@@ -1,2 +1,2 @@
-// Setup file for vitest with jsdom environment
+import '@testing-library/jest-dom/vitest'
 
