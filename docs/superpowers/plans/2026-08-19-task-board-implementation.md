@@ -53,7 +53,8 @@ Dashboard/
 │   │   ├── KanbanBoard.tsx
 │   │   ├── TaskCard.tsx
 │   │   ├── TaskDetailModal.tsx
-│   │   └── CompletionAnimation.tsx
+│   │   ├── CompletionAnimation.tsx
+│   │   └── SessionProviderWrapper.tsx
 │   ├── lib/
 │   │   ├── prisma.ts
 │   │   ├── auth.ts
@@ -64,6 +65,8 @@ Dashboard/
 │   │       └── client.ts
 │   ├── types/
 │   │   └── task.ts
+│   ├── test/
+│   │   └── setup.ts                       # jest-dom matchers for vitest
 │   └── middleware.ts
 ├── public/sounds/
 │   └── success.mp3                        # sourced by human, see Task 6
@@ -82,11 +85,14 @@ Dashboard/
 
 **Files:**
 - Create: `package.json`, `tsconfig.json`, `next.config.js`, `tailwind.config.ts`, `postcss.config.js`, `.eslintrc.json`, `.gitignore`
-- Create: `src/app/layout.tsx`, `src/app/page.tsx` (placeholder)
+- Create: `vitest.config.ts`, `src/test/setup.ts`
+- Create: `src/components/SessionProviderWrapper.tsx`
+- Create: `src/app/layout.tsx` (wraps children in `SessionProviderWrapper`), `src/app/page.tsx` (placeholder)
 - Create: `.env.example`
 
 **Interfaces:**
-- Produces: a running Next.js dev server at `localhost:3000`; every later task builds inside `src/`.
+- Produces: a running Next.js dev server at `localhost:3000`; every later task builds inside `src/`. `SessionProviderWrapper` (client component wrapping NextAuth's `SessionProvider`) is what lets any later client component call `useSession()` — Task 11 depends on this.
+- Produces: a working `npx vitest run` — jsdom environment, `@/*` path alias, `@testing-library/jest-dom` matchers loaded — that every later task's tests rely on without re-configuring it.
 
 - [ ] **Step 1: Scaffold the app**
 
@@ -121,16 +127,81 @@ CRON_SECRET=""
 E2E_TEST_MODE=""
 ```
 
-- [ ] **Step 4: Verify the scaffold builds and runs**
+- [ ] **Step 4: Write `vitest.config.ts` and `src/test/setup.ts`**
+
+Every component test from Task 7 onward needs jsdom, the `@/*` alias, and jest-dom's matchers (`toBeInTheDocument`, `toHaveAttribute`, etc.) — this step is what makes those pass rather than error on missing config.
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+})
+```
+
+```typescript
+// src/test/setup.ts
+import '@testing-library/jest-dom'
+```
+
+- [ ] **Step 5: Write `SessionProviderWrapper` and wire it into the root layout**
+
+```tsx
+// src/components/SessionProviderWrapper.tsx
+'use client'
+
+import { SessionProvider } from 'next-auth/react'
+import type { ReactNode } from 'react'
+
+export function SessionProviderWrapper({ children }: { children: ReactNode }) {
+  return <SessionProvider>{children}</SessionProvider>
+}
+```
+
+```tsx
+// src/app/layout.tsx
+import type { Metadata } from 'next'
+import './globals.css'
+import { SessionProviderWrapper } from '@/components/SessionProviderWrapper'
+
+export const metadata: Metadata = {
+  title: 'Team Board',
+  description: 'Internal Team Dashboard — Task & Assignment Board',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+      </body>
+    </html>
+  )
+}
+```
+
+- [ ] **Step 6: Verify the scaffold builds and runs**
 
 Run: `npm run build`
-Expected: build succeeds with the default Next.js starter page.
+Expected: build succeeds with the default Next.js starter page (with the layout change from Step 5).
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add -A
-git commit -m "chore: scaffold Next.js app with Tailwind, TypeScript, and dependencies"
+git commit -m "chore: scaffold Next.js app with Tailwind, TypeScript, vitest config, and session provider"
 ```
 
 ---
@@ -441,7 +512,14 @@ git commit -m "feat: add Prisma schema and client singleton"
 
 ```typescript
 // src/lib/__tests__/auth.test.ts
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// authOptions imports src/lib/prisma.ts, which constructs a real
+// PrismaClient at module load — that throws without a DATABASE_URL in
+// process.env (vitest does not load .env the way `prisma` CLI commands
+// do). This test only inspects provider config, so a stub is enough.
+vi.mock('@/lib/prisma', () => ({ prisma: {} }))
+
 import { authOptions } from '../auth'
 
 describe('authOptions', () => {
@@ -1441,6 +1519,7 @@ git commit -m "feat: add completion animation for tasks moved to Done"
 **Interfaces:**
 - Consumes: `CreateTaskInput`/`UpdateTaskInput`/`Task` types (Task 2)
 - Produces: `<TaskDetailModal task={Task | null} onClose={() => void} onSaved={() => void} />`. `task === null` means "create" mode; otherwise "edit" mode with a delete button. Calls `POST /api/tasks` or `PATCH /api/tasks/[id]` / `DELETE /api/tasks/[id]`.
+- Also produces (Step 5, in `page.tsx`): the mute toggle required by the spec's "muteable per-user, non-negotiable" constraint. Nothing before this task ever calls `PATCH /api/user/settings` (Task 6) or reads `session.user.muteSounds` (Task 4) — this step is where that constraint actually gets satisfied, not just made possible.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1588,31 +1667,62 @@ export function TaskDetailModal({
 Run: `npx vitest run src/components/__tests__/TaskDetailModal.test.tsx`
 Expected: PASS (2 tests)
 
-- [ ] **Step 5: Wire the modal into `src/app/page.tsx`**
+- [ ] **Step 5: Wire the modal and the mute toggle into `src/app/page.tsx`**
+
+`SessionProviderWrapper` (Task 1) is what makes `useSession()` work here. The
+toggle reads the signed-in user's saved preference, flips local state
+immediately, and persists it via Task 6's route — `KanbanBoard`'s
+`muteSounds` prop (added in Task 9) is what actually silences
+`playSound` once this is wired.
 
 ```tsx
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import { TaskDetailModal } from '@/components/TaskDetailModal'
 
 export default function Page() {
+  const { data: session } = useSession()
   const [showCreate, setShowCreate] = useState(false)
+  const [muteSounds, setMuteSounds] = useState(false)
+
+  useEffect(() => {
+    const sessionMuted = (session?.user as { muteSounds?: boolean } | undefined)?.muteSounds
+    if (sessionMuted !== undefined) {
+      setMuteSounds(sessionMuted)
+    }
+  }, [session])
+
+  async function toggleMute() {
+    const next = !muteSounds
+    setMuteSounds(next)
+    await fetch('/api/user/settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ muteSounds: next }),
+    })
+  }
 
   return (
     <main className="p-6">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Team Board</h1>
-        <button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="rounded bg-blue-600 px-3 py-1 text-white"
-        >
-          New Task
-        </button>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={toggleMute} className="text-sm text-gray-600">
+            {muteSounds ? '🔇 Sounds off' : '🔊 Sounds on'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className="rounded bg-blue-600 px-3 py-1 text-white"
+          >
+            New Task
+          </button>
+        </div>
       </div>
-      <KanbanBoard />
+      <KanbanBoard muteSounds={muteSounds} />
       {showCreate && (
         <TaskDetailModal task={null} onClose={() => setShowCreate(false)} onSaved={() => setShowCreate(false)} />
       )}
@@ -1625,7 +1735,7 @@ export default function Page() {
 
 ```bash
 git add src/components/TaskDetailModal.tsx src/components/__tests__/TaskDetailModal.test.tsx src/app/page.tsx
-git commit -m "feat: add task create/edit/delete modal and wire into board page"
+git commit -m "feat: add task create/edit/delete modal and wire mute toggle into board page"
 ```
 
 ---
@@ -1915,6 +2025,7 @@ git commit -m "test: add Playwright E2E smoke test for the core task flow"
 
 ## Self-Review Notes
 
-- **Spec coverage**: Kanban board (Task 8–9), task CRUD/assignment (Task 5, 11), completion animation/sound (Task 10, 6, 9), due-soon/overdue/stale visuals (Task 2, 7), mute toggle (Task 6), realtime via Pusher with polling fallback (Task 5, 8), overdue cron (Task 12), error handling — optimistic rollback (Task 9), Pusher-drop silent fallback (inherent in SWR polling, Task 8), auth failure redirect (NextAuth default, Task 4), testing (unit tests throughout, E2E in Task 14), deployment (Task 13). All spec sections are covered.
+- **Spec coverage**: Kanban board (Task 8–9), task CRUD/assignment (Task 5, 11), completion animation/sound (Task 10, 6, 9), due-soon/overdue/stale visuals (Task 2, 7), mute toggle — API route (Task 6) *and* the UI that actually calls it (Task 11 Step 5) — realtime via Pusher with polling fallback (Task 5, 8), overdue cron (Task 12), error handling — optimistic rollback (Task 9), Pusher-drop silent fallback (inherent in SWR polling, Task 8), auth failure redirect (NextAuth default, Task 4), testing (unit tests throughout, E2E in Task 14), deployment (Task 13). All spec sections are covered.
 - **Type consistency checked**: `Task`, `CreateTaskInput`, `UpdateTaskInput` (Task 2) are the only types referenced by API routes (Task 5, 12) and components (Task 7, 8, 9, 11) — no divergent shapes introduced.
 - **Open dependency on the human**: Tasks 3, 4, 14 note explicitly where a real `DATABASE_URL`/GitHub OAuth app/seeded user is required and cannot be faked — these are the only steps that may need to pause for Prerequisites rather than fail outright.
+- **Execution-order note**: Task 9's `KanbanBoard.tsx` imports `CompletionAnimation`, which Task 10 creates. Dispatch Task 10 before Task 9 (both are otherwise independent — Task 10 has no dependency on Task 9's drag-and-drop code). Task numbers/content are unchanged; only dispatch order swaps. Recorded as a ruling in the SDD ledger at execution time.
