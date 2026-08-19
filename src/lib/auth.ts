@@ -58,5 +58,9 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
-  pages: { signIn: '/api/auth/signin' },
+  // No `pages.signIn` override: this app has no custom sign-in page
+  // component, so pointing pages.signIn at the built-in handler's own
+  // URL (/api/auth/signin) made NextAuth treat it as a custom page and
+  // redirect to itself forever. Omitting it falls back to NextAuth's
+  // built-in sign-in UI at that same route, which works correctly.
 }
