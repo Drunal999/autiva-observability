@@ -51,11 +51,22 @@ function DraggableTaskCard({ task, onClick }: { task: Task; onClick: () => void 
 }
 
 function DroppableColumn({ status, label, tasks }: { status: TaskStatus; label: string; tasks: Task[] }) {
-  const { setNodeRef } = useDroppable({ id: status })
+  const { setNodeRef, isOver } = useDroppable({ id: status })
   return (
-    <div ref={setNodeRef} data-testid={`column-${status}`} className="rounded-lg bg-gray-50 p-3">
-      <h2 className="mb-3 font-semibold">{label}</h2>
-      <div className="space-y-2">
+    <div
+      ref={setNodeRef}
+      data-testid={`column-${status}`}
+      className={`glass min-h-[200px] rounded-3xl p-5 transition duration-300 ease-fluid ${
+        isOver ? 'border-cyan-400/40' : ''
+      }`}
+    >
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-white/40">{label}</h2>
+        <span className="rounded-full bg-white/5 px-2 py-0.5 font-mono text-[10px] text-white/50">
+          {tasks.length}
+        </span>
+      </div>
+      <div className="space-y-3">
         {tasks.map((task) => (
           <DraggableTaskCard key={task.id} task={task} onClick={() => {}} />
         ))}
@@ -105,7 +116,7 @@ export function KanbanBoard({ muteSounds = false }: { muteSounds?: boolean }) {
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {COLUMNS.map((col) => (
           <DroppableColumn
             key={col.status}
