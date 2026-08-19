@@ -3,9 +3,8 @@ import { render, waitFor } from '@testing-library/react'
 import useSWR from 'swr'
 
 vi.mock('swr')
-vi.mock('@/lib/pusher/client', () => ({
-  getPusherClient: () => ({ subscribe: () => ({ bind: vi.fn(), unbind_all: vi.fn() }), unsubscribe: vi.fn() }),
-  BOARD_CHANNEL: 'board',
+vi.mock('@/lib/realtime/client', () => ({
+  useBoardEvents: vi.fn(),
 }))
 
 import { KanbanBoard } from '../KanbanBoard'

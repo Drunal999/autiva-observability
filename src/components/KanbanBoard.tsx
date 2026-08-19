@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import useSWR, { type KeyedMutator } from 'swr'
 import { DndContext, type DragEndEvent, useDraggable, useDroppable } from '@dnd-kit/core'
 import { TaskCard } from './TaskCard'
 import { CompletionAnimation } from './CompletionAnimation'
-import { getPusherClient, BOARD_CHANNEL } from '@/lib/pusher/client'
+import { useBoardEvents } from '@/lib/realtime/client'
 import { playSound } from '@/lib/sounds'
 import type { Task, TaskStatus } from '@/types/task'
 
@@ -82,23 +82,17 @@ export function KanbanBoard({ muteSounds = false }: { muteSounds?: boolean }) {
   })
   const [celebrating, setCelebrating] = useState<string | null>(null)
 
-  useEffect(() => {
-    const pusher = getPusherClient()
-    const channel = pusher.subscribe(BOARD_CHANNEL)
-    channel.bind('task-created', (task: Task) => {
+  useBoardEvents({
+    onCreated: (task) => {
       mutate((current) => (current ? [...current, task] : [task]), { revalidate: false })
-    })
-    channel.bind('task-updated', (task: Task) => {
+    },
+    onUpdated: (task) => {
       mutate((current) => current?.map((t) => (t.id === task.id ? task : t)), { revalidate: false })
-    })
-    channel.bind('task-deleted', ({ id }: { id: string }) => {
+    },
+    onDeleted: (id) => {
       mutate((current) => current?.filter((t) => t.id !== id), { revalidate: false })
-    })
-    return () => {
-      channel.unbind_all()
-      pusher.unsubscribe(BOARD_CHANNEL)
-    }
-  }, [mutate])
+    },
+  })
 
   async function handleDragEnd(event: DragEndEvent) {
     const taskId = String(event.active.id)

@@ -8,13 +8,12 @@ vi.mock('@/lib/prisma', () => ({
     },
   },
 }))
-vi.mock('@/lib/pusher/server', () => ({
-  pusherServer: { trigger: vi.fn() },
-  BOARD_CHANNEL: 'board',
+vi.mock('@/lib/realtime/bus', () => ({
+  publishBoardEvent: vi.fn(),
 }))
 
 import { prisma } from '@/lib/prisma'
-import { pusherServer } from '@/lib/pusher/server'
+import { publishBoardEvent } from '@/lib/realtime/bus'
 import { GET } from '../route'
 
 describe('/api/cron/flag-overdue', () => {
@@ -43,6 +42,6 @@ describe('/api/cron/flag-overdue', () => {
 
     expect(res.status).toBe(200)
     expect(prisma.task.update).toHaveBeenCalledTimes(2)
-    expect(pusherServer.trigger).toHaveBeenCalledTimes(2)
+    expect(publishBoardEvent).toHaveBeenCalledTimes(2)
   })
 })

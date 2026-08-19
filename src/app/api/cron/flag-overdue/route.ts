@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { pusherServer, BOARD_CHANNEL } from '@/lib/pusher/server'
+import { publishBoardEvent } from '@/lib/realtime/bus'
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get('Authorization')
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       where: { id: task.id },
       data: { overdueFlaggedAt: new Date() },
     })
-    await pusherServer.trigger(BOARD_CHANNEL, 'task-updated', updated)
+    publishBoardEvent({ type: 'task-updated', payload: updated })
   }
 
   return NextResponse.json({ flagged: newlyOverdue.length })

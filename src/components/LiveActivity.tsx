@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { getPusherClient, usePusherConnectionState, BOARD_CHANNEL } from '@/lib/pusher/client'
+import { useState } from 'react'
+import { useBoardEvents, useRealtimeConnectionState, type RealtimeConnectionState } from '@/lib/realtime/client'
 import type { Task } from '@/types/task'
 
 interface ActivityEntry {
@@ -24,41 +24,31 @@ function describeUpdated(task: Pick<Task, 'title' | 'status'>) {
   return `Task updated: "${task.title}"`
 }
 
-const statusDotClass: Record<ReturnType<typeof usePusherConnectionState>, string> = {
+const statusDotClass: Record<RealtimeConnectionState, string> = {
   connected: 'bg-emerald-400',
   connecting: 'bg-amber-400 animate-pulse',
-  unavailable: 'bg-red-400',
   disconnected: 'bg-red-400',
 }
 
-const statusLabel: Record<ReturnType<typeof usePusherConnectionState>, string> = {
+const statusLabel: Record<RealtimeConnectionState, string> = {
   connected: 'Live',
   connecting: 'Connecting',
-  unavailable: 'Offline',
   disconnected: 'Offline',
 }
 
 export function LiveActivity() {
   const [entries, setEntries] = useState<ActivityEntry[]>([])
-  const connectionState = usePusherConnectionState()
+  const connectionState = useRealtimeConnectionState()
 
-  useEffect(() => {
-    const pusher = getPusherClient()
-    const channel = pusher.subscribe(BOARD_CHANNEL)
+  function push(text: string) {
+    setEntries((current) => [{ id: crypto.randomUUID(), text, at: new Date() }, ...current].slice(0, MAX_ENTRIES))
+  }
 
-    function push(text: string) {
-      setEntries((current) => [{ id: crypto.randomUUID(), text, at: new Date() }, ...current].slice(0, MAX_ENTRIES))
-    }
-
-    channel.bind('task-created', (task: Task) => push(describeCreated(task)))
-    channel.bind('task-updated', (task: Task) => push(describeUpdated(task)))
-    channel.bind('task-deleted', ({ id }: { id: string }) => push(`Task deleted (${id.slice(0, 6)})`))
-
-    return () => {
-      channel.unbind_all()
-      pusher.unsubscribe(BOARD_CHANNEL)
-    }
-  }, [])
+  useBoardEvents({
+    onCreated: (task) => push(describeCreated(task)),
+    onUpdated: (task) => push(describeUpdated(task)),
+    onDeleted: (id) => push(`Task deleted (${id.slice(0, 6)})`),
+  })
 
   return (
     <div className="glass flex h-full flex-col rounded-3xl p-6">

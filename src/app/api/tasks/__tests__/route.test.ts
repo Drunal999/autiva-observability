@@ -10,15 +10,14 @@ vi.mock('@/lib/prisma', () => ({
     },
   },
 }))
-vi.mock('@/lib/pusher/server', () => ({
-  pusherServer: { trigger: vi.fn() },
-  BOARD_CHANNEL: 'board',
+vi.mock('@/lib/realtime/bus', () => ({
+  publishBoardEvent: vi.fn(),
 }))
 vi.mock('next-auth', () => ({ getServerSession: vi.fn().mockResolvedValue({ user: { id: 'u1' } }) }))
 vi.mock('@/lib/auth', () => ({ authOptions: {} }))
 
 import { prisma } from '@/lib/prisma'
-import { pusherServer } from '@/lib/pusher/server'
+import { publishBoardEvent } from '@/lib/realtime/bus'
 import { GET, POST } from '../route'
 
 describe('/api/tasks', () => {
@@ -41,7 +40,7 @@ describe('/api/tasks', () => {
     const res = await POST(req)
     const body = await res.json()
     expect(body).toEqual(created)
-    expect(pusherServer.trigger).toHaveBeenCalledWith('board', 'task-created', created)
+    expect(publishBoardEvent).toHaveBeenCalledWith({ type: 'task-created', payload: created })
   })
 
   it('POST rejects a missing title with 400', async () => {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { pusherServer, BOARD_CHANNEL } from '@/lib/pusher/server'
+import { publishBoardEvent } from '@/lib/realtime/bus'
 import type { CreateTaskInput } from '@/types/task'
 
 export async function GET() {
@@ -27,6 +27,6 @@ export async function POST(req: Request) {
     },
   })
 
-  await pusherServer.trigger(BOARD_CHANNEL, 'task-created', task)
+  publishBoardEvent({ type: 'task-created', payload: task })
   return NextResponse.json(task)
 }

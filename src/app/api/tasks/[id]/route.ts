@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { pusherServer, BOARD_CHANNEL } from '@/lib/pusher/server'
+import { publishBoardEvent } from '@/lib/realtime/bus'
 import type { UpdateTaskInput } from '@/types/task'
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
@@ -18,12 +18,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   const task = await prisma.task.update({ where: { id: params.id }, data })
-  await pusherServer.trigger(BOARD_CHANNEL, 'task-updated', task)
+  publishBoardEvent({ type: 'task-updated', payload: task })
   return NextResponse.json(task)
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   await prisma.task.delete({ where: { id: params.id } })
-  await pusherServer.trigger(BOARD_CHANNEL, 'task-deleted', { id: params.id })
+  publishBoardEvent({ type: 'task-deleted', payload: { id: params.id } })
   return NextResponse.json({ id: params.id })
 }

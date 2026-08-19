@@ -1,28 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
+import type { Task } from '@/types/task'
 
-const handlers: Record<string, (payload: unknown) => void> = {}
+interface CapturedHandlers {
+  onCreated?: (task: Task) => void
+  onUpdated?: (task: Task) => void
+  onDeleted?: (id: string) => void
+}
 
-vi.mock('@/lib/pusher/client', () => ({
-  getPusherClient: () => ({
-    subscribe: () => ({
-      bind: (event: string, cb: (payload: unknown) => void) => {
-        handlers[event] = cb
-      },
-      unbind_all: vi.fn(),
-    }),
-    unsubscribe: vi.fn(),
-    connection: { state: 'connected', bind: vi.fn(), unbind: vi.fn() },
-  }),
-  usePusherConnectionState: () => 'connected',
-  BOARD_CHANNEL: 'board',
+let capturedHandlers: CapturedHandlers = {}
+
+vi.mock('@/lib/realtime/client', () => ({
+  useBoardEvents: (handlers: CapturedHandlers) => {
+    capturedHandlers = handlers
+  },
+  useRealtimeConnectionState: () => 'connected',
 }))
 
 import { LiveActivity } from '../LiveActivity'
 
 describe('LiveActivity', () => {
   beforeEach(() => {
-    Object.keys(handlers).forEach((key) => delete handlers[key])
+    capturedHandlers = {}
   })
 
   it('shows an empty state before any events arrive', () => {
@@ -30,11 +29,11 @@ describe('LiveActivity', () => {
     expect(screen.getByText(/no activity yet/i)).toBeInTheDocument()
   })
 
-  it('logs a real task-created event from Pusher', () => {
+  it('logs a real task-created event from the realtime stream', () => {
     render(<LiveActivity />)
 
     act(() => {
-      handlers['task-created']({ id: 't1', title: 'Ship it', status: 'TODO' })
+      capturedHandlers.onCreated?.({ id: 't1', title: 'Ship it', status: 'TODO' } as Task)
     })
 
     expect(screen.getByText(/ship it/i)).toBeInTheDocument()
@@ -44,7 +43,7 @@ describe('LiveActivity', () => {
     render(<LiveActivity />)
 
     act(() => {
-      handlers['task-updated']({ id: 't1', title: 'Ship it', status: 'DONE' })
+      capturedHandlers.onUpdated?.({ id: 't1', title: 'Ship it', status: 'DONE' } as Task)
     })
 
     expect(screen.getByText(/moved/i)).toBeInTheDocument()

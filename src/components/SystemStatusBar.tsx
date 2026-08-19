@@ -2,22 +2,20 @@
 
 import useSWR from 'swr'
 import { CircularMeter } from './CircularMeter'
-import { usePusherConnectionState } from '@/lib/pusher/client'
+import { useRealtimeConnectionState, type RealtimeConnectionState } from '@/lib/realtime/client'
 import type { Task } from '@/types/task'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const connectionLabel: Record<ReturnType<typeof usePusherConnectionState>, string> = {
+const connectionLabel: Record<RealtimeConnectionState, string> = {
   connected: 'OS Stable',
   connecting: 'Syncing',
-  unavailable: 'Offline',
   disconnected: 'Offline',
 }
 
-const connectionDot: Record<ReturnType<typeof usePusherConnectionState>, string> = {
+const connectionDot: Record<RealtimeConnectionState, string> = {
   connected: 'bg-emerald-400',
   connecting: 'bg-amber-400 animate-pulse',
-  unavailable: 'bg-red-400',
   disconnected: 'bg-red-400',
 }
 
@@ -25,7 +23,7 @@ export function SystemStatusBar() {
   // Shares SWR's '/api/tasks' cache key with KanbanBoard — no duplicate
   // network request, just a second reader of the same real data.
   const { data: tasks } = useSWR<Task[]>('/api/tasks', fetcher)
-  const connectionState = usePusherConnectionState()
+  const connectionState = useRealtimeConnectionState()
 
   const total = tasks?.length ?? 0
   const done = tasks?.filter((t) => t.status === 'DONE').length ?? 0
