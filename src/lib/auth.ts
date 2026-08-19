@@ -51,9 +51,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user?.email) {
         const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
         if (dbUser) {
-          ;(session.user as typeof session.user & { id: string; muteSounds: boolean }).id = dbUser.id
-          ;(session.user as typeof session.user & { id: string; muteSounds: boolean }).muteSounds =
-            dbUser.muteSounds
+          session.user.id = dbUser.id
+          session.user.muteSounds = dbUser.muteSounds
         }
       }
       return session
