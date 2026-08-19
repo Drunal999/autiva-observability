@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Internal Team Dashboard — Task & Assignment Board
 
-## Getting Started
+Phase 1 of the Internal Team Dashboard. Kanban task board with GitHub login,
+realtime sync, and animated/audio feedback on task-state changes.
 
-First, run the development server:
+## Local setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Copy `.env.example` to `.env.local` and fill in every value (see
+   "Accounts you need" below).
+2. `npm install`
+3. `npx prisma migrate dev --name init`
+4. `npm run dev` → http://localhost:3000
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Accounts you need
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Neon** (neon.tech, free tier) — create a project, copy the pooled
+  connection string into `DATABASE_URL`.
+- **GitHub OAuth App** (github.com/settings/developers) — callback URL
+  `http://localhost:3000/api/auth/callback/github` for local dev, and your
+  production URL's equivalent once deployed. Copy Client ID/Secret into
+  `GITHUB_ID`/`GITHUB_SECRET`.
+- **Pusher** (dashboard.pusher.com, free "Sandbox" plan) — create an app,
+  copy App ID/Key/Secret/Cluster into `PUSHER_*` and the client-facing
+  `NEXT_PUBLIC_PUSHER_*` variables.
+- **`NEXTAUTH_SECRET`** — generate with `openssl rand -base64 32`.
+- **`CRON_SECRET`** — any random string; must match what you set in Vercel's
+  project environment variables.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploying
 
-## Learn More
+1. Push this repo to GitHub (personal account, private).
+2. Import it in Vercel; add all `.env.example` variables (with production
+   values — a new GitHub OAuth App or an updated callback URL, the same
+   Neon/Pusher credentials) in Vercel's project settings.
+3. Vercel reads `vercel.json` and schedules the overdue-flagging cron
+   automatically on deploy.
 
-To learn more about Next.js, take a look at the following resources:
+## Testing
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npx vitest run` — unit/component tests
+- `npx playwright test` — E2E smoke test (see Task 14 in the implementation
+  plan for how login is stubbed for this)
