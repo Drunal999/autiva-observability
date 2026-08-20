@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/flag-overdue",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

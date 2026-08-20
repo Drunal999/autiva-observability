@@ -19,7 +19,8 @@
     "prisma": "^6.19.3",
     "react": "^18",
     "react-dom": "^18",
-    "swr": "^2.5.1"
+    "swr": "^2.5.1",
+    "vercel": "^59.1.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
