@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { ChartPanel, RunBars, LatencyLines, AreaChart, SuccessRate, Sparkline } from './Charts'
+import { EmptyState } from './Panel'
 import { fmtElapsed } from '@/lib/ops/tokens'
 import { statusLabel, statusColor, statusGlyph, statusIsLive } from '@/lib/ops/status'
 import { inr, inrCompact, tokens as fmtTokens } from '@/lib/ops/format'
@@ -276,13 +277,17 @@ export function FleetView({
           </div>
         )}
 
+        {/* A brand-new tenant lands here. It has to read as "nothing has run
+            yet", not as "this dashboard is broken". */}
         {state === 'empty' && (
-          <div className="flex flex-col items-center gap-2 rounded-[20px] border border-dashed border-white/[0.08] px-5 py-14">
-            <p className="text-[13px] text-white/45">No agents registered</p>
-            <p className="font-mono text-[11px] text-white/25">
-              Start one with `autiva run --agent &lt;name&gt;`
-            </p>
-          </div>
+          <EmptyState
+            title={mode === 'client' ? 'No automations running yet' : 'No agents registered'}
+            detail={
+              mode === 'client'
+                ? 'Once your automations are switched on, each one appears here with its current status, what it is working on, and what it has cost.'
+                : 'Agents appear here as soon as one picks up a run. Start one with `autiva run --agent <name>`.'
+            }
+          />
         )}
 
         {state === 'ready' && (

@@ -58,7 +58,11 @@ export function AmbientBackground() {
         preload="metadata"
         poster="/purple-desert.jpg"
         onCanPlayThrough={() => setReady(true)}
-        className="h-full w-full object-cover"
+        // Absolutely positioned inside the fixed wrapper. Without this the
+        // element lays out at the video's intrinsic 4K width, which pushes the
+        // document's scrollWidth past the viewport and produces a horizontal
+        // scrollbar on a phone — the clip from overflow-hidden is visual only.
+        className="absolute inset-0 h-full w-full object-cover"
         style={{
           // Brightened so the dunes read as landscape rather than noise, with
           // a touch of saturation so the violet survives the scrim above it.

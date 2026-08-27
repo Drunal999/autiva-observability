@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
 import { inr, relative, absolute } from '@/lib/ops/format'
 import { useEventListener, useRealtimeConnectionState } from '@/lib/realtime/client'
+import { EmptyState } from './Panel'
 import type { Approval, ApprovalsResponse, ApprovalRisk } from '@/types/approvals'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -202,13 +203,15 @@ export function ApprovalsView() {
   const decided = data?.decided ?? []
 
   return (
-    <div className="relative flex h-full flex-col gap-5 overflow-y-auto p-5">
-      <div className="flex items-baseline gap-3">
+    <div className="relative flex h-full flex-col gap-5 overflow-y-auto p-3 md:p-5">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
           Approvals
         </h1>
         <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
-          {pending.length} WAITING · A DECISION IS RECORDED ONCE AND CANNOT BE EDITED
+          {pending.length} WAITING
+          {/* The caveat matters but is not worth a six-line column on a phone. */}
+          <span className="hidden sm:inline"> · A DECISION IS RECORDED ONCE AND CANNOT BE EDITED</span>
         </span>
         <span className="flex-1" />
         {/* A stale queue that looks live is how the same action gets approved
@@ -252,20 +255,25 @@ export function ApprovalsView() {
         </div>
       )}
 
+      {/* Zero-approval state. Distinguishes "you are up to date" from "nothing
+          has ever come through here", because those mean different things to
+          someone who just signed up. */}
       {!isLoading && !error && pending.length === 0 && (
-        <div className="flex flex-col items-center gap-2 rounded-[16px] border border-dashed border-white/[0.08] px-5 py-14">
-          <p className="text-[13px] text-white/50">Nothing waiting on you</p>
-          <p className="font-mono text-[11px] text-white/25">
-            Agents pause here before spending money, publishing, or messaging in bulk.
-          </p>
-        </div>
+        <EmptyState
+          title={decided.length > 0 ? 'Nothing waiting on you' : 'No approvals yet'}
+          detail={
+            decided.length > 0
+              ? 'Everything requested so far has been decided. New requests appear here the moment an agent pauses.'
+              : 'Agents pause here before spending money, publishing publicly, messaging in bulk, or deleting data — so nothing irreversible happens without you.'
+          }
+        />
       )}
 
       <div className="flex flex-col gap-3">
         {pending.map((a, i) => (
           <article
             key={a.id}
-            className="rounded-[16px] border bg-white/[0.03] p-4"
+            className="rounded-[16px] border bg-white/[0.03] p-3 md:p-4"
             style={{
               borderColor: a.risk === 'MONEY' || a.risk === 'DATA_DELETE'
                 ? 'rgba(248,113,113,0.30)'

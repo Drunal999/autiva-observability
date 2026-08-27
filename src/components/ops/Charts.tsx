@@ -1,8 +1,16 @@
 'use client'
 
 import { ACCENT, T, MONO, ERR, WARN } from '@/lib/ops/tokens'
+import { PanelBoundary } from './Panel'
 
-/** Shared chart frame: title, sub-caption, and an axis-labelled plot area. */
+/**
+ * Shared chart frame: title, sub-caption, and an axis-labelled plot area.
+ *
+ * The error boundary lives here rather than at each call site, so a panel
+ * cannot be added without one. A chart that throws on a malformed series takes
+ * out its own tile and nothing else — the operator keeps every other panel,
+ * including the ones that might explain the failure.
+ */
 export function ChartPanel({
   title,
   caption,
@@ -17,15 +25,17 @@ export function ChartPanel({
   rightLabel: string
 }) {
   return (
-    <div className="flex min-w-0 flex-col rounded-[18px] border border-white/5 bg-white/[0.02] p-4">
-      <p className="text-[13px] font-semibold">{title}</p>
-      <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-white/35">{caption}</p>
-      <div className="mt-3 min-h-0 flex-1">{children}</div>
-      <div className="mt-1.5 flex justify-between font-mono text-[9px] text-white/25">
-        <span>{leftLabel}</span>
-        <span>{rightLabel}</span>
+    <PanelBoundary label={title}>
+      <div className="flex min-w-0 flex-col rounded-[18px] border border-white/5 bg-white/[0.02] p-4">
+        <p className="text-[13px] font-semibold">{title}</p>
+        <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-white/35">{caption}</p>
+        <div className="mt-3 min-h-0 flex-1">{children}</div>
+        <div className="mt-1.5 flex justify-between font-mono text-[9px] text-white/25">
+          <span>{leftLabel}</span>
+          <span>{rightLabel}</span>
+        </div>
       </div>
-    </div>
+    </PanelBoundary>
   )
 }
 

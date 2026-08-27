@@ -10,6 +10,15 @@ import type { ApprovalsResponse } from '@/types/approvals'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+/**
+ * Whether the figures on screen are seeded rather than production activity.
+ *
+ * Defaults to TRUE and must be switched off explicitly. A missing or
+ * misspelled env var therefore over-warns rather than silently presenting
+ * mock numbers as real — the failure mode has to be the harmless one.
+ */
+const IS_SAMPLE_DATA = process.env.NEXT_PUBLIC_SAMPLE_DATA !== 'false'
+
 /** Ticking clock in the header. Starts null so server and client agree on the
  *  first paint — the time only appears once the client is running. */
 function Clock() {
@@ -41,9 +50,13 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
   const failing = agents?.filter((a) => a.status === 'FAILED').length ?? 0
 
   return (
-    <div className="flex min-h-screen flex-col text-[#f5f5f7]">
-      <header className="flex h-14 shrink-0 items-center gap-3 overflow-x-auto border-b border-white/5 px-4 md:gap-4 md:px-5">
-        <div className="flex shrink-0 items-center gap-2.5">
+    <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden text-[#f5f5f7]">
+      {/* Two rows on a phone: status chrome that must never scroll out of
+          reach, then the nav which may. On desktop it collapses back to one. */}
+      <header className="flex shrink-0 flex-col border-b border-white/5 md:h-14 md:flex-row md:items-center md:gap-4 md:px-5">
+        {/* Status row. On a phone this is its own line so nothing here can be
+            scrolled out of reach; on desktop it dissolves into the single bar. */}
+        <div className="flex shrink-0 items-center gap-2.5 px-4 pt-2.5 md:contents md:px-0 md:pt-0">
           <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-cyan-400/55">
             <span className="h-2 w-2 rounded-sm bg-cyan-400" />
           </span>
@@ -51,9 +64,29 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-white/35 lg:inline">
             Mission Control
           </span>
+
+          <span className="flex-1 md:hidden" />
+
+          {IS_SAMPLE_DATA && (
+            <span
+              className="shrink-0 rounded-[5px] bg-amber-400/15 px-1.5 py-[3px] font-mono text-[9px] font-bold tracking-[0.08em] text-amber-300 md:hidden"
+              title="Figures on this dashboard come from seeded sample data, not production activity."
+            >
+              SAMPLE
+            </span>
+          )}
+          {agents && (
+            <span
+              className={`shrink-0 rounded-[5px] px-1.5 py-[3px] font-mono text-[9px] tracking-[0.08em] md:hidden ${
+                failing ? 'bg-red-400/12 text-red-400' : 'bg-emerald-400/12 text-emerald-400'
+              }`}
+            >
+              {failing ? `${failing} FAILING` : 'HEALTHY'}
+            </span>
+          )}
         </div>
 
-        <nav className="flex shrink-0 items-center gap-1 md:ml-3">
+        <nav className="flex shrink-0 items-center gap-1 overflow-x-auto px-4 pb-2 pt-2 md:ml-3 md:px-0 md:py-0">
           {NAV.map((n) => {
             const active = pathname === n.href
             const badge = n.href === '/approvals' ? pendingApprovals : 0
@@ -83,14 +116,23 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="flex-1" />
+        <div className="hidden flex-1 md:block" />
 
-        <span className="hidden shrink-0 rounded-[5px] bg-white/5 px-2 py-[5px] font-mono text-[10px] tracking-[0.08em] text-white/40 xl:inline">
-          SAMPLE DATA
-        </span>
+        {/* Never responsively hidden. Demoing mocked numbers as real is how
+            trust dies, and the client view — the one most likely to be read as
+            real — is the narrow one. It shrinks on small screens; it does not
+            disappear. */}
+        {IS_SAMPLE_DATA && (
+          <span
+            className="hidden shrink-0 rounded-[5px] bg-amber-400/15 px-2 py-[5px] font-mono text-[10px] font-bold tracking-[0.08em] text-amber-300 md:inline"
+            title="Figures on this dashboard come from seeded sample data, not production activity."
+          >
+            SAMPLE DATA
+          </span>
+        )}
         {agents && (
           <span
-            className={`shrink-0 rounded-[5px] px-2 py-[5px] font-mono text-[10px] tracking-[0.08em] ${
+            className={`hidden shrink-0 rounded-[5px] px-2 py-[5px] font-mono text-[10px] tracking-[0.08em] md:inline ${
               failing
                 ? 'bg-red-400/12 text-red-400'
                 : 'bg-emerald-400/12 text-emerald-400'
@@ -99,7 +141,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             {failing ? `${failing} AGENT FAILING` : 'FLEET HEALTHY'}
           </span>
         )}
-        <Clock />
+        <span className="hidden md:inline"><Clock /></span>
       </header>
 
       <main className="min-h-0 flex-1">{children}</main>
