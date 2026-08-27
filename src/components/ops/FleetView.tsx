@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { ChartPanel, RunBars, LatencyLines, AreaChart, SuccessRate, Sparkline } from './Charts'
 import { EmptyState } from './Panel'
-import { ThreadToggle, useCommentCounts } from './Thread'
+import { ThreadToggle, useThreadBadges } from './Thread'
 import { fmtElapsed } from '@/lib/ops/tokens'
 import { statusLabel, statusColor, statusGlyph, statusIsLive } from '@/lib/ops/status'
 import { inr, inrCompact, tokens as fmtTokens } from '@/lib/ops/format'
@@ -99,12 +99,16 @@ function AgentCard({
   tick,
   mode,
   noteCount,
+  noteUnread,
+  noteMentions,
 }: {
   agent: Agent
   index: number
   tick: number
   mode: ViewMode
   noteCount?: number
+  noteUnread?: number
+  noteMentions?: number
 }) {
   const cardRef = useRef<HTMLDivElement>(null)
   const color = statusColor(agent.status)
@@ -184,6 +188,8 @@ function AgentCard({
         subjectType="AGENT"
         subjectId={agent.id}
         count={noteCount}
+        unread={noteUnread}
+        mentions={noteMentions}
         shortcutScopeRef={cardRef}
       />
     </div>
@@ -246,7 +252,7 @@ export function FleetView({
             : 'ready'
 
   // One request for every card's badge, rather than one request per card.
-  const noteCounts = useCommentCounts('AGENT')
+  const notes = useThreadBadges('AGENT')
 
   const running = agents?.filter((a) => a.status === 'RUNNING').length ?? 0
   const failed = agents?.filter((a) => a.status === 'FAILED').length ?? 0
@@ -309,7 +315,7 @@ export function FleetView({
         {state === 'ready' && (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {agents?.map((a, i) => (
-              <AgentCard key={a.id} agent={a} index={i} tick={tick} mode={mode} noteCount={noteCounts[a.id]} />
+              <AgentCard key={a.id} agent={a} index={i} tick={tick} mode={mode} noteCount={notes.total[a.id]} noteUnread={notes.unread[a.id]} noteMentions={notes.mentions[a.id]} />
             ))}
           </div>
         )}

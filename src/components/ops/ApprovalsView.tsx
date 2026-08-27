@@ -6,7 +6,7 @@ import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
 import { inr, relative, absolute } from '@/lib/ops/format'
 import { useEventListener, useRealtimeConnectionState } from '@/lib/realtime/client'
 import { EmptyState } from './Panel'
-import { ThreadToggle, useCommentCounts } from './Thread'
+import { ThreadToggle, useThreadBadges } from './Thread'
 import { CallButton } from './CallButton'
 import type { Approval, ApprovalsResponse, ApprovalRisk } from '@/types/approvals'
 
@@ -159,7 +159,7 @@ export function ApprovalsView() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
   const connection = useRealtimeConnectionState()
-  const noteCounts = useCommentCounts('APPROVAL')
+  const notes = useThreadBadges('APPROVAL')
 
   // Subscribe to the shared stream rather than opening another connection, so
   // a decision made by a colleague drops out of this queue immediately instead
@@ -327,7 +327,13 @@ export function ApprovalsView() {
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <ThreadToggle subjectType="APPROVAL" subjectId={a.id} count={noteCounts[a.id]} />
+              <ThreadToggle
+                subjectType="APPROVAL"
+                subjectId={a.id}
+                count={notes.total[a.id]}
+                unread={notes.unread[a.id]}
+                mentions={notes.mentions[a.id]}
+              />
               <span className="flex-1" />
               <CallButton subjectType="APPROVAL" subjectId={a.id} label="Talk it over" />
             </div>

@@ -18,6 +18,7 @@ model User {
   decisions  Approval[]
   comments   Comment[]
   notifications Notification[]
+  threadReads   ThreadRead[]
   calendarEvents CalendarEvent[] @relation("CalendarAuthor")
   calendarResponses CalendarAttendee[]
   createdAt  DateTime @default(now())
@@ -77,6 +78,7 @@ model Tenant {
   events    Event[]
   comments  Comment[]
   notifications Notification[]
+  threadReads   ThreadRead[]
   calendarEvents CalendarEvent[]
   createdAt DateTime       @default(now())
 }
@@ -362,6 +364,38 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, readAt, createdAt])
+}
+
+/// Per-user, per-thread read position.
+///
+/// One row per thread a user has actually opened — NOT one row per comment.
+/// A read receipt per message would be users x comments rows for a number
+/// nobody reads at that resolution; a watermark answers the only question the
+/// UI asks ("anything since I last looked?") in one row.
+///
+/// This is deliberately not folded into Notification. A Notification exists
+/// only when someone is mentioned, so it can never answer "is there new
+/// activity in a thread I am simply watching" — the common case.
+///
+/// A MISSING ROW MEANS UNREAD, not read. That is the honest reading: you have
+/// not opened it. The consequence is that every pre-existing thread lights up
+/// the first time this ships, which is correct rather than a bug to backfill
+/// away.
+model ThreadRead {
+  id          String      @id @default(cuid())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  subjectType SubjectType
+  subjectId   String
+  /// Everything authored at or before this instant has been seen.
+  lastReadAt  DateTime
+
+  /// Tenant is in the key so the same user id in two tenants cannot collide,
+  /// and so the upsert can be scoped without a second lookup.
+  @@unique([tenantId, userId, subjectType, subjectId])
+  @@index([tenantId, userId, subjectType])
 }
 
 enum SubjectType {

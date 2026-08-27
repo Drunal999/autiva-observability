@@ -6,6 +6,7 @@ import { getTenantContext, tenantScope } from '@/lib/ops/tenant'
 import { rateLimit, logWriteAttempt } from '@/lib/ops/rateLimit'
 import { publishEvent } from '@/lib/realtime/bus'
 import { extractMentions, MAX_COMMENT_LENGTH } from '@/lib/ops/safeMarkdown'
+import { markThreadRead } from '@/lib/ops/threadRead'
 
 const SUBJECTS = ['RUN', 'APPROVAL', 'AGENT', 'MODULE', 'TENANT'] as const
 type Subject = (typeof SUBJECTS)[number]
@@ -136,6 +137,19 @@ export async function POST(req: Request) {
     route: 'comments.create', userId, tenantId: ctx.tenantId,
     subjectId, outcome: 'allowed',
   })
+
+  // Replying to a thread means you read it. Without this the author's own
+  // comment would leave the thread looking unread to everyone including them,
+  // because the watermark still predates what they just wrote.
+  try {
+    await markThreadRead({
+      tenantId: ctx.tenantId, userId, subjectType, subjectId,
+      upTo: comment.createdAt,
+    })
+  } catch {
+    // The comment is committed. A stale watermark shows one extra badge; it is
+    // not worth failing the write the user actually asked for.
+  }
 
   try {
     await publishEvent({

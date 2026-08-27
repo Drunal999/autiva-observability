@@ -105,6 +105,35 @@ export function Thread({
   // Same shared stream, one more channel — never a second socket.
   useEventListener(() => void mutate(), ['COMMENTS'])
 
+  const { mutate: mutateGlobal } = useSWRConfig()
+  const markedUpTo = useRef<string | null>(null)
+
+  /**
+   * Mark read from the thread itself, not from the toggle that opened it.
+   *
+   * The watermark is the newest comment THIS COMPONENT RENDERED, so a comment
+   * that lands between the fetch and the write stays unread rather than being
+   * silently swallowed. Re-runs when new comments arrive while the thread is
+   * open, which is correct: you are looking at them.
+   */
+  useEffect(() => {
+    const live = (comments ?? []).filter((c) => !c.deletedAt)
+    if (live.length === 0) return
+    const newest = live[live.length - 1].createdAt
+    if (markedUpTo.current === newest) return
+    markedUpTo.current = newest
+
+    void fetch('/api/comments/read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subjectType, subjectId, upTo: newest }),
+    })
+      .then(() => mutateGlobal(`/api/comments/counts?subjectType=${subjectType}`))
+      // A failed mark-read leaves the badge up. That is the safe direction to
+      // fail in — it over-reports rather than losing something unseen.
+      .catch(() => {})
+  }, [comments, subjectType, subjectId, mutateGlobal])
+
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus()
   }, [autoFocus])
@@ -249,23 +278,38 @@ export function Thread({
  * Comment counts for every card on a screen, in one request rather than one
  * per card.
  */
-export function useCommentCounts(subjectType: SubjectType): Record<string, number> {
-  const { data } = useSWR<{ counts: Record<string, number> }>(
-    `/api/comments/counts?subjectType=${subjectType}`,
-    fetcher,
-    { refreshInterval: 30000 }
-  )
-  const counts = data?.counts ?? {}
+export interface ThreadBadges {
+  /** Every live comment on the thread. */
+  total: Record<string, number>
+  /** Comments newer than your read watermark, excluding your own. */
+  unread: Record<string, number>
+  /** Of those, how many name you. */
+  mentions: Record<string, number>
+}
+
+export function useThreadBadges(subjectType: SubjectType): ThreadBadges {
+  const key = `/api/comments/counts?subjectType=${subjectType}`
+  const { data } = useSWR<{
+    counts: Record<string, number>
+    unread?: Record<string, number>
+    mentions?: Record<string, number>
+  }>(key, fetcher, { refreshInterval: 30000 })
 
   // A new comment anywhere invalidates these, and the shared stream already
   // carries that — no extra poll.
   const { mutate } = useSWRConfig()
-  useEventListener(
-    () => void mutate(`/api/comments/counts?subjectType=${subjectType}`),
-    ['COMMENTS']
-  )
+  useEventListener(() => void mutate(key), ['COMMENTS'])
 
-  return counts
+  return {
+    total: data?.counts ?? {},
+    unread: data?.unread ?? {},
+    mentions: data?.mentions ?? {},
+  }
+}
+
+/** Totals only, for callers that do not show an unread state. */
+export function useCommentCounts(subjectType: SubjectType): Record<string, number> {
+  return useThreadBadges(subjectType).total
 }
 
 /**
@@ -279,16 +323,27 @@ export function ThreadToggle({
   subjectId,
   currentUserId,
   count,
+  unread = 0,
+  mentions = 0,
   shortcutScopeRef,
 }: {
   subjectType: SubjectType
   subjectId: string
   currentUserId?: string
   count?: number
+  /** Comments newer than this user's watermark, excluding their own. */
+  unread?: number
+  /** Of those, how many name this user. */
+  mentions?: number
   /** Element that must contain focus for `c` to apply to this thread. */
   shortcutScopeRef?: React.RefObject<HTMLElement>
 }) {
   const [open, setOpen] = useState(false)
+
+  // Once opened, the thread marks itself read and the badge would flicker back
+  // on until the counts refetch lands. Suppressing it locally on open keeps the
+  // transition in one direction.
+  const showUnread = !open && unread > 0
 
   useEffect(() => {
     if (!shortcutScopeRef) return
@@ -316,6 +371,33 @@ export function ThreadToggle({
       >
         <span aria-hidden="true">{open ? '▾' : '▸'}</span>
         {count && count > 0 ? `${count} note${count === 1 ? '' : 's'}` : 'Add a note'}
+
+        {/* Two states, not one. A mention is someone asking YOU for something
+            and gets a filled marker; plain new activity gets a dot. Both carry
+            text as well as colour — a badge that is only a colour says nothing
+            to a screen reader or to anyone who cannot separate these two. */}
+        {showUnread && mentions > 0 && (
+          <span
+            className="rounded-[4px] border border-cyan-400/45 bg-cyan-400/15 px-1 font-mono text-[9px] font-bold text-cyan-200"
+            title={`${unread} new, ${mentions} mentioning you`}
+          >
+            @{unread}
+          </span>
+        )}
+        {showUnread && mentions === 0 && (
+          <span className="flex items-center gap-1 text-cyan-300/85" title={`${unread} new`}>
+            <span aria-hidden="true" className="h-[5px] w-[5px] rounded-full bg-cyan-300/85" />
+            <span className="font-mono text-[9px]">{unread} new</span>
+          </span>
+        )}
+        {showUnread && (
+          <span className="sr-only">
+            {mentions > 0
+              ? `${unread} unread, ${mentions} mentioning you`
+              : `${unread} unread`}
+          </span>
+        )}
+
         {!open && <span className="text-white/20">c</span>}
       </button>
       {open && (
