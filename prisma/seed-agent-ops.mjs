@@ -228,6 +228,8 @@ function buildBuckets(scale = 1, seedOffset = 0) {
 
 async function main() {
   // Idempotent: clear the ops tables only. Task/User are untouched.
+  await db.calendarAttendee.deleteMany()
+  await db.calendarEvent.deleteMany()
   await db.approval.deleteMany()
   await db.metricBucket.deleteMany()
   await db.flowRun.deleteMany()
@@ -394,7 +396,27 @@ async function main() {
     })
   }
 
+  // A few human events so the future half of the timeline is not empty at a
+  // demo. Runs populate the past half on their own.
+  const dayAt = (offsetDays, hour, min = 0) => {
+    const d = new Date()
+    d.setDate(d.getDate() + offsetDays)
+    d.setHours(hour, min, 0, 0)
+    return d
+  }
+
+  await db.calendarEvent.createMany({
+    data: [
+      { tenantId: tenant.id, kind: 'HUMAN', title: 'Standup', startsAt: dayAt(0, 9, 30), endsAt: dayAt(0, 9, 45), rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', createdById: decider?.id ?? null },
+      { tenantId: tenant.id, kind: 'HUMAN', title: 'Client review — Rankworks', startsAt: dayAt(2, 15, 0), endsAt: dayAt(2, 16, 0), createdById: decider?.id ?? null },
+      { tenantId: tenant.id, kind: 'MILESTONE', title: 'Q3 automation targets due', startsAt: dayAt(5, 0, 0), endsAt: dayAt(5, 23, 59), allDay: true, createdById: decider?.id ?? null },
+      { tenantId: tenant.id, kind: 'SCHEDULED_RUN', title: 'Nightly migration check', startsAt: dayAt(1, 2, 0), endsAt: dayAt(1, 2, 30), rrule: 'FREQ=DAILY', moduleId: modules['seo-audit'].id },
+      { tenantId: tenant.id, kind: 'HUMAN', title: 'Retro — flake quarantine', startsAt: dayAt(-2, 16, 0), endsAt: dayAt(-2, 17, 0), createdById: decider?.id ?? null },
+    ],
+  })
+
   console.log('seeded:',
+    await db.calendarEvent.count(), 'calendar events ·',
     await db.approval.count(), 'approvals ·',
     await db.module.count(), 'modules ·',
     await db.metricBucket.count(), 'buckets ·',

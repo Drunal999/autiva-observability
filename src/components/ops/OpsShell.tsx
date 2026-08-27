@@ -52,6 +52,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
     '/': 'the task board',
     '/board': 'mission control',
     '/approvals': 'the approvals queue',
+    '/calendar': 'the calendar',
     '/fleet': 'the fleet',
     '/trace': 'a trace',
     '/terminal': 'a terminal',

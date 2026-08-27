@@ -11,6 +11,7 @@ export const config = {
     '/automations',
     '/states',
     '/motion',
+    '/calendar',
     '/api/tasks/:path*',
     '/api/user/:path*',
     '/api/events',
@@ -22,6 +23,7 @@ export const config = {
     '/api/comments/:path*',
     '/api/presence/:path*',
     '/api/calls/:path*',
+    '/api/calendar/:path*',
     '/api/notifications/:path*',
   ],
 }

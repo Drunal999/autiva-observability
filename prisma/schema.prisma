@@ -18,6 +18,8 @@ model User {
   decisions  Approval[]
   comments   Comment[]
   notifications Notification[]
+  calendarEvents CalendarEvent[] @relation("CalendarAuthor")
+  calendarResponses CalendarAttendee[]
   createdAt  DateTime @default(now())
 }
 
@@ -75,6 +77,7 @@ model Tenant {
   events    Event[]
   comments  Comment[]
   notifications Notification[]
+  calendarEvents CalendarEvent[]
   createdAt DateTime       @default(now())
 }
 
@@ -92,6 +95,7 @@ model Module {
   agents      Agent[]
   approvals   Approval[]
   buckets     MetricBucket[]
+  calendarEvents CalendarEvent[]
   createdAt   DateTime @default(now())
 
   @@unique([tenantId, key])
@@ -246,6 +250,62 @@ model FlowRun {
   at      DateTime   @default(now())
 
   @@index([flowId, at])
+}
+
+/// A planned thing on the timeline.
+///
+/// AGENT RUNS ARE NOT COPIED HERE. The past layer is read live from Run and
+/// merged at query time, so there is exactly one source of truth for what
+/// actually happened. A second copy would drift, and a calendar that disagrees
+/// with the trace is worse than no calendar.
+model CalendarEvent {
+  id          String             @id @default(cuid())
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  kind        CalendarEventKind  @default(HUMAN)
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime
+  allDay      Boolean            @default(false)
+  /// RFC 5545 RRULE string, or null for a one-off. Never a bespoke repeat
+  /// format — recurrence is a solved problem and rrule.js solves it.
+  rrule       String?
+  module      Module?            @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  moduleId    String?
+  createdBy   User?              @relation("CalendarAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+  attendees   CalendarAttendee[]
+  createdAt   DateTime           @default(now())
+
+  @@index([tenantId, startsAt])
+  @@index([tenantId, kind, startsAt])
+}
+
+model CalendarAttendee {
+  event    CalendarEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId  String
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  /// Attendees may only change their own row.
+  response AttendeeResponse   @default(PENDING)
+
+  @@id([eventId, userId])
+  @@index([userId])
+}
+
+enum CalendarEventKind {
+  HUMAN
+  SCHEDULED_RUN
+  DEADLINE
+  MILESTONE
+}
+
+enum AttendeeResponse {
+  YES
+  NO
+  MAYBE
+  PENDING
 }
 
 /// Conversation attached to the thing being discussed, rather than a general
