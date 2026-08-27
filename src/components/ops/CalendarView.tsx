@@ -6,6 +6,7 @@ import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
 import { describeRRule } from '@/lib/ops/recurrence'
 import { EmptyState } from './Panel'
 import { DensityStrip, CostRibbon } from './DensityStrip'
+import { QuickAdd } from './QuickAdd'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -63,7 +64,7 @@ export function CalendarView() {
   }, [offsetDays])
 
   const key = `/api/calendar?from=${from.toISOString()}&to=${to.toISOString()}`
-  const { data, isLoading } = useSWR<{ items: TimelineItem[] }>(key, fetcher, {
+  const { data, isLoading, mutate } = useSWR<{ items: TimelineItem[] }>(key, fetcher, {
     keepPreviousData: true,
   })
 
@@ -158,6 +159,8 @@ export function CalendarView() {
           times shown in your timezone
         </span>
       </div>
+
+      <QuickAdd onCreated={() => void mutate()} />
 
       {buckets.length > 0 && <DensityStrip buckets={buckets} />}
 

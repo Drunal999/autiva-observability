@@ -8,6 +8,7 @@ import { NAV, fmtClock } from '@/lib/ops/tokens'
 import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
 import { usePresence, PresenceBar } from './Presence'
+import { useEventListener } from '@/lib/realtime/client'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -61,6 +62,16 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
     '/motion': 'the motion spec',
   }
   const roster = usePresence(LOCATION[pathname] ?? 'the dashboard')
+
+  // Unread mentions. Refreshed on the shared COMMENTS channel rather than a
+  // dedicated poll — a mention should land quickly without another socket.
+  const { data: notifs, mutate: refreshNotifs } = useSWR<{ unread: { id: string }[] }>(
+    '/api/notifications',
+    fetcher,
+    { refreshInterval: 60000 }
+  )
+  useEventListener(() => void refreshNotifs(), ['COMMENTS'])
+  const unread = notifs?.unread?.length ?? 0
 
   const failing = agents?.filter((a) => a.status === 'FAILED').length ?? 0
 
@@ -155,6 +166,21 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           >
             {failing ? `${failing} AGENT FAILING` : 'FLEET HEALTHY'}
           </span>
+        )}
+        {unread > 0 && (
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch('/api/notifications', { method: 'POST' })
+              void refreshNotifs()
+            }}
+            title={`${unread} unread mention${unread === 1 ? '' : 's'} — click to clear`}
+            aria-label={`${unread} unread mentions, click to clear`}
+            className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-cyan-400/20 px-2 font-mono text-[10px] font-bold text-cyan-300 transition hover:bg-cyan-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+          >
+            <span aria-hidden="true">@</span>
+            {unread}
+          </button>
         )}
         <PresenceBar roster={roster} />
         <span className="hidden md:inline"><Clock /></span>
