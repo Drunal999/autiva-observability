@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { CalendarClient } from '@/components/CalendarClient'
 import type { Task } from '@/types/task'
 
 export function TaskDetailModal({
@@ -14,6 +15,9 @@ export function TaskDetailModal({
 }) {
   const [title, setTitle] = useState(task?.title ?? '')
   const [description, setDescription] = useState(task?.description ?? '')
+  const [dueDate, setDueDate] = useState<Date | undefined>(
+    task?.dueDate ? new Date(task.dueDate) : undefined
+  )
   const [error, setError] = useState<string | null>(null)
 
   async function handleSave() {
@@ -27,13 +31,13 @@ export function TaskDetailModal({
       await fetch(`/api/tasks/${task.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({ title, description, dueDate: dueDate?.toISOString() ?? null }),
       })
     } else {
       await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({ title, description, dueDate: dueDate?.toISOString() ?? null }),
       })
     }
     onSaved()
@@ -46,8 +50,8 @@ export function TaskDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="glass w-full max-w-md rounded-3xl p-6">
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+      <div className="glass max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-white/40" htmlFor="task-title">
           Title
         </label>
@@ -69,6 +73,17 @@ export function TaskDetailModal({
           onChange={(e) => setDescription(e.target.value)}
           className="mb-4 w-full rounded-xl border border-white/10 bg-white/5 p-2.5 text-white/90 outline-none transition focus:border-cyan-400/50"
         />
+        <label className="mb-1 block text-xs font-bold uppercase tracking-widest text-white/40">
+          Due date
+        </label>
+        <div className="mb-4 flex justify-center rounded-xl border border-white/10 bg-white/5">
+          <CalendarClient
+            mode="single"
+            selected={dueDate}
+            onSelect={setDueDate}
+            className="bg-transparent"
+          />
+        </div>
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
         <div className="flex justify-between">
           <div>

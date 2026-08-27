@@ -2,9 +2,16 @@
 
 import { useState } from 'react'
 import useSWR, { type KeyedMutator } from 'swr'
-import { DndContext, type DragEndEvent, useDraggable, useDroppable } from '@dnd-kit/core'
 import { TaskCard } from './TaskCard'
 import { CompletionAnimation } from './CompletionAnimation'
+import {
+  Kanban,
+  KanbanBoard as KanbanRoot,
+  KanbanColumn,
+  KanbanColumnContent,
+  KanbanItem,
+  KanbanOverlay,
+} from '@/components/reui/kanban'
 import { useBoardEvents } from '@/lib/realtime/client'
 import { playSound } from '@/lib/sounds'
 import type { Task, TaskStatus } from '@/types/task'
@@ -38,27 +45,12 @@ export async function moveTaskStatus(
   return { ok: true as const }
 }
 
-function DraggableTaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: task.id })
-  const style = transform
-    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
-    : undefined
+function BoardColumn({ status, label, tasks }: { status: TaskStatus; label: string; tasks: Task[] }) {
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <TaskCard task={task} onClick={onClick} />
-    </div>
-  )
-}
-
-function DroppableColumn({ status, label, tasks }: { status: TaskStatus; label: string; tasks: Task[] }) {
-  const { setNodeRef, isOver } = useDroppable({ id: status })
-  return (
-    <div
-      ref={setNodeRef}
+    <KanbanColumn
+      value={status}
       data-testid={`column-${status}`}
-      className={`glass min-h-[200px] rounded-3xl p-5 transition duration-300 ease-fluid ${
-        isOver ? 'border-cyan-400/40' : ''
-      }`}
+      className="glass min-h-[200px] rounded-3xl p-5 transition duration-300 ease-fluid"
     >
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xs font-bold uppercase tracking-widest text-white/40">{label}</h2>
@@ -66,12 +58,14 @@ function DroppableColumn({ status, label, tasks }: { status: TaskStatus; label: 
           {tasks.length}
         </span>
       </div>
-      <div className="space-y-3">
+      <KanbanColumnContent value={status} className="space-y-3">
         {tasks.map((task) => (
-          <DraggableTaskCard key={task.id} task={task} onClick={() => {}} />
+          <KanbanItem key={task.id} value={task.id}>
+            <TaskCard task={task} onClick={() => {}} />
+          </KanbanItem>
         ))}
-      </div>
-    </div>
+      </KanbanColumnContent>
+    </KanbanColumn>
   )
 }
 
@@ -94,35 +88,53 @@ export function KanbanBoard({ muteSounds = false }: { muteSounds?: boolean }) {
     },
   })
 
-  async function handleDragEnd(event: DragEndEvent) {
-    const taskId = String(event.active.id)
-    const newStatus = event.over?.id as TaskStatus | undefined
-    if (!newStatus || !tasks) return
+  // Kanban owns a Record<status, Task[]>; the board's source of truth stays the
+  // flat SWR list, so group on the way in and diff on the way out.
+  const grouped = COLUMNS.reduce<Record<string, Task[]>>((acc, col) => {
+    acc[col.status] = (tasks ?? []).filter((t) => t.status === col.status)
+    return acc
+  }, {})
 
-    const previous = tasks
-    const result = await moveTaskStatus(taskId, newStatus, tasks, mutate)
+  async function handleValueChange(next: Record<string, Task[]>) {
+    if (!tasks) return
+
+    // The moved card is the one now sitting under a key that disagrees with its
+    // own status field.
+    let movedId: string | undefined
+    let newStatus: TaskStatus | undefined
+    for (const status of Object.keys(next) as TaskStatus[]) {
+      for (const task of next[status]) {
+        if (task.status !== status) {
+          movedId = task.id
+          newStatus = status
+        }
+      }
+    }
+    if (!movedId || !newStatus) return
+
+    const result = await moveTaskStatus(movedId, newStatus, tasks, mutate)
     if (result.ok && newStatus === 'DONE') {
-      setCelebrating(taskId)
+      setCelebrating(movedId)
       playSound('success', muteSounds)
     }
-    void previous
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+    <Kanban value={grouped} onValueChange={handleValueChange} getItemValue={(task) => task.id}>
+      <KanbanRoot className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {COLUMNS.map((col) => (
-          <DroppableColumn
+          <BoardColumn
             key={col.status}
             status={col.status}
             label={col.label}
-            tasks={(tasks ?? []).filter((t) => t.status === col.status)}
+            tasks={grouped[col.status]}
           />
         ))}
-      </div>
+      </KanbanRoot>
+      <KanbanOverlay />
       {celebrating && (
         <CompletionAnimation taskId={celebrating} onComplete={() => setCelebrating(null)} />
       )}
-    </DndContext>
+    </Kanban>
   )
 }
