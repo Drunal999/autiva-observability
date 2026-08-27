@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
 import { inr, relative, absolute } from '@/lib/ops/format'
+import { useEventListener, useRealtimeConnectionState } from '@/lib/realtime/client'
 import type { Approval, ApprovalsResponse, ApprovalRisk } from '@/types/approvals'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -154,6 +155,12 @@ export function ApprovalsView() {
   })
   const [busyId, setBusyId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null)
+  const connection = useRealtimeConnectionState()
+
+  // Subscribe to the shared stream rather than opening another connection, so
+  // a decision made by a colleague drops out of this queue immediately instead
+  // of lingering until the next poll and inviting a duplicate decision.
+  useEventListener(() => void mutate(), ['APPROVALS'])
 
   useEffect(() => {
     if (!toast) return
@@ -202,6 +209,25 @@ export function ApprovalsView() {
         </h1>
         <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
           {pending.length} WAITING · A DECISION IS RECORDED ONCE AND CANNOT BE EDITED
+        </span>
+        <span className="flex-1" />
+        {/* A stale queue that looks live is how the same action gets approved
+            twice, so the connection state is stated rather than implied. */}
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/40">
+          <span
+            className={`h-[5px] w-[5px] rounded-full ${
+              connection === 'connected'
+                ? 'bg-emerald-400'
+                : connection === 'offline'
+                  ? 'bg-red-400'
+                  : 'bg-amber-400 animate-pulse'
+            }`}
+          />
+          {connection === 'connected'
+            ? 'LIVE'
+            : connection === 'offline'
+              ? 'OFFLINE — LIST MAY BE STALE'
+              : 'RECONNECTING'}
         </span>
       </div>
 

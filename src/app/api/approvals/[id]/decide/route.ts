@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { getTenantContext } from '@/lib/ops/tenant'
 import { rateLimit, logWriteAttempt } from '@/lib/ops/rateLimit'
+import { publishEvent } from '@/lib/realtime/bus'
 
 /**
  * Decide an approval. This is the one route where a mistake costs money, so
@@ -121,6 +122,22 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     route: 'approvals.decide', userId, tenantId: ctx.tenantId,
     subjectId: params.id, outcome: 'allowed', detail: decision,
   })
+
+  // Announce on the shared stream so every open dashboard drops the row from
+  // its queue without polling. Failure here must not undo a decision that is
+  // already committed — the decision is the source of truth, the event is a
+  // notification about it.
+  try {
+    await publishEvent({
+      tenantId: ctx.tenantId,
+      channel: 'APPROVALS',
+      type: decision === 'APPROVED' ? 'approval.approved' : 'approval.rejected',
+      payload: { id: params.id, decidedBy: userId },
+    })
+  } catch {
+    // Swallowed deliberately: the write succeeded, and clients still refresh
+    // on their poll interval.
+  }
 
   const updated = await prisma.approval.findUnique({
     where: { id: params.id },

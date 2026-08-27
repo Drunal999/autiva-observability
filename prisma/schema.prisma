@@ -70,6 +70,7 @@ model Tenant {
   flows     Flow[]
   buckets   MetricBucket[]
   approvals Approval[]
+  events    Event[]
   createdAt DateTime       @default(now())
 }
 
@@ -240,6 +241,39 @@ model FlowRun {
   at      DateTime   @default(now())
 
   @@index([flowId, at])
+}
+
+/// The realtime event log. One stream feeds both this dashboard and the
+/// animated city UI — they subscribe to the same channels rather than each
+/// opening their own socket stack.
+///
+/// Persisted rather than fire-and-forget so a client that connects late, or
+/// reconnects after a drop, can replay what it missed instead of showing a
+/// silently incomplete picture.
+model Event {
+  id       String       @id @default(cuid())
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  channel  EventChannel
+  /// Dotted event name within the channel, e.g. "task.created".
+  type     String
+  /// Untrusted: may have originated from a customer email or a scraped page.
+  /// Never rendered as HTML.
+  payload  Json
+  at       DateTime     @default(now())
+
+  @@index([tenantId, at])
+  @@index([tenantId, channel, at])
+}
+
+/// Channels a subscriber can filter on. A new realtime feature adds a channel
+/// here — it does not open a second connection.
+enum EventChannel {
+  BOARD
+  FLEET
+  RUNS
+  APPROVALS
+  SYSTEM
 }
 
 /// A risky action an agent has paused on, waiting for a human.
