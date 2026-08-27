@@ -39,3 +39,7 @@ next-env.d.ts
 # superpowers task planning
 .superpowers/
 .env*
+
+# local config backups from the Tailwind v3/v4 reconciliation
+*.bak
+.env.bak-*
