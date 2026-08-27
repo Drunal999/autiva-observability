@@ -15,3 +15,5 @@ If you are about to change one of these, read the "when to revisit" line first
 | [004](004-embedded-jitsi.md) | Embed Jitsi rather than build WebRTC signalling | Accepted |
 | [005](005-calendar-library-and-ics-only.md) | rrule.js for recurrence; ICS export only in v1 | Accepted |
 | [006](006-internal-and-client-modes.md) | One component, two modes | Accepted |
+| [007](007-read-state-as-a-watermark.md) | Thread read-state is a watermark, not a receipt | Accepted |
+| [008](008-continuous-timeline-zoom.md) | One continuous timeline scale, not four views | Accepted |
