@@ -1,6 +1,6 @@
 'use client'
 
-import { ACCENT, T, MONO } from '@/lib/ops/tokens'
+import { ACCENT, T, MONO, ERR, WARN } from '@/lib/ops/tokens'
 
 /** Shared chart frame: title, sub-caption, and an axis-labelled plot area. */
 export function ChartPanel({
@@ -71,10 +71,21 @@ export function RunBars({ runs, fails }: { runs: number[]; fails: number[] }) {
  * operator acts on — and each line is direct-labelled at its end rather than
  * pushed into a legend.
  */
-export function LatencyLines({ p50, p95, p99 }: { p50: number[]; p95: number[]; p99: number[] }) {
+export function LatencyLines({
+  p50,
+  p95,
+  p99,
+  targetMs,
+}: {
+  p50: number[]
+  p95: number[]
+  p99: number[]
+  /** This engine's own budget. Omitted for the fleet rollup, which has none. */
+  targetMs?: number | null
+}) {
   const W = 320
   const H = 120
-  const all = [...p50, ...p95, ...p99]
+  const all = [...p50, ...p95, ...p99, ...(targetMs ? [targetMs] : [])]
   const max = Math.max(...all)
   const min = Math.min(...all)
   const span = max - min || 1
@@ -83,10 +94,16 @@ export function LatencyLines({ p50, p95, p99 }: { p50: number[]; p95: number[]; 
   const path = (arr: number[]) =>
     arr.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i, arr.length).toFixed(1)},${y(v).toFixed(1)}`).join(' ')
 
+  // p99 is judged against this engine's target, not a global threshold. Over
+  // budget turns the emphasised series red; there is no in-between colour,
+  // because "slightly over" is still over.
+  const overBudget = targetMs != null && p99[p99.length - 1] > targetMs
+  const p99Stroke = overBudget ? ERR : ACCENT
+
   const series = [
     { key: 'p50', arr: p50, stroke: T(0.28), width: 1 },
     { key: 'p95', arr: p95, stroke: T(0.45), width: 1 },
-    { key: 'p99', arr: p99, stroke: ACCENT, width: 1.75 },
+    { key: 'p99', arr: p99, stroke: p99Stroke, width: 1.75 },
   ]
 
   return (
@@ -94,6 +111,30 @@ export function LatencyLines({ p50, p95, p99 }: { p50: number[]; p95: number[]; 
       {[0.25, 0.5, 0.75].map((f) => (
         <line key={f} x1="0" x2={W - 30} y1={H * f} y2={H * f} stroke={T(0.05)} strokeWidth="1" />
       ))}
+
+      {targetMs != null && (
+        <>
+          {/* Everything above the budget line is time someone spent waiting. */}
+          <rect
+            x="0"
+            y="0"
+            width={W - 30}
+            height={Math.max(y(targetMs), 0)}
+            fill={overBudget ? 'rgba(248,113,113,0.07)' : 'rgba(255,255,255,0.03)'}
+          />
+          <line
+            x1="0"
+            x2={W - 30}
+            y1={y(targetMs)}
+            y2={y(targetMs)}
+            stroke={overBudget ? ERR : WARN}
+            strokeWidth="1"
+            strokeDasharray="3 3"
+            opacity="0.7"
+          />
+        </>
+      )}
+
       {series.map((s) => (
         <g key={s.key}>
           <path d={path(s.arr)} fill="none" stroke={s.stroke} strokeWidth={s.width} strokeLinejoin="round" />

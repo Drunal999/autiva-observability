@@ -202,7 +202,7 @@ const minsAgo = (m) => new Date(Date.now() - m * 60_000)
  * seeded walk rather than random, so re-running the seed reproduces the same
  * series and the charts do not jump between runs.
  */
-function buildBuckets() {
+function buildBuckets(scale = 1, seedOffset = 0) {
   const hourStart = new Date()
   hourStart.setMinutes(0, 0, 0)
 
@@ -210,11 +210,11 @@ function buildBuckets() {
   for (let i = 23; i >= 0; i--) {
     const at = new Date(hourStart.getTime() - i * 3_600_000)
     // Deterministic pseudo-noise from the hour index.
-    const n = (k) => (Math.sin((24 - i) * k) + 1) / 2
+    const n = (k) => (Math.sin((24 - i + seedOffset) * k) + 1) / 2
 
     const runs = Math.round(12 + n(1.7) * 26)
     const failed = Math.round(n(2.9) * 3)
-    const p50 = Math.round(390 + n(1.1) * 260)
+    const p50 = Math.round((390 + n(1.1) * 260) * scale)
     const p95 = Math.round(p50 * 2.9 + n(0.7) * 320)
     const p99 = Math.round(p95 * 1.9 + n(2.3) * 480)
     const tokens = Math.round(runs * (5200 + n(3.1) * 3400))
@@ -339,7 +339,31 @@ async function main() {
     }
   }
 
-  await db.metricBucket.createMany({ data: buildBuckets().map((b) => ({ ...b, tenantId: tenant.id })) })
+  // Fleet-wide rollup (moduleId null), then one series per engine. Each
+  // engine's latency is scaled around its own target, so a chart judged
+  // against one global threshold would be meaningless — which is the point.
+  await db.metricBucket.createMany({
+    data: buildBuckets().map((b) => ({ ...b, tenantId: tenant.id, moduleId: null })),
+  })
+
+  const ENGINE_SCALE = {
+    'inbox-triage': 0.55,
+    'review-replies': 0.8,
+    'lead-followup': 0.95,
+    'invoice-chase': 1.35,
+    'seo-audit': 4.2,
+    'weekly-digest': 7.5,
+  }
+
+  let offset = 0
+  for (const [key, scale] of Object.entries(ENGINE_SCALE)) {
+    offset += 3
+    await db.metricBucket.createMany({
+      data: buildBuckets(scale, offset).map((b) => ({
+        ...b, tenantId: tenant.id, moduleId: modules[key].id,
+      })),
+    })
+  }
 
   const decider = await db.user.findFirst({ where: { githubId: 'e2e-test-user' } })
 

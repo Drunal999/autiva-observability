@@ -21,6 +21,8 @@ const leakyAgent = (over: Record<string, unknown> = {}) => ({
   ...over,
 })
 
+const ENGINE = { key: 'inbox-triage', displayName: 'Inbox Triage', targetMs: 2500 }
+
 const bucket = {
   id: 'b1', at: new Date().toISOString(), runs: 10, failed: 1,
   p50Ms: 400, p95Ms: 1200, p99Ms: 2400, tokens: 50000, costInr: 105.6, successRate: 90,
@@ -29,7 +31,7 @@ const bucket = {
 function mockFleet(mode: string, agents: unknown[]) {
   ;(useSWR as unknown as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
     if (key === '/api/agents') return { data: { mode, agents }, error: undefined, isLoading: false }
-    if (key === '/api/metrics') return { data: [bucket], error: undefined, isLoading: false }
+    if (key === '/api/metrics') return { data: { engines: [ENGINE], engine: ENGINE, buckets: [bucket] }, error: undefined, isLoading: false }
     return { data: undefined, error: undefined, isLoading: false }
   })
 }
@@ -88,7 +90,7 @@ describe('FleetView — client mode never leaks internals', () => {
       if (key === '/api/agents') {
         return { data: { agents: [leakyAgent()] }, error: undefined, isLoading: false }
       }
-      if (key === '/api/metrics') return { data: [bucket], error: undefined, isLoading: false }
+      if (key === '/api/metrics') return { data: { engines: [ENGINE], engine: ENGINE, buckets: [bucket] }, error: undefined, isLoading: false }
       return { data: undefined, error: undefined, isLoading: false }
     })
     render(<FleetView />)

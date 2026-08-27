@@ -87,6 +87,7 @@ model Module {
   targetMs    Int      @default(2000)
   agents      Agent[]
   approvals   Approval[]
+  buckets     MetricBucket[]
   createdAt   DateTime @default(now())
 
   @@unique([tenantId, key])
@@ -334,6 +335,11 @@ model MetricBucket {
   id          String   @id @default(cuid())
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   tenantId    String
+  /// Null means the fleet-wide rollup. A moduleId scopes the bucket to one
+  /// engine, so latency can be judged against that engine own target rather
+  /// than one global threshold.
+  module      Module?  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  moduleId    String?
   /// Start of the hour this bucket covers.
   at          DateTime
   runs        Int      @default(0)
@@ -345,8 +351,9 @@ model MetricBucket {
   costInr     Float    @default(0)
   successRate Float    @default(100)
 
-  @@unique([tenantId, at])
+  @@unique([tenantId, moduleId, at])
   @@index([tenantId, at])
+  @@index([tenantId, moduleId, at])
 }
 
 /// Agent-level state. IDLE is not a run status — it means the agent has no

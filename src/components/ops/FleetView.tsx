@@ -10,6 +10,18 @@ import type { Agent, ViewMode, FleetResponse } from '@/types/agentOps'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+interface Engine {
+  key: string
+  displayName: string
+  targetMs: number
+}
+
+interface MetricsResponse {
+  engines: Engine[]
+  engine: Engine | null
+  buckets: MetricBucket[]
+}
+
 interface MetricBucket {
   id: string
   at: string
@@ -21,6 +33,11 @@ interface MetricBucket {
   tokens: number
   costInr: number
   successRate: number
+}
+
+/** Budgets read better as 2.5s than 2500ms once past a second. */
+function fmtBudget(ms: number): string {
+  return ms >= 1000 ? `${(ms / 1000).toFixed(ms % 1000 === 0 ? 0 : 1)}s` : `${ms}ms`
 }
 
 function fmtM(n: number): string {
@@ -185,9 +202,16 @@ export function FleetView({
   const mode: ViewMode = modeOverride ?? data?.mode ?? 'client'
   // Telemetry loads independently of the fleet strip — one slow query must
   // never freeze the whole surface.
-  const { data: buckets } = useSWR<MetricBucket[]>('/api/metrics', fetcher, {
-    refreshInterval: 60000,
-  })
+  // Latency is judged per engine, so the selected engine is part of the key.
+  const [engineKey, setEngineKey] = useState<string | null>(null)
+  const { data: metrics } = useSWR<MetricsResponse>(
+    engineKey ? `/api/metrics?engine=${engineKey}` : '/api/metrics',
+    fetcher,
+    { refreshInterval: 60000, keepPreviousData: true }
+  )
+  const buckets = metrics?.buckets
+  const engines = metrics?.engines ?? []
+  const engine = metrics?.engine ?? null
 
   // 1Hz tick so running agents' elapsed timers advance without refetching.
   const [tick, setTick] = useState(0)
@@ -278,6 +302,40 @@ export function FleetView({
           <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
             LAST 24H · 1H BUCKETS
           </span>
+          <span className="flex-1" />
+          {/* Latency is only meaningful against an engine's own budget, so the
+              chart is filtered by engine rather than averaged across all of
+              them. Each chip carries its target, since that is the number the
+              series is being judged against. */}
+          <div className="flex flex-wrap items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setEngineKey(null)}
+              className={`h-6 rounded-[7px] px-2 font-mono text-[10px] transition ${
+                engineKey === null
+                  ? 'bg-white/10 text-white'
+                  : 'text-white/40 hover:text-white/70'
+              }`}
+            >
+              ALL
+            </button>
+            {engines.map((e) => (
+              <button
+                key={e.key}
+                type="button"
+                onClick={() => setEngineKey(e.key)}
+                title={`Target ${e.targetMs}ms`}
+                className={`flex h-6 items-center gap-1.5 rounded-[7px] px-2 font-mono text-[10px] transition ${
+                  engineKey === e.key
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/40 hover:text-white/70'
+                }`}
+              >
+                {e.displayName}
+                <span className="text-white/25">{fmtBudget(e.targetMs)}</span>
+              </button>
+            ))}
+          </div>
         </div>
         {!buckets ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -300,8 +358,17 @@ export function FleetView({
               <RunBars runs={buckets.map((b) => b.runs)} fails={buckets.map((b) => b.failed)} />
             </ChartPanel>
             <ChartPanel
-              title="Latency"
-              caption={`P99 ${buckets[buckets.length - 1].p99Ms}ms · P50 ${buckets[buckets.length - 1].p50Ms}ms`}
+              title={engine ? `Latency · ${engine.displayName}` : 'Latency · all engines'}
+              caption={
+                engine
+                  ? `P99 ${fmtBudget(buckets[buckets.length - 1].p99Ms)} · TARGET ${fmtBudget(engine.targetMs)} · ${
+                      buckets[buckets.length - 1].p99Ms > engine.targetMs
+                        ? 'OVER BUDGET'
+                        : 'WITHIN BUDGET'
+                    }`
+                  : // No single target applies across engines, so none is implied.
+                    `P99 ${fmtBudget(buckets[buckets.length - 1].p99Ms)} · NO SINGLE TARGET ACROSS ENGINES`
+              }
               leftLabel="-24H"
               rightLabel="NOW"
             >
@@ -309,6 +376,7 @@ export function FleetView({
                 p50={buckets.map((b) => b.p50Ms)}
                 p95={buckets.map((b) => b.p95Ms)}
                 p99={buckets.map((b) => b.p99Ms)}
+                targetMs={engine?.targetMs ?? null}
               />
             </ChartPanel>
             <ChartPanel
