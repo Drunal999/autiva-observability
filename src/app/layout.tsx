@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, JetBrains_Mono, Inter } from 'next/font/google'
 import './globals.css'
 import { SessionProviderWrapper } from '@/components/SessionProviderWrapper'
+import { AmbientBackground } from '@/components/AmbientBackground'
+import { cn } from "@/lib/utils";
+
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -21,8 +25,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={cn(jakarta.variable, jetbrainsMono.variable, "font-sans", inter.variable)}>
       <body>
+        <AmbientBackground />
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>
     </html>
