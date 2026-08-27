@@ -20,6 +20,9 @@ interface TimelineItem {
   status?: string
   moduleName?: string | null
   recurring?: boolean
+  /** Scheduled runs cannot be edited here — see the API for why. */
+  readOnly?: boolean
+  readOnlyReason?: string
   href?: string
 }
 
@@ -237,6 +240,13 @@ export function CalendarView() {
                           {item.title}
                         </span>
                         <span className="font-mono text-[9px] text-white/28">
+                          {/* Visible before someone tries to edit, not only
+                              after the attempt fails. */}
+                          {item.readOnly && (
+                            <span title={item.readOnlyReason} aria-label="read only">
+                              🔒{' '}
+                            </span>
+                          )}
                           {item.allDay ? 'all day' : time}
                           {item.recurring && ' · repeats'}
                           {item.moduleName && ` · ${item.moduleName}`}

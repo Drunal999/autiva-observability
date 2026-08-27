@@ -31,6 +31,9 @@ export interface TimelineItem {
   moduleName?: string | null
   /** True for an expanded RRULE occurrence rather than a stored row. */
   recurring?: boolean
+  /** Scheduled runs and live rows are not editable from the calendar. */
+  readOnly?: boolean
+  readOnlyReason?: string
   href?: string
 }
 
@@ -79,6 +82,13 @@ export async function GET(req: Request) {
   for (const e of events) {
     const durationMs = e.endsAt.getTime() - e.startsAt.getTime()
     const layer = e.kind === 'SCHEDULED_RUN' ? 'scheduled' : e.kind === 'DEADLINE' ? 'deadline' : 'human'
+    // Scheduled runs are shown but not editable: the calendar must not become
+    // a second copy of the automation schedule, and Flow has nothing to write
+    // through to yet.
+    const readOnly = e.kind === 'SCHEDULED_RUN'
+    const readOnlyReason = readOnly
+      ? 'Managed in Automations — editing here would not change when it runs'
+      : undefined
 
     if (!e.rrule) {
       if (e.startsAt >= from && e.startsAt <= to) {
@@ -86,6 +96,7 @@ export async function GET(req: Request) {
           id: e.id, layer, title: e.title,
           startsAt: e.startsAt.toISOString(), endsAt: e.endsAt.toISOString(),
           allDay: e.allDay, moduleName: e.module?.displayName ?? null,
+          readOnly, readOnlyReason,
         })
       }
       continue
@@ -102,6 +113,7 @@ export async function GET(req: Request) {
         allDay: e.allDay,
         moduleName: e.module?.displayName ?? null,
         recurring: true,
+        readOnly, readOnlyReason,
       })
     }
   }
