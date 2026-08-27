@@ -44,3 +44,293 @@ enum Priority {
   MED
   HIGH
 }
+
+// ─────────────────────────────────────────────────────────────
+// Agent operations — the Autiva Mission Control surfaces.
+// Fleet reads Agent, Trace reads Run + Span, Terminal reads
+// LogLine + WorkspaceFile, Automations reads Flow + FlowNode.
+//
+// TENANCY: this deployment runs on Neon, which has no RLS. Every
+// tenant-scoped table therefore carries `tenantId`, and the boundary
+// is enforced in server routes via lib/ops/tenant.ts — never in the
+// browser. See ADR-002. A query that forgets tenantId is a security
+// bug, not a missing filter.
+// ─────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  name      String
+  /// Internal tenant = our own dev fleet. Client tenants get client mode.
+  isInternal Boolean       @default(false)
+  modules   Module[]
+  agents    Agent[]
+  runs      Run[]
+  flows     Flow[]
+  buckets   MetricBucket[]
+  createdAt DateTime       @default(now())
+}
+
+/// A customer-facing capability ("SEO Audit", "Lead Follow-up"). Client mode
+/// shows `displayName` in place of agent codenames and file paths.
+model Module {
+  id          String   @id @default(cuid())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  key         String
+  displayName String
+  /// Per-engine latency target — Part 4 colours latency against this, not one
+  /// global threshold.
+  targetMs    Int      @default(2000)
+  agents      Agent[]
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+model Agent {
+  id          String      @id @default(cuid())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  module      Module?     @relation(fields: [moduleId], references: [id])
+  moduleId    String?
+  name        String
+  model       String
+  status      AgentStatus @default(IDLE)
+  currentStep String?
+  startedAt   DateTime?
+  tokensIn    Int         @default(0)
+  tokensOut   Int         @default(0)
+  costInr     Float       @default(0)
+  // Recent per-step durations in ms, oldest first — drives the card sparkline.
+  stepMs      Int[]       @default([])
+  runs        Run[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId, status])
+}
+
+model Run {
+  id        String          @id @default(cuid())
+  ref       String          @unique
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId  String
+  agent     Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId   String
+  trigger   RunTrigger      @default(MANUAL)
+  status    RunStatus       @default(RUNNING)
+  summary   String?
+  exitCode  Int?
+  tokens    Int             @default(0)
+  costInr   Float           @default(0)
+  startedAt DateTime        @default(now())
+  endedAt   DateTime?
+  spans     Span[]
+  logLines  LogLine[]
+  files     WorkspaceFile[]
+
+  @@index([agentId, startedAt])
+  @@index([tenantId, startedAt])
+}
+
+model Span {
+  id       String     @id @default(cuid())
+  run      Run        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  runId    String
+  parentId String?
+  type     SpanType
+  name     String
+  // Offsets from the run's start, so the waterfall shares one time axis.
+  startMs  Int
+  durMs    Int
+  status   SpanStatus @default(OK)
+  model    String?
+  tokens   Int?
+  error    String?
+  critical Boolean    @default(false)
+
+  @@index([runId, startMs])
+}
+
+model LogLine {
+  id     String    @id @default(cuid())
+  run    Run       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  runId  String
+  ts     DateTime  @default(now())
+  stream LogStream @default(STDOUT)
+  level  LogLevel  @default(INFO)
+  text   String
+  // Structured blocks interleave with raw output: a tool call carries its
+  // args, a diff its hunk, a stack trace its frames. TEXT lines use none.
+  kind   LogKind   @default(TEXT)
+  args   String?
+  meta   String?
+  lines  String[]  @default([])
+
+  @@index([runId, ts])
+}
+
+model WorkspaceFile {
+  id      String     @id @default(cuid())
+  run     Run        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  runId   String
+  path    String
+  status  FileStatus @default(READING)
+  added   Int        @default(0)
+  removed Int        @default(0)
+  // Unified-diff hunk for the workspace diff pane, one entry per line
+  // prefixed with its sign — " ", "-" or "+".
+  diff    String[]   @default([])
+
+  @@index([runId])
+}
+
+model Flow {
+  id         String     @id @default(cuid())
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  name       String
+  trigger    RunTrigger @default(CRON)
+  enabled    Boolean    @default(true)
+  runsToday  Int        @default(0)
+  p95Ms      Int        @default(0)
+  failures1h Int        @default(0)
+  nodes      FlowNode[]
+  runsLog    FlowRun[]
+  createdAt  DateTime   @default(now())
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model FlowNode {
+  id       String   @id @default(cuid())
+  flow     Flow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  flowId   String
+  kind     NodeKind
+  title    String
+  meta     String?
+  // Canvas coordinates in CSS px, straight from the design's DAG layout.
+  x        Int
+  y        Int
+  runs     Int      @default(0)
+  p95Ms    Int      @default(0)
+  failures Int      @default(0)
+  // Outgoing edges, stored as the ids of downstream nodes.
+  edgesTo  String[] @default([])
+
+  @@index([flowId])
+}
+
+model FlowRun {
+  id      String     @id @default(cuid())
+  ref     String     @unique
+  flow    Flow       @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  flowId  String
+  status  SpanStatus @default(OK)
+  summary String
+  durMs   Int        @default(0)
+  at      DateTime   @default(now())
+
+  @@index([flowId, at])
+}
+
+/// One hourly rollup of fleet-wide activity. Fleet's four telemetry charts
+/// read these directly — per-agent step durations cannot be aggregated into a
+/// time series after the fact, so the bucket is written as runs complete.
+model MetricBucket {
+  id          String   @id @default(cuid())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  /// Start of the hour this bucket covers.
+  at          DateTime
+  runs        Int      @default(0)
+  failed      Int      @default(0)
+  p50Ms       Int      @default(0)
+  p95Ms       Int      @default(0)
+  p99Ms       Int      @default(0)
+  tokens      Int      @default(0)
+  costInr     Float    @default(0)
+  successRate Float    @default(100)
+
+  @@unique([tenantId, at])
+  @@index([tenantId, at])
+}
+
+/// Agent-level state. IDLE is not a run status — it means the agent has no
+/// active run at all — so it lives here and never on Run.
+enum AgentStatus {
+  IDLE
+  RUNNING
+  SUCCESS
+  FAILED
+  AWAITING_APPROVAL
+}
+
+/// The four backend run states, and the single source of truth for status.
+/// Display labels ("Done", "Blocked") are derived from these by statusLabel()
+/// and are never hardcoded anywhere else.
+enum RunStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  AWAITING_APPROVAL
+}
+
+enum RunTrigger {
+  MANUAL
+  CRON
+  WEBHOOK
+  AGENT
+}
+
+enum SpanType {
+  LLM
+  TOOL
+  SHELL
+  FILE
+  SUBAGENT
+}
+
+enum SpanStatus {
+  OK
+  RUNNING
+  ERROR
+  WARN
+}
+
+enum LogStream {
+  STDOUT
+  STDERR
+  SYSTEM
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
+
+enum LogKind {
+  TEXT
+  TOOL
+  DIFF
+  STACK
+}
+
+enum FileStatus {
+  READING
+  WRITING
+  MODIFIED
+  COMMITTED
+}
+
+enum NodeKind {
+  TRIGGER
+  CONDITION
+  ACTION
+}
