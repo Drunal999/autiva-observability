@@ -2,50 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
-import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
+import { T } from '@/lib/ops/tokens'
+import { Timeline, LAYERS, runTone, type TimelineItem } from './Timeline'
 import { describeRRule } from '@/lib/ops/recurrence'
 import { EmptyState } from './Panel'
 import { DensityStrip, CostRibbon } from './DensityStrip'
 import { QuickAdd } from './QuickAdd'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-interface TimelineItem {
-  id: string
-  layer: 'human' | 'scheduled' | 'run' | 'deadline'
-  title: string
-  startsAt: string
-  endsAt: string
-  allDay?: boolean
-  status?: string
-  moduleName?: string | null
-  recurring?: boolean
-  /** Scheduled runs cannot be edited here — see the API for why. */
-  readOnly?: boolean
-  readOnlyReason?: string
-  href?: string
-}
-
-/**
- * Four layers on one axis, each visually distinct and independently toggleable.
- *
- * The point of this calendar over a normal one: the PAST half populates itself.
- * Human events are planned; run bars are what actually happened, read live from
- * the run table rather than copied here.
- */
-const LAYERS: { key: TimelineItem['layer']; label: string; tone: string; hint: string }[] = [
-  { key: 'human', label: 'Events', tone: '#22d3ee', hint: 'meetings and milestones' },
-  { key: 'scheduled', label: 'Scheduled', tone: BLOCKED, hint: 'automations due to run' },
-  { key: 'run', label: 'Runs', tone: T(0.45), hint: 'what actually happened' },
-  { key: 'deadline', label: 'Waiting', tone: WARN, hint: 'approvals with a clock on them' },
-]
-
-function runTone(status?: string): string {
-  if (status === 'FAILED') return ERR
-  if (status === 'RUNNING') return '#22d3ee'
-  if (status === 'AWAITING_APPROVAL') return BLOCKED
-  return OK
-}
 
 function startOfDay(d: Date) {
   const c = new Date(d)
@@ -81,6 +45,21 @@ export function CalendarView() {
   const [enabled, setEnabled] = useState<Record<string, boolean>>({
     human: true, scheduled: true, run: true, deadline: true,
   })
+
+  // Grid or continuous timeline. Remembered, because which one you want is a
+  // property of how you work rather than of this visit.
+  const [view, setView] = useState<'grid' | 'timeline'>('grid')
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('calendar.view') === 'timeline') setView('timeline')
+    } catch {
+      // Private windows and blocked site data throw here. The default stands.
+    }
+  }, [])
+  function chooseView(next: 'grid' | 'timeline') {
+    setView(next)
+    try { localStorage.setItem('calendar.view', next) } catch { /* not worth failing over */ }
+  }
 
   const items = (data?.items ?? []).filter((i) => enabled[i.layer])
   const today = startOfDay(new Date()).getTime()
@@ -186,7 +165,28 @@ export function CalendarView() {
         </span>
         <span className="flex-1" />
 
-        <div className="flex items-center gap-1">
+        {/* Two ways to read the same four layers. The grid is a day at a
+            glance; the timeline is one continuous axis you can zoom from a
+            quarter down to a couple of hours. */}
+        <div className="flex items-center gap-0.5 rounded-[9px] border border-white/10 p-[2px]">
+          {(['grid', 'timeline'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => chooseView(v)}
+              aria-pressed={view === v}
+              className="h-6 rounded-[7px] px-2 font-mono text-[10px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              style={{
+                background: view === v ? 'rgba(34,211,238,0.14)' : 'transparent',
+                color: view === v ? '#67e8f9' : 'rgba(255,255,255,0.4)',
+              }}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1" hidden={view === 'timeline'}>
           <button
             type="button"
             onClick={() => setOffsetDays((d) => d - 7)}
@@ -246,7 +246,9 @@ export function CalendarView() {
 
       {buckets.length > 0 && <DensityStrip buckets={buckets} />}
 
-      {isLoading && !data && (
+      {view === 'timeline' && <Timeline enabled={enabled} onCreated={() => void mutate()} />}
+
+      {view === 'grid' && isLoading && !data && (
         <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
           {Array.from({ length: 14 }).map((_, i) => (
             <div
@@ -258,14 +260,14 @@ export function CalendarView() {
         </div>
       )}
 
-      {data && items.length === 0 && (
+      {view === 'grid' && data && items.length === 0 && (
         <EmptyState
           title="Nothing on the timeline yet"
           detail="Runs appear here on their own as agents work. Add a meeting or a milestone and it sits alongside them."
         />
       )}
 
-      {data && (
+      {view === 'grid' && data && (
         <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
           {days.map((d) => {
             const key = d.getTime()
