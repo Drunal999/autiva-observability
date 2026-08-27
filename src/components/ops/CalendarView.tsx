@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
 import { describeRRule } from '@/lib/ops/recurrence'
 import { EmptyState } from './Panel'
+import { DensityStrip, CostRibbon } from './DensityStrip'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -65,6 +66,13 @@ export function CalendarView() {
   const { data, isLoading } = useSWR<{ items: TimelineItem[] }>(key, fetcher, {
     keepPreviousData: true,
   })
+
+  // Activity and spend read the same hourly buckets the fleet telemetry uses.
+  const { data: metrics } = useSWR<{ buckets: { at: string; runs: number; failed: number; costInr: number }[] }>(
+    '/api/metrics',
+    fetcher
+  )
+  const buckets = metrics?.buckets ?? []
 
   const [enabled, setEnabled] = useState<Record<string, boolean>>({
     human: true, scheduled: true, run: true, deadline: true,
@@ -150,6 +158,8 @@ export function CalendarView() {
           times shown in your timezone
         </span>
       </div>
+
+      {buckets.length > 0 && <DensityStrip buckets={buckets} />}
 
       {isLoading && !data && (
         <div className="grid grid-cols-2 gap-2 md:grid-cols-7">
@@ -257,6 +267,7 @@ export function CalendarView() {
           })}
         </div>
       )}
+      {buckets.length > 0 && <CostRibbon buckets={buckets} />}
     </div>
   )
 }
