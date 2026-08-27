@@ -15,6 +15,12 @@ export async function GET() {
       const send = (event: BoardEvent) => {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
       }
+      // Flush a frame immediately: the browser only fires EventSource.onopen
+      // once the response body starts arriving, so a stream that sends
+      // nothing until the first heartbeat leaves the client stuck on
+      // "connecting" for HEARTBEAT_MS.
+      controller.enqueue(encoder.encode(`: connected\n\n`))
+
       unsubscribe = subscribeToBoardEvents(send)
 
       // SSE connections behind some proxies/load balancers get killed if
