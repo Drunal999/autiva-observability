@@ -290,7 +290,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
         <div className="min-h-0 flex-1 overflow-auto">
           {selected && selected.diff.length > 0 ? (
             <>
-              <div className="sticky top-0 flex items-center gap-2 bg-[#0a0a0c]/95 px-4 py-2 backdrop-blur">
+              <div className="sticky top-0 flex items-center gap-2 bg-[#0a1020]/95 px-4 py-2 backdrop-blur">
                 <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/55">
                   {selected.path}
                 </span>

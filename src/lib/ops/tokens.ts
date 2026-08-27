@@ -4,7 +4,7 @@
 
 export const FG = '#f5f5f7'
 export const HAIR = 'rgba(255,255,255,0.05)'
-export const CANVAS = '#0a0a0c'
+export const CANVAS = '#0a1020'
 
 export const ACCENT = '#22d3ee'
 export const QUEUED = '#64748b'

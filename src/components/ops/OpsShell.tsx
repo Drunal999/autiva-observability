@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import { NAV, fmtClock } from '@/lib/ops/tokens'
-import type { Agent } from '@/types/agentOps'
+import type { FleetResponse } from '@/types/agentOps'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -27,7 +27,10 @@ function Clock() {
 
 export function OpsShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { data: agents } = useSWR<Agent[]>('/api/agents', fetcher, { refreshInterval: 20000 })
+  // /api/agents returns { mode, agents } — the mode is decided server-side, so
+  // the payload is an object, not a bare array.
+  const { data } = useSWR<FleetResponse>('/api/agents', fetcher, { refreshInterval: 20000 })
+  const agents = data?.agents
 
   const failing = agents?.filter((a) => a.status === 'FAILED').length ?? 0
 
