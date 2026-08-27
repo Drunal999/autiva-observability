@@ -20,6 +20,8 @@ export const config = {
     '/api/metrics/:path*',
     '/api/approvals/:path*',
     '/api/comments/:path*',
+    '/api/presence/:path*',
+    '/api/calls/:path*',
     '/api/notifications/:path*',
   ],
 }

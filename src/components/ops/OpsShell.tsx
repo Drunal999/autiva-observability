@@ -7,6 +7,7 @@ import useSWR from 'swr'
 import { NAV, fmtClock } from '@/lib/ops/tokens'
 import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
+import { usePresence, PresenceBar } from './Presence'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -46,6 +47,19 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
     refreshInterval: 20000,
   })
   const pendingApprovals = approvals?.pending?.length ?? 0
+
+  const LOCATION: Record<string, string> = {
+    '/': 'the task board',
+    '/board': 'mission control',
+    '/approvals': 'the approvals queue',
+    '/fleet': 'the fleet',
+    '/trace': 'a trace',
+    '/terminal': 'a terminal',
+    '/automations': 'automations',
+    '/states': 'the states sheet',
+    '/motion': 'the motion spec',
+  }
+  const roster = usePresence(LOCATION[pathname] ?? 'the dashboard')
 
   const failing = agents?.filter((a) => a.status === 'FAILED').length ?? 0
 
@@ -141,6 +155,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             {failing ? `${failing} AGENT FAILING` : 'FLEET HEALTHY'}
           </span>
         )}
+        <PresenceBar roster={roster} />
         <span className="hidden md:inline"><Clock /></span>
       </header>
 

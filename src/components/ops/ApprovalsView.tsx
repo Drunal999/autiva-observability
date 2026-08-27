@@ -7,6 +7,7 @@ import { inr, relative, absolute } from '@/lib/ops/format'
 import { useEventListener, useRealtimeConnectionState } from '@/lib/realtime/client'
 import { EmptyState } from './Panel'
 import { ThreadToggle } from './Thread'
+import { CallButton } from './CallButton'
 import type { Approval, ApprovalsResponse, ApprovalRisk } from '@/types/approvals'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -324,7 +325,11 @@ export function ApprovalsView() {
               />
             </div>
 
-            <ThreadToggle subjectType="APPROVAL" subjectId={a.id} />
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <ThreadToggle subjectType="APPROVAL" subjectId={a.id} />
+              <span className="flex-1" />
+              <CallButton subjectType="APPROVAL" subjectId={a.id} label="Talk it over" />
+            </div>
           </article>
         ))}
       </div>
