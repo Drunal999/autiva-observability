@@ -4,6 +4,7 @@ export const config = {
   matcher: [
     '/',
     '/board',
+    '/approvals',
     '/fleet',
     '/trace',
     '/terminal',
@@ -17,5 +18,6 @@ export const config = {
     '/api/runs/:path*',
     '/api/flows/:path*',
     '/api/metrics/:path*',
+    '/api/approvals/:path*',
   ],
 }

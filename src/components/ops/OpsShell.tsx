@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import { NAV, fmtClock } from '@/lib/ops/tokens'
 import type { FleetResponse } from '@/types/agentOps'
+import type { ApprovalsResponse } from '@/types/approvals'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -32,6 +33,11 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
   const { data } = useSWR<FleetResponse>('/api/agents', fetcher, { refreshInterval: 20000 })
   const agents = data?.agents
 
+  const { data: approvals } = useSWR<ApprovalsResponse>('/api/approvals', fetcher, {
+    refreshInterval: 20000,
+  })
+  const pendingApprovals = approvals?.pending?.length ?? 0
+
   const failing = agents?.filter((a) => a.status === 'FAILED').length ?? 0
 
   return (
@@ -50,17 +56,28 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         <nav className="flex shrink-0 items-center gap-1 md:ml-3">
           {NAV.map((n) => {
             const active = pathname === n.href
+            const badge = n.href === '/approvals' ? pendingApprovals : 0
             return (
               <Link
                 key={n.href}
                 href={n.href}
-                className={`flex h-8 items-center rounded-[11px] px-3 text-[12.5px] transition ${
+                className={`flex h-8 items-center gap-1.5 rounded-[11px] px-3 text-[12.5px] transition ${
                   active
                     ? 'bg-cyan-400/10 font-bold text-cyan-400'
                     : 'font-medium text-white/60 hover:text-white/85'
                 }`}
               >
                 {n.label}
+                {/* Pending approvals are the one thing that always needs
+                    attention, so the count rides the nav on every screen. */}
+                {badge > 0 && (
+                  <span
+                    className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-amber-400 px-1 font-mono text-[10px] font-bold tabular-nums text-amber-950"
+                    aria-label={`${badge} approvals waiting`}
+                  >
+                    {badge}
+                  </span>
+                )}
               </Link>
             )
           })}

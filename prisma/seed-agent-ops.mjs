@@ -170,6 +170,31 @@ const HISTORY = [
   { ref: 'af-2282', status: 'OK', summary: 'digest posted · 1 item', durMs: 900, minsAgo: 304 },
 ]
 
+const APPROVALS = [
+  { action: 'Pay vendor invoice INV-2291 to Rankworks Media', risk: 'MONEY', amountInr: 48500,
+    detail: 'Invoice matched to PO-118 and the amount is within the monthly SEO retainer, but it is above the auto-pay ceiling of Rs 25,000.',
+    moduleKey: 'invoice-chase', runRef: null, minsAgo: 6 },
+  { action: 'Publish 14 review replies to Google Business Profile', risk: 'PUBLISH',
+    detail: 'Drafted replies for 14 reviews from the last 7 days. Two mention a refund; those are flagged in the batch.',
+    moduleKey: 'review-replies', runRef: null, minsAgo: 23 },
+  { action: 'Send follow-up WhatsApp to 312 leads', risk: 'BULK_MESSAGE',
+    detail: 'Segment: enquired in the last 30 days, no reply. Template approved on 21 Aug. Sends over 4 hours to stay inside rate limits.',
+    moduleKey: 'lead-followup', runRef: null, minsAgo: 71 },
+  { action: 'Delete 1,840 archived crawl snapshots', risk: 'DATA_DELETE',
+    detail: 'Snapshots older than 90 days from the SEO crawler. Frees roughly 12 GB. Not recoverable once removed.',
+    moduleKey: 'seo-audit', runRef: null, minsAgo: 194 },
+]
+
+const DECIDED = [
+  { action: 'Pay hosting renewal to Hostinger', risk: 'MONEY', amountInr: 8900,
+    detail: 'Annual renewal, same amount as last year.', moduleKey: 'invoice-chase',
+    status: 'APPROVED', minsAgo: 340, decidedMinsAgo: 336 },
+  { action: 'Send promotional broadcast to all 4,102 contacts', risk: 'BULK_MESSAGE',
+    detail: 'Requested outside the agreed sending window.', moduleKey: 'lead-followup',
+    status: 'REJECTED', reason: 'Outside the agreed 10:00-18:00 window, and the segment was not filtered for opt-outs.',
+    minsAgo: 520, decidedMinsAgo: 505 },
+]
+
 const minsAgo = (m) => new Date(Date.now() - m * 60_000)
 
 /**
@@ -203,6 +228,7 @@ function buildBuckets() {
 
 async function main() {
   // Idempotent: clear the ops tables only. Task/User are untouched.
+  await db.approval.deleteMany()
   await db.metricBucket.deleteMany()
   await db.flowRun.deleteMany()
   await db.flowNode.deleteMany()
@@ -315,7 +341,37 @@ async function main() {
 
   await db.metricBucket.createMany({ data: buildBuckets().map((b) => ({ ...b, tenantId: tenant.id })) })
 
+  const decider = await db.user.findFirst({ where: { githubId: 'e2e-test-user' } })
+
+  for (const a of APPROVALS) {
+    const { moduleKey, runRef, minsAgo: m, ...rest } = a
+    await db.approval.create({
+      data: {
+        ...rest,
+        tenantId: tenant.id,
+        moduleId: modules[moduleKey]?.id ?? null,
+        runId: runRef ? (await db.run.findUnique({ where: { ref: runRef } }))?.id ?? null : null,
+        requestedAt: minsAgo(m),
+      },
+    })
+  }
+
+  for (const a of DECIDED) {
+    const { moduleKey, minsAgo: m, decidedMinsAgo, ...rest } = a
+    await db.approval.create({
+      data: {
+        ...rest,
+        tenantId: tenant.id,
+        moduleId: modules[moduleKey]?.id ?? null,
+        requestedAt: minsAgo(m),
+        decidedAt: minsAgo(decidedMinsAgo),
+        decidedById: decider?.id ?? null,
+      },
+    })
+  }
+
   console.log('seeded:',
+    await db.approval.count(), 'approvals ·',
     await db.module.count(), 'modules ·',
     await db.metricBucket.count(), 'buckets ·',
     await db.agent.count(), 'agents ·',

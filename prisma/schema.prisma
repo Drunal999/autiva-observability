@@ -15,6 +15,7 @@ model User {
   email      String?  @unique
   muteSounds Boolean  @default(false)
   tasks      Task[]
+  decisions  Approval[]
   createdAt  DateTime @default(now())
 }
 
@@ -68,6 +69,7 @@ model Tenant {
   runs      Run[]
   flows     Flow[]
   buckets   MetricBucket[]
+  approvals Approval[]
   createdAt DateTime       @default(now())
 }
 
@@ -83,6 +85,7 @@ model Module {
   /// global threshold.
   targetMs    Int      @default(2000)
   agents      Agent[]
+  approvals   Approval[]
   createdAt   DateTime @default(now())
 
   @@unique([tenantId, key])
@@ -131,6 +134,7 @@ model Run {
   spans     Span[]
   logLines  LogLine[]
   files     WorkspaceFile[]
+  approvals Approval[]
 
   @@index([agentId, startedAt])
   @@index([tenantId, startedAt])
@@ -236,6 +240,57 @@ model FlowRun {
   at      DateTime   @default(now())
 
   @@index([flowId, at])
+}
+
+/// A risky action an agent has paused on, waiting for a human.
+///
+/// Append-only in the sense that matters: rows are never deleted, and a
+/// decision is written exactly once. The decide route updates only where
+/// status is still PENDING, so a double-click or a replayed request cannot
+/// overwrite an existing decision — see /api/approvals/[id]/decide.
+model Approval {
+  id       String   @id @default(cuid())
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  /// The run that paused. Null if the request came from a flow rather than a
+  /// specific run.
+  run      Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
+  runId    String?
+  module   Module?  @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  moduleId String?
+
+  /// What the agent wants to do, in the operator's words.
+  action      String
+  detail      String?
+  risk        ApprovalRisk   @default(OTHER)
+  /// Set when the action moves money, so the amount is reviewable at a glance.
+  amountInr   Float?
+  status      ApprovalStatus @default(PENDING)
+  requestedAt DateTime       @default(now())
+
+  /// Audit trail. Written once, alongside the status transition.
+  decidedBy   User?     @relation(fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedById String?
+  decidedAt   DateTime?
+  /// Required when rejecting — a rejection with no reason is not reviewable.
+  reason      String?
+
+  @@index([tenantId, status, requestedAt])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Why this action needed a human. Drives how loudly the row presents.
+enum ApprovalRisk {
+  MONEY
+  PUBLISH
+  BULK_MESSAGE
+  DATA_DELETE
+  OTHER
 }
 
 /// One hourly rollup of fleet-wide activity. Fleet's four telemetry charts

@@ -46,6 +46,7 @@ export const SPAN_STATUS_COLOR: Record<string, string> = {
 export const NAV = [
   { label: 'Board', href: '/' },
   { label: 'Mission', href: '/board' },
+  { label: 'Approvals', href: '/approvals' },
   { label: 'Fleet', href: '/fleet' },
   { label: 'Trace', href: '/trace' },
   { label: 'Terminal', href: '/terminal' },
