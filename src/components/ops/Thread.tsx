@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import { OK, WARN, BLOCKED, T } from '@/lib/ops/tokens'
 import { relative, absolute } from '@/lib/ops/format'
 import { parseCommentBody, MAX_COMMENT_LENGTH } from '@/lib/ops/safeMarkdown'
@@ -245,19 +245,66 @@ export function Thread({
   )
 }
 
-/** Collapsed-by-default wrapper: status at a glance first, conversation second. */
+/**
+ * Comment counts for every card on a screen, in one request rather than one
+ * per card.
+ */
+export function useCommentCounts(subjectType: SubjectType): Record<string, number> {
+  const { data } = useSWR<{ counts: Record<string, number> }>(
+    `/api/comments/counts?subjectType=${subjectType}`,
+    fetcher,
+    { refreshInterval: 30000 }
+  )
+  const counts = data?.counts ?? {}
+
+  // A new comment anywhere invalidates these, and the shared stream already
+  // carries that — no extra poll.
+  const { mutate } = useSWRConfig()
+  useEventListener(
+    () => void mutate(`/api/comments/counts?subjectType=${subjectType}`),
+    ['COMMENTS']
+  )
+
+  return counts
+}
+
+/**
+ * Collapsed-by-default wrapper: status at a glance first, conversation second.
+ *
+ * Pressing `c` while the card is focused (or hovered) opens the thread — the
+ * point of attaching conversation to a thing is that reaching it costs nothing.
+ */
 export function ThreadToggle({
   subjectType,
   subjectId,
   currentUserId,
   count,
+  shortcutScopeRef,
 }: {
   subjectType: SubjectType
   subjectId: string
   currentUserId?: string
   count?: number
+  /** Element that must contain focus for `c` to apply to this thread. */
+  shortcutScopeRef?: React.RefObject<HTMLElement>
 }) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!shortcutScopeRef) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'c' || e.metaKey || e.ctrlKey || e.altKey) return
+      // Never steal the key from someone typing.
+      const el = document.activeElement
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return
+      const scope = shortcutScopeRef.current
+      if (!scope || !scope.matches(':hover') && !scope.contains(el)) return
+      e.preventDefault()
+      setOpen(true)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [shortcutScopeRef])
 
   return (
     <div className="mt-2">
@@ -269,6 +316,7 @@ export function ThreadToggle({
       >
         <span aria-hidden="true">{open ? '▾' : '▸'}</span>
         {count && count > 0 ? `${count} note${count === 1 ? '' : 's'}` : 'Add a note'}
+        {!open && <span className="text-white/20">c</span>}
       </button>
       {open && (
         <Thread

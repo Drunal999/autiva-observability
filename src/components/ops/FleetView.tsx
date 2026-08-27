@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { ChartPanel, RunBars, LatencyLines, AreaChart, SuccessRate, Sparkline } from './Charts'
 import { EmptyState } from './Panel'
+import { ThreadToggle, useCommentCounts } from './Thread'
 import { fmtElapsed } from '@/lib/ops/tokens'
 import { statusLabel, statusColor, statusGlyph, statusIsLive } from '@/lib/ops/status'
 import { inr, inrCompact, tokens as fmtTokens } from '@/lib/ops/format'
@@ -97,12 +98,15 @@ function AgentCard({
   index,
   tick,
   mode,
+  noteCount,
 }: {
   agent: Agent
   index: number
   tick: number
   mode: ViewMode
+  noteCount?: number
 }) {
+  const cardRef = useRef<HTMLDivElement>(null)
   const color = statusColor(agent.status)
   const live = statusIsLive(agent.status)
   const identity = cardIdentity(agent, mode)
@@ -113,7 +117,8 @@ function AgentCard({
 
   return (
     <div
-      className="relative flex flex-col gap-2.5 overflow-hidden rounded-[13px] border bg-white/[0.03] p-3.5"
+      ref={cardRef}
+      className="relative flex flex-col gap-2.5 rounded-[13px] border bg-white/[0.03] p-3.5"
       style={{
         borderColor: agent.status === 'FAILED' ? 'rgba(248,113,113,0.35)' : 'rgba(255,255,255,0.05)',
         animation: `enter 160ms cubic-bezier(0.16,1,0.3,1) ${Math.min(index, 8) * 0.018}s both`,
@@ -173,6 +178,14 @@ function AgentCard({
           <Sparkline values={agent.stepMs} color={color} />
         </div>
       </div>
+
+      {/* Conversation attached to the agent, not in a chat nobody can find. */}
+      <ThreadToggle
+        subjectType="AGENT"
+        subjectId={agent.id}
+        count={noteCount}
+        shortcutScopeRef={cardRef}
+      />
     </div>
   )
 }
@@ -231,6 +244,9 @@ export function FleetView({
           : (agents?.length ?? 0) === 0
             ? 'empty'
             : 'ready'
+
+  // One request for every card's badge, rather than one request per card.
+  const noteCounts = useCommentCounts('AGENT')
 
   const running = agents?.filter((a) => a.status === 'RUNNING').length ?? 0
   const failed = agents?.filter((a) => a.status === 'FAILED').length ?? 0
@@ -293,7 +309,7 @@ export function FleetView({
         {state === 'ready' && (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {agents?.map((a, i) => (
-              <AgentCard key={a.id} agent={a} index={i} tick={tick} mode={mode} />
+              <AgentCard key={a.id} agent={a} index={i} tick={tick} mode={mode} noteCount={noteCounts[a.id]} />
             ))}
           </div>
         )}

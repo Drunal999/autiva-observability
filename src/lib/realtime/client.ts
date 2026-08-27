@@ -76,7 +76,10 @@ function scheduleReconnect() {
 }
 
 function connect(): void {
-  if (typeof window === 'undefined' || source) return
+  // `typeof window` alone is not enough: jsdom and some embedded webviews are
+  // browser-like but have no EventSource. Realtime is an enhancement, so its
+  // absence must degrade to polling rather than throwing on mount.
+  if (typeof window === 'undefined' || typeof EventSource === 'undefined' || source) return
 
   // Resume from the last event seen, so a reconnect replays the gap instead
   // of leaving a silent hole in the stream.

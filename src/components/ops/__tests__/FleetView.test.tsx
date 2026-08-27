@@ -3,7 +3,16 @@ import { render, screen } from '@testing-library/react'
 import useSWR from 'swr'
 import { FleetView } from '../FleetView'
 
-vi.mock('swr')
+vi.mock('swr', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('swr')>()
+  return {
+    ...actual,
+    default: vi.fn(),
+    // useCommentCounts destructures mutate from this; the auto-mock would
+    // return undefined and throw before the component rendered.
+    useSWRConfig: () => ({ mutate: vi.fn() }),
+  }
+})
 
 const agent = (over: Record<string, unknown> = {}) => ({
   id: 'a1',

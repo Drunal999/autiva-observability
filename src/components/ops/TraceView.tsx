@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { ERR, T, fmtDuration, fmtTokens } from '@/lib/ops/tokens'
 import type { RunDetail, Span } from '@/types/agentOps'
+import { ThreadToggle } from './Thread'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -294,6 +295,9 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
                 <span>children {fmtDuration(childMs)}</span>
               </div>
             </div>
+
+            {/* The fix and the reasoning belong next to the failure. */}
+            <ThreadToggle subjectType="RUN" subjectId={run.id} />
 
             {selected.error && (
               <div className="flex flex-col gap-1.5">
