@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #0a0a0c; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #22d3ee; text-decoration: none; }
+    a:hover { color: #67e8f9; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="width: 940px; min-height: 900px; background: #0a0a0c; color: #f5f5f7; padding: 36px 40px; display: flex; flex-direction: column; gap: 34px;">
+
+  <div>
+    <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #22d3ee;">Foundations</p>
+    <h1 style="margin: 7px 0 0 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em;">JARVIS v2 — Design System</h1>
+    <p style="margin: 7px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.4); max-width: 620px; line-height: 1.6; text-wrap: pretty;">Every value below is lifted from the running codebase — <span style="font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.55);">globals.css</span>, <span style="font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.55);">tailwind.config.ts</span> and the component sources — not invented or rounded to a grid.</p>
+  </div>
+
+  <!-- COLOR -->
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.35);">Color</h2>
+    <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px;">
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="height: 62px; border-radius: 12px; background: #0a0a0c; border: 1px solid rgba(255,255,255,0.09);"></span>
+        <div style="line-height: 1.4;"><p style="margin: 0; font-size: 12px; font-weight: 600;">Canvas</p><p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.32);">#0a0a0c</p></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="height: 62px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);"></span>
+        <div style="line-height: 1.4;"><p style="margin: 0; font-size: 12px; font-weight: 600;">Surface</p><p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.32);">#fff / 3%</p></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="height: 62px; border-radius: 12px; background: #22d3ee;"></span>
+        <div style="line-height: 1.4;"><p style="margin: 0; font-size: 12px; font-weight: 600;">Accent</p><p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.32);">#22d3ee</p></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="height: 62px; border-radius: 12px; background: #34d399;"></span>
+        <div style="line-height: 1.4;"><p style="margin: 0; font-size: 12px; font-weight: 600;">Low / Done</p><p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.32);">#34d399</p></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="height: 62px; border-radius: 12px; background: #fbbf24;"></span>
+        <div style="line-height: 1.4;"><p style="margin: 0; font-size: 12px; font-weight: 600;">Med / Due soon</p><p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.32);">#fbbf24</p></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <span style="height: 62px; border-radius: 12px; background: #f87171;"></span>
+        <div style="line-height: 1.4;"><p style="margin: 0; font-size: 12px; font-weight: 600;">High / Overdue</p><p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.32);">#f87171</p></div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; padding: 13px 15px; border-radius: 12px; border: 1px solid rgba(251,191,36,0.22); background: rgba(251,191,36,0.06);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M12 8v5M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      <p style="margin: 0; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.62); text-wrap: pretty;">Contrast floor: text at <span style="font-family: 'JetBrains Mono', monospace;">rgba(255,255,255,0.30)</span> on the canvas measures roughly 3.1:1 and fails AA for body copy. Keep 0.30 for decorative metadata only; raise anything readable to 0.45 or above.</p>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.35);">Type scale</h2>
+    <div style="display: flex; flex-direction: column; gap: 0; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; overflow: hidden;">
+      <div style="display: grid; grid-template-columns: 1fr 190px; gap: 16px; align-items: baseline; padding: 15px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+        <span style="font-size: 30px; font-weight: 800; letter-spacing: -0.03em;">Good evening, Devarshi.</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">30 / 800 / −0.03em</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 190px; gap: 16px; align-items: baseline; padding: 15px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+        <span style="font-size: 21px; font-weight: 700; letter-spacing: -0.02em;">Task detail heading</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">21 / 700 / −0.02em</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 190px; gap: 16px; align-items: baseline; padding: 15px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+        <span style="font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.92);">Card title — 13/600 at 1.4 line-height</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">13 / 600 / 1.4</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 190px; gap: 16px; align-items: baseline; padding: 15px 18px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45);">Column label</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">11 / 700 / 0.14em</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 190px; gap: 16px; align-items: baseline; padding: 15px 18px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.5);">JetBrains Mono — counts, timestamps, IDs, shortcuts</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">mono 10 / 400</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARD STATES -->
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.35);">Task card — every state</h2>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;">
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <div style="position: relative; padding: 13px; border-radius: 13px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06);">
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <p style="margin: 0; flex-grow: 1; font-size: 13px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92);">Audit AA contrast pairs</p>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 5px; color: #fbbf24; background: rgba(251,191,36,0.10);">MED</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <span style="width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #a78bfa; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">AM</span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.4); flex-grow: 1;">Aarav M.</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3);">Sep 2</span>
+          </div>
+        </div>
+        <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">default</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <div style="position: relative; padding: 13px; border-radius: 13px; background: rgba(255,255,255,0.035); border: 1px solid rgba(251,191,36,0.28);">
+          <span style="position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 0 2px 2px 0; background: #fbbf24;"></span>
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <p style="margin: 0; flex-grow: 1; font-size: 13px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92);">Command palette (⌘K)</p>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 5px; color: #fbbf24; background: rgba(251,191,36,0.10);">MED</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <span style="width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #a78bfa; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">AM</span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.4); flex-grow: 1;">Aarav M.</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #fbbf24; background: rgba(251,191,36,0.10); border-radius: 5px; padding: 2px 6px;">Aug 27</span>
+          </div>
+        </div>
+        <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">due&nbsp;soon</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <div style="position: relative; padding: 13px; border-radius: 13px; background: rgba(255,255,255,0.035); border: 1px solid rgba(248,113,113,0.28);">
+          <span style="position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 0 2px 2px 0; background: #f87171;"></span>
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <p style="margin: 0; flex-grow: 1; font-size: 13px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92);">Redis pub/sub for SSE</p>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 5px; color: #f87171; background: rgba(248,113,113,0.10);">HIGH</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <span style="width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #22d3ee; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">DR</span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.4); flex-grow: 1;">Devarshi R.</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #f87171; background: rgba(248,113,113,0.10); border-radius: 5px; padding: 2px 6px;">−2d</span>
+          </div>
+        </div>
+        <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">overdue&nbsp;· no&nbsp;pulse</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 9px;">
+        <div style="position: relative; padding: 13px; border-radius: 13px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06); opacity: 0.62;">
+          <div style="display: flex; align-items: flex-start; gap: 8px;">
+            <p style="margin: 0; flex-grow: 1; font-size: 13px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92);">Overdue-flagging cron</p>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 5px; color: #34d399; background: rgba(52,211,153,0.10);">LOW</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+            <span style="width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 700; color: #22d3ee; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">DR</span>
+            <span style="font-size: 11px; color: rgba(255,255,255,0.4); flex-grow: 1;">Devarshi R.</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3);">Aug 20</span>
+          </div>
+        </div>
+        <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.35);">done&nbsp;/&nbsp;stale</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTROLS -->
+  <section style="display: flex; flex-direction: column; gap: 14px;">
+    <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.35);">Controls</h2>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 20px; border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; background: rgba(255,255,255,0.02);">
+      <button type="button" style="height: 36px; padding: 0 16px; border-radius: 11px; border: none; background: #22d3ee; color: #06171a; font-size: 12px; font-weight: 800; letter-spacing: 0.02em; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Primary</button>
+      <button type="button" style="height: 36px; padding: 0 16px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Secondary</button>
+      <button type="button" style="height: 36px; padding: 0 16px; border-radius: 11px; border: none; background: transparent; color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Ghost</button>
+      <button type="button" style="height: 36px; padding: 0 16px; border-radius: 11px; border: 1px solid rgba(248,113,113,0.28); background: rgba(248,113,113,0.08); color: #f87171; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Destructive</button>
+      <span style="width: 1px; height: 24px; background: rgba(255,255,255,0.07);"></span>
+      <span style="height: 28px; display: flex; align-items: center; padding: 0 11px; border-radius: 8px; border: 1px solid rgba(34,211,238,0.33); background: rgba(34,211,238,0.09); color: #22d3ee; font-size: 12px; font-weight: 600;">Chip · active</span>
+      <span style="height: 28px; display: flex; align-items: center; padding: 0 11px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600;">Chip · rest</span>
+      <span style="width: 1px; height: 24px; background: rgba(255,255,255,0.07);"></span>
+      <span style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border-radius: 11px; border: 1px solid rgba(34,211,238,0.5); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.9); font-size: 12px;">
+        Input · focused
+        <span style="width: 1px; height: 14px; background: #22d3ee;"></span>
+      </span>
+    </div>
+    <p style="margin: 0; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,0.4); text-wrap: pretty;">Control height is <span style="font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.6);">36px</span> with an <span style="font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.6);">11px</span> radius; chips step down to 28/8. Radii ladder: 20 columns · 13 cards · 11 controls · 8 chips · 5 mono tags.</p>
+  </section>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview": {"width": 940, "height": 900}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>
