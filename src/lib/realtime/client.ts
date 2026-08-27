@@ -10,7 +10,7 @@ import type { Task } from '@/types/task'
  * parallel stack.
  */
 
-export type EventChannel = 'BOARD' | 'FLEET' | 'RUNS' | 'APPROVALS' | 'SYSTEM'
+export type EventChannel = 'BOARD' | 'COMMENTS' | 'FLEET' | 'RUNS' | 'APPROVALS' | 'SYSTEM'
 export type RealtimeConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'offline'
 
 export interface StreamEvent {

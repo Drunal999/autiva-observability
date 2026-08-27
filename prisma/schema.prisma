@@ -16,6 +16,8 @@ model User {
   muteSounds Boolean  @default(false)
   tasks      Task[]
   decisions  Approval[]
+  comments   Comment[]
+  notifications Notification[]
   createdAt  DateTime @default(now())
 }
 
@@ -71,6 +73,8 @@ model Tenant {
   buckets   MetricBucket[]
   approvals Approval[]
   events    Event[]
+  comments  Comment[]
+  notifications Notification[]
   createdAt DateTime       @default(now())
 }
 
@@ -244,6 +248,78 @@ model FlowRun {
   @@index([flowId, at])
 }
 
+/// Conversation attached to the thing being discussed, rather than a general
+/// team chat. When an agent fails at 3am, the fix and the reasoning belong next
+/// to the failure — not in a scroll nobody can find next month.
+///
+/// Never hard-deleted: a thread hanging off an approval is part of the audit
+/// trail. Deleting soft-fills the body with a tombstone in the UI.
+model Comment {
+  id          String      @id @default(cuid())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  /// Polymorphic subject. Not a FK, because a comment must outlive the run or
+  /// approval it discusses.
+  subjectType SubjectType
+  subjectId   String
+
+  /// Null for agent- and system-authored entries, which have no user behind
+  /// them. An entry that looks human but was written by a model is how bad
+  /// decisions get made, so authorship is a stored fact, not a convention.
+  author      User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId    String?
+  authorKind  AuthorKind  @default(HUMAN)
+  /// Kept so a deleted account's past comments still show who wrote them.
+  authorName  String
+
+  /// Untrusted. May have originated from a customer email or a scraped page.
+  /// Rendered as text, never as HTML.
+  body      String
+  /// User ids mentioned in the body, resolved at write time.
+  mentions  String[]  @default([])
+  notifications Notification[]
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+  deletedAt DateTime?
+
+  @@index([tenantId, subjectType, subjectId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+/// A mention waiting to be seen. No email or push — the header badge only.
+model Notification {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String?
+  subjectType SubjectType
+  subjectId   String
+  preview   String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+enum SubjectType {
+  RUN
+  APPROVAL
+  AGENT
+  MODULE
+  TENANT
+}
+
+/// Who wrote an entry. Agents and system summaries are labelled and styled
+/// distinctly; they must never be mistakable for a person.
+enum AuthorKind {
+  HUMAN
+  AGENT
+  SYSTEM
+}
+
 /// The realtime event log. One stream feeds both this dashboard and the
 /// animated city UI — they subscribe to the same channels rather than each
 /// opening their own socket stack.
@@ -271,6 +347,7 @@ model Event {
 /// here — it does not open a second connection.
 enum EventChannel {
   BOARD
+  COMMENTS
   FLEET
   RUNS
   APPROVALS

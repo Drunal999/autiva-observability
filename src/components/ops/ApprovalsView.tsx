@@ -6,6 +6,7 @@ import { OK, WARN, ERR, BLOCKED, T } from '@/lib/ops/tokens'
 import { inr, relative, absolute } from '@/lib/ops/format'
 import { useEventListener, useRealtimeConnectionState } from '@/lib/realtime/client'
 import { EmptyState } from './Panel'
+import { ThreadToggle } from './Thread'
 import type { Approval, ApprovalsResponse, ApprovalRisk } from '@/types/approvals'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -322,6 +323,8 @@ export function ApprovalsView() {
                 onDecide={(decision, reason) => decide(a, decision, reason)}
               />
             </div>
+
+            <ThreadToggle subjectType="APPROVAL" subjectId={a.id} />
           </article>
         ))}
       </div>

@@ -13,7 +13,7 @@ import { prisma } from '@/lib/prisma'
  * client replays from the log on connect rather than silently missing work.
  */
 
-export type EventChannel = 'BOARD' | 'FLEET' | 'RUNS' | 'APPROVALS' | 'SYSTEM'
+export type EventChannel = 'BOARD' | 'COMMENTS' | 'FLEET' | 'RUNS' | 'APPROVALS' | 'SYSTEM'
 
 export interface StreamEvent {
   id: string

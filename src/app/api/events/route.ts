@@ -5,7 +5,7 @@ import { getTenantContext } from '@/lib/ops/tenant'
 export const dynamic = 'force-dynamic'
 
 const HEARTBEAT_MS = 25_000
-const VALID_CHANNELS: EventChannel[] = ['BOARD', 'FLEET', 'RUNS', 'APPROVALS', 'SYSTEM']
+const VALID_CHANNELS: EventChannel[] = ['BOARD', 'COMMENTS', 'FLEET', 'RUNS', 'APPROVALS', 'SYSTEM']
 
 export async function GET(req: Request) {
   const ctx = await getTenantContext()

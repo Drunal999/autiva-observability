@@ -1,0 +1,284 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import useSWR from 'swr'
+import { OK, WARN, BLOCKED, T } from '@/lib/ops/tokens'
+import { relative, absolute } from '@/lib/ops/format'
+import { parseCommentBody, MAX_COMMENT_LENGTH } from '@/lib/ops/safeMarkdown'
+import { useEventListener } from '@/lib/realtime/client'
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
+export type SubjectType = 'RUN' | 'APPROVAL' | 'AGENT' | 'MODULE' | 'TENANT'
+
+interface Comment {
+  id: string
+  authorId: string | null
+  authorKind: 'HUMAN' | 'AGENT' | 'SYSTEM'
+  authorName: string
+  body: string
+  mentions: string[]
+  createdAt: string
+  editedAt: string | null
+  deletedAt: string | null
+}
+
+/**
+ * Renders a comment body from the token tree, as React elements.
+ *
+ * There is no HTML string anywhere in this path and no
+ * `dangerouslySetInnerHTML` — a body may have arrived from a customer email,
+ * so it is text until proven otherwise. Links open in a new tab with
+ * `noopener noreferrer`, which stops the opened page reaching back through
+ * `window.opener`.
+ */
+function CommentBody({ body }: { body: string }) {
+  const tokens = parseCommentBody(body)
+  return (
+    <p className="whitespace-pre-wrap text-[12.5px] leading-[1.6] text-white/72">
+      {tokens.map((t, i) => {
+        switch (t.kind) {
+          case 'code':
+            return (
+              <code key={i} className="rounded-[4px] bg-white/[0.08] px-1 py-[1px] font-mono text-[11.5px] text-cyan-200">
+                {t.value}
+              </code>
+            )
+          case 'bold':
+            return <strong key={i} className="font-semibold text-white/90">{t.value}</strong>
+          case 'italic':
+            return <em key={i} className="italic">{t.value}</em>
+          case 'mention':
+            return (
+              <span key={i} className="rounded-[4px] bg-cyan-400/15 px-1 font-medium text-cyan-300">
+                @{t.value}
+              </span>
+            )
+          case 'link':
+            return (
+              <a
+                key={i}
+                href={t.href}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="text-cyan-300 underline decoration-cyan-300/40 underline-offset-2"
+              >
+                {t.value}
+              </a>
+            )
+          default:
+            return <span key={i}>{t.value}</span>
+        }
+      })}
+    </p>
+  )
+}
+
+const KIND_STYLE: Record<Comment['authorKind'], { tone: string; label: string | null }> = {
+  HUMAN: { tone: T(0.75), label: null },
+  // An entry that looks human but was written by a model is how bad decisions
+  // get made, so agent and system entries are labelled and tinted.
+  AGENT: { tone: BLOCKED, label: 'AGENT' },
+  SYSTEM: { tone: WARN, label: 'SYSTEM' },
+}
+
+export function Thread({
+  subjectType,
+  subjectId,
+  currentUserId,
+  autoFocus = false,
+  onClose,
+}: {
+  subjectType: SubjectType
+  subjectId: string
+  currentUserId?: string
+  autoFocus?: boolean
+  onClose?: () => void
+}) {
+  const key = `/api/comments?subjectType=${subjectType}&subjectId=${encodeURIComponent(subjectId)}`
+  const { data: comments, mutate, isLoading } = useSWR<Comment[]>(key, fetcher)
+  const [draft, setDraft] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Same shared stream, one more channel — never a second socket.
+  useEventListener(() => void mutate(), ['COMMENTS'])
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus()
+  }, [autoFocus])
+
+  async function send() {
+    const text = draft.trim()
+    if (!text || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subjectType, subjectId, body: text }),
+      })
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        setError(payload.error ?? 'Could not post that comment.')
+        return
+      }
+      setDraft('')
+      void mutate()
+    } catch {
+      setError('Network problem — the comment was not posted.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove(id: string) {
+    await fetch(`/api/comments/${id}`, { method: 'DELETE' })
+    void mutate()
+  }
+
+  const visible = comments ?? []
+
+  return (
+    <div
+      className="flex flex-col gap-2 border-t border-white/[0.06] pt-2.5"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && onClose) {
+          e.stopPropagation()
+          onClose()
+        }
+      }}
+    >
+      {isLoading && <p className="font-mono text-[10px] text-white/25">Loading thread…</p>}
+
+      {!isLoading && visible.length === 0 && (
+        // An empty thread invites the first comment rather than looking broken.
+        <p className="text-[11.5px] text-white/32">
+          No notes yet. Anything you work out here stays attached to this item.
+        </p>
+      )}
+
+      {visible.map((c) => {
+        const kind = KIND_STYLE[c.authorKind]
+        const mine = !!currentUserId && c.authorId === currentUserId
+
+        if (c.deletedAt) {
+          return (
+            <p key={c.id} className="font-mono text-[11px] italic text-white/22">
+              comment deleted · {relative(c.deletedAt)}
+            </p>
+          )
+        }
+
+        return (
+          <div key={c.id} className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11.5px] font-semibold" style={{ color: kind.tone }}>
+                {c.authorName}
+              </span>
+              {kind.label && (
+                <span
+                  className="rounded-[4px] px-1 font-mono text-[8.5px] font-bold tracking-[0.08em]"
+                  style={{ color: kind.tone, background: `${kind.tone}22` }}
+                >
+                  {kind.label}
+                </span>
+              )}
+              <span
+                className="font-mono text-[9.5px] text-white/25"
+                title={absolute(c.createdAt)}
+              >
+                {relative(c.createdAt)}
+                {c.editedAt && ' · edited'}
+              </span>
+              {mine && (
+                <button
+                  type="button"
+                  onClick={() => remove(c.id)}
+                  className="ml-auto font-mono text-[9.5px] text-white/25 transition hover:text-red-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-red-400/60"
+                >
+                  delete
+                </button>
+              )}
+            </div>
+            <CommentBody body={c.body} />
+          </div>
+        )
+      })}
+
+      <div className="mt-1 flex flex-col gap-1.5">
+        <textarea
+          ref={inputRef}
+          value={draft}
+          maxLength={MAX_COMMENT_LENGTH}
+          rows={2}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            // Cmd/Ctrl+Enter sends; plain Enter keeps a newline, because ops
+            // notes are usually more than one line.
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault()
+              void send()
+            }
+          }}
+          placeholder="Add a note… @mention to notify someone"
+          aria-label="Add a comment"
+          className="w-full resize-y rounded-[9px] border border-white/10 bg-white/5 px-2.5 py-2 text-[12.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+        />
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[9.5px] text-white/22">⌘↵ to send</span>
+          {error && <span className="font-mono text-[10px] text-red-300">{error}</span>}
+          <span className="flex-1" />
+          <button
+            type="button"
+            disabled={!draft.trim() || busy}
+            onClick={() => void send()}
+            className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 text-[11.5px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+          >
+            {busy ? 'Posting…' : 'Comment'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Collapsed-by-default wrapper: status at a glance first, conversation second. */
+export function ThreadToggle({
+  subjectType,
+  subjectId,
+  currentUserId,
+  count,
+}: {
+  subjectType: SubjectType
+  subjectId: string
+  currentUserId?: string
+  count?: number
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 font-mono text-[10px] text-white/35 transition hover:text-white/65 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
+        aria-expanded={open}
+      >
+        <span aria-hidden="true">{open ? '▾' : '▸'}</span>
+        {count && count > 0 ? `${count} note${count === 1 ? '' : 's'}` : 'Add a note'}
+      </button>
+      {open && (
+        <Thread
+          subjectType={subjectType}
+          subjectId={subjectId}
+          currentUserId={currentUserId}
+          autoFocus
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </div>
+  )
+}
