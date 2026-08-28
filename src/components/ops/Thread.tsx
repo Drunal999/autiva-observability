@@ -287,8 +287,24 @@ export interface ThreadBadges {
   mentions: Record<string, number>
 }
 
-export function useThreadBadges(subjectType: SubjectType): ThreadBadges {
-  const key = `/api/comments/counts?subjectType=${subjectType}`
+/**
+ * @param subjectIds Narrows the query to specific subjects. Pass this when a
+ * screen shows ONE thing — without it a single card would make the database
+ * group over every run in the tenant to answer a question about itself.
+ */
+export function useThreadBadges(subjectType: SubjectType, subjectIds?: string[]): ThreadBadges {
+  // Three distinct cases, and conflating the last two is a performance bug:
+  //   undefined -> every subject of this kind (a screen full of cards)
+  //   [id, ...] -> just these
+  //   []        -> nothing to ask about yet; do not fetch at all
+  // Falling back to "every subject" for an empty list is how a single card ends
+  // up scanning the whole tenant while its own id is still loading.
+  const key =
+    subjectIds && subjectIds.length === 0
+      ? null
+      : `/api/comments/counts?subjectType=${subjectType}` +
+        (subjectIds ? `&subjectIds=${subjectIds.map(encodeURIComponent).join(',')}` : '')
+
   const { data } = useSWR<{
     counts: Record<string, number>
     unread?: Record<string, number>
@@ -298,7 +314,7 @@ export function useThreadBadges(subjectType: SubjectType): ThreadBadges {
   // A new comment anywhere invalidates these, and the shared stream already
   // carries that — no extra poll.
   const { mutate } = useSWRConfig()
-  useEventListener(() => void mutate(key), ['COMMENTS'])
+  useEventListener(() => { if (key) void mutate(key) }, ['COMMENTS'])
 
   return {
     total: data?.counts ?? {},

@@ -26,10 +26,25 @@ export async function GET(req: Request) {
   const ctx = await getTenantContext()
   if (!ctx) return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
 
-  const raw = new URL(req.url).searchParams.get('subjectType')
+  const params = new URL(req.url).searchParams
+  const raw = params.get('subjectType')
   const subjectType = SUBJECTS.includes(raw as Subject) ? (raw as Subject) : null
   if (!subjectType) {
     return NextResponse.json({ error: 'subjectType is required' }, { status: 400 })
+  }
+
+  // Optional narrowing. A screen showing every card of a kind wants them all;
+  // a screen showing ONE subject should not make the database group over every
+  // run in the tenant to answer a question about a single card.
+  // `has` rather than a truthiness check on the value: an ABSENT parameter
+  // means "every subject of this kind", but a PRESENT and empty one means
+  // "none". Collapsing those two makes the narrowest possible request into the
+  // widest one.
+  const subjectIds = params.has('subjectIds')
+    ? (params.get('subjectIds') ?? '').split(',').map((v) => v.trim()).filter(Boolean).slice(0, 200)
+    : null
+  if (subjectIds && subjectIds.length === 0) {
+    return NextResponse.json({ counts: {}, unread: {}, mentions: {} })
   }
 
   const session = await getServerSession(authOptions)
@@ -39,7 +54,12 @@ export async function GET(req: Request) {
     by: ['subjectId'],
     // Deleted comments leave a tombstone in an open thread but should not
     // inflate a badge — the count is "things worth opening this for".
-    where: { ...tenantScope(ctx), subjectType, deletedAt: null },
+    where: {
+      ...tenantScope(ctx),
+      subjectType,
+      deletedAt: null,
+      ...(subjectIds ? { subjectId: { in: subjectIds } } : {}),
+    },
     _count: { _all: true },
   })
 
@@ -73,6 +93,7 @@ export async function GET(req: Request) {
          -- a null author and DO count: nobody has read those yet either.
          AND (c."authorId" IS NULL OR c."authorId" <> ${userId})
          AND (r."lastReadAt" IS NULL OR c."createdAt" > r."lastReadAt")
+         ${subjectIds ? Prisma.sql`AND c."subjectId" = ANY(${subjectIds})` : Prisma.empty}
        GROUP BY c."subjectId"
     `)
     for (const r of rows) {

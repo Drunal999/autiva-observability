@@ -92,6 +92,42 @@ describe('per-thread unread', () => {
     h.getTenantContext.mockResolvedValue(null)
     expect((await counts(countsReq())).status).toBe(401)
   })
+
+  it('narrows to the ids it was given, so one card does not scan the tenant', async () => {
+    signedIn()
+    h.queryRaw.mockResolvedValue([{ subjectId: 'run-9', unread: 1, mentions: 0 }])
+    const res = await counts(
+      new Request('http://localhost/api/comments/counts?subjectType=RUN&subjectIds=run-9')
+    )
+    expect(res.status).toBe(200)
+    expect(h.groupBy.mock.calls[0][0].where.subjectId).toEqual({ in: ['run-9'] })
+  })
+
+  it('asks for everything when no ids are given', async () => {
+    signedIn()
+    await counts(countsReq())
+    expect(h.groupBy.mock.calls[0][0].where.subjectId).toBeUndefined()
+  })
+
+  it('answers an explicitly empty id list without touching the database', async () => {
+    // The route should never see this — the hook skips the fetch — but if it
+    // does, "no ids" must not degrade into "every id".
+    signedIn()
+    const res = await counts(
+      new Request('http://localhost/api/comments/counts?subjectType=RUN&subjectIds=')
+    )
+    expect(await res.json()).toEqual({ counts: {}, unread: {}, mentions: {} })
+    expect(h.groupBy).not.toHaveBeenCalled()
+  })
+
+  it('caps how many ids one request can ask about', async () => {
+    signedIn()
+    const many = Array.from({ length: 500 }, (_, i) => 'r' + i).join(',')
+    await counts(
+      new Request('http://localhost/api/comments/counts?subjectType=RUN&subjectIds=' + many)
+    )
+    expect(h.groupBy.mock.calls[0][0].where.subjectId.in).toHaveLength(200)
+  })
 })
 
 describe('marking a thread read', () => {

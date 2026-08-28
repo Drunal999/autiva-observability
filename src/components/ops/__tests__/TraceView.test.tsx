@@ -3,7 +3,16 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import useSWR from 'swr'
 import { TraceView } from '../TraceView'
 
-vi.mock('swr')
+vi.mock('swr', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('swr')>()
+  return {
+    ...actual,
+    default: vi.fn(),
+    // The unread badge destructures mutate from this; a bare auto-mock returns
+    // undefined and throws before the waterfall renders.
+    useSWRConfig: () => ({ mutate: vi.fn() }),
+  }
+})
 
 const span = (over: Record<string, unknown>) => ({
   id: 's', runId: 'r1', parentId: null, type: 'TOOL', name: 'read file',

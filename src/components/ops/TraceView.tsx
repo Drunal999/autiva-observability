@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { ERR, T, fmtDuration, fmtTokens } from '@/lib/ops/tokens'
 import type { RunDetail, Span } from '@/types/agentOps'
-import { ThreadToggle } from './Thread'
+import { ThreadToggle, useThreadBadges } from './Thread'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -50,6 +50,9 @@ function hasChildren(spans: Span[], id: string) {
 export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
   const { data: run, error, isLoading } = useSWR<RunDetail>(`/api/runs/${runRef}`, fetcher)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  // Scoped to this one run, so the badge costs a lookup rather than a scan of
+  // every run thread in the tenant.
+  const notes = useThreadBadges('RUN', run?.id ? [run.id] : [])
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const spans = useMemo(() => run?.spans ?? [], [run])
@@ -297,7 +300,13 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
             </div>
 
             {/* The fix and the reasoning belong next to the failure. */}
-            <ThreadToggle subjectType="RUN" subjectId={run.id} />
+            <ThreadToggle
+              subjectType="RUN"
+              subjectId={run.id}
+              count={notes.total[run.id]}
+              unread={notes.unread[run.id]}
+              mentions={notes.mentions[run.id]}
+            />
 
             {selected.error && (
               <div className="flex flex-col gap-1.5">
