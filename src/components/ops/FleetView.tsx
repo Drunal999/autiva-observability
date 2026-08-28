@@ -230,6 +230,10 @@ export function FleetView({
     { refreshInterval: 60000, keepPreviousData: true }
   )
   const buckets = metrics?.buckets
+  // The newest bucket, or undefined when the window holds none. Every "NOW"
+  // caption reads this rather than indexing length-1, which throws on an empty
+  // array — a new tenant, or an engine filter matching nothing in 24h.
+  const latest = buckets?.[buckets.length - 1]
   const engines = metrics?.engines ?? []
   const engine = metrics?.engine ?? null
 
@@ -387,14 +391,19 @@ export function FleetView({
             <ChartPanel
               title={engine ? `Latency · ${engine.displayName}` : 'Latency · all engines'}
               caption={
-                engine
-                  ? `P99 ${fmtBudget(buckets[buckets.length - 1].p99Ms)} · TARGET ${fmtBudget(engine.targetMs)} · ${
-                      buckets[buckets.length - 1].p99Ms > engine.targetMs
-                        ? 'OVER BUDGET'
-                        : 'WITHIN BUDGET'
-                    }`
-                  : // No single target applies across engines, so none is implied.
-                    `P99 ${fmtBudget(buckets[buckets.length - 1].p99Ms)} · NO SINGLE TARGET ACROSS ENGINES`
+                // `buckets` is non-null but can be EMPTY — a new tenant, or an
+                // engine filter matching nothing in the last 24h. Indexing
+                // length-1 on that throws, and this caption is computed in
+                // FleetView's own render, so the error escapes PanelBoundary
+                // and takes the whole page down rather than one panel.
+                latest === undefined
+                  ? 'NO LATENCY IN THE LAST 24H'
+                  : engine
+                    ? `P99 ${fmtBudget(latest.p99Ms)} · TARGET ${fmtBudget(engine.targetMs)} · ${
+                        latest.p99Ms > engine.targetMs ? 'OVER BUDGET' : 'WITHIN BUDGET'
+                      }`
+                    : // No single target applies across engines, so none is implied.
+                      `P99 ${fmtBudget(latest.p99Ms)} · NO SINGLE TARGET ACROSS ENGINES`
               }
               leftLabel="-24H"
               rightLabel="NOW"
@@ -418,9 +427,13 @@ export function FleetView({
             </ChartPanel>
             <ChartPanel
               title="Success rate"
-              caption={`${buckets[buckets.length - 1].successRate}% NOW · ${(
-                buckets.reduce((a, b) => a + b.successRate, 0) / buckets.length
-              ).toFixed(1)}% AVG`}
+              caption={
+                latest === undefined
+                  ? 'NO RUNS IN THE LAST 24H'
+                  : `${latest.successRate}% NOW · ${(
+                      buckets.reduce((a, b) => a + b.successRate, 0) / buckets.length
+                    ).toFixed(1)}% AVG`
+              }
               leftLabel="-24H"
               rightLabel="NOW"
             >

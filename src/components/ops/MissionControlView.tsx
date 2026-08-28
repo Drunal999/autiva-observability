@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import useSWR from 'swr'
 import { OK, WARN, ERR, T } from '@/lib/ops/tokens'
 import { useBoardEvents } from '@/lib/realtime/client'
@@ -69,28 +70,40 @@ export function MissionControlView() {
 
   const all = useMemo(() => tasks ?? [], [tasks])
 
+  // "My tasks" needs to know whose. The component never read the session at
+  // all, so the filter could only fall back to "assigned to anyone" — which
+  // made it a near-duplicate of the full list.
+  const { data: session } = useSession()
+  const currentUserId = (session?.user as { id?: string } | undefined)?.id ?? null
+
+  // Derived once so the chip's count and the list it opens cannot disagree.
+  const mine = useMemo(
+    () => (currentUserId ? all.filter((t) => t.assignee?.id === currentUserId) : []),
+    [all, currentUserId]
+  )
+
   const views: { key: ViewKey; label: string; dot: string; count: number }[] = useMemo(
     () => [
       { key: 'all', label: 'All tasks', dot: T(0.25), count: all.length },
-      { key: 'mine', label: 'My tasks', dot: '#22d3ee', count: all.filter((t) => t.assignee).length },
+      { key: 'mine', label: 'My tasks', dot: '#22d3ee', count: mine.length },
       { key: 'overdue', label: 'Overdue', dot: ERR, count: all.filter((t) => dueState(t) === 'overdue').length },
       { key: 'stale', label: 'Stale · 3d+', dot: WARN, count: all.filter((t) => staleDays(t) >= 3).length },
       { key: 'unassigned', label: 'Unassigned', dot: T(0.35), count: all.filter((t) => !t.assignee).length },
       { key: 'shipped', label: 'Shipped today', dot: OK, count: all.filter((t) => t.status === 'DONE' && staleDays(t) < 1).length },
     ],
-    [all]
+    [all, mine]
   )
 
   const visible = useMemo(() => {
     switch (view) {
-      case 'mine': return all.filter((t) => t.assignee)
+      case 'mine': return mine
       case 'overdue': return all.filter((t) => dueState(t) === 'overdue')
       case 'stale': return all.filter((t) => staleDays(t) >= 3)
       case 'unassigned': return all.filter((t) => !t.assignee)
       case 'shipped': return all.filter((t) => t.status === 'DONE' && staleDays(t) < 1)
       default: return all
     }
-  }, [all, view])
+  }, [all, mine, view])
 
   const task = all.find((t) => t.id === selected) ?? null
 

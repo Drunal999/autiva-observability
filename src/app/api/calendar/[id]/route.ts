@@ -45,7 +45,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const existing = await prisma.calendarEvent.findFirst({
     where: { id: params.id, tenantId: ctx.tenantId },
-    select: { kind: true, startsAt: true },
+    select: { kind: true, startsAt: true, endsAt: true },
   })
   if (!existing) return NextResponse.json({ error: 'event not found' }, { status: 404 })
 
@@ -83,7 +83,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (endsAt && Number.isNaN(endsAt.getTime())) {
     return NextResponse.json({ error: 'Invalid end time.' }, { status: 400 })
   }
-  if (startsAt && endsAt && endsAt < startsAt) {
+  // Compare against what the row WILL hold, not only against what this request
+  // happened to send. Requiring both fields let a PATCH carrying just `endsAt`
+  // write an event that ends before it begins.
+  const finalStart = startsAt ?? existing.startsAt
+  const finalEnd = endsAt ?? existing.endsAt
+  if (finalEnd < finalStart) {
     return NextResponse.json({ error: 'An event cannot end before it starts.' }, { status: 400 })
   }
   if (startsAt) data.startsAt = startsAt

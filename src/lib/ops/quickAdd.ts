@@ -161,6 +161,10 @@ export function quickAdd(input: string, now: Date = new Date()): QuickAddResult 
   }
 
   const allDay = !time && !recurrence
+  // An all-day event begins at midnight. Carrying the current clock time
+  // through meant "quarter close tomorrow", typed at 14:37, stored a
+  // 14:37 -> 23:59 event that still claimed to be all-day.
+  if (allDay) start.setHours(0, 0, 0, 0)
   const end = new Date(start)
   if (allDay) end.setHours(23, 59, 0, 0)
   else end.setMinutes(end.getMinutes() + DEFAULT_DURATION_MIN)

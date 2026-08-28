@@ -8,6 +8,13 @@ import { publishEvent } from '@/lib/realtime/bus'
 import { extractMentions, MAX_COMMENT_LENGTH } from '@/lib/ops/safeMarkdown'
 import { markThreadRead } from '@/lib/ops/threadRead'
 
+/**
+ * A comment that genuinely needs to notify more than this many people is a
+ * broadcast, not a note. The cap also keeps one request from resolving a
+ * dictionary of handles at a time.
+ */
+const MAX_MENTIONS_PER_COMMENT = 10
+
 const SUBJECTS = ['RUN', 'APPROVAL', 'AGENT', 'MODULE', 'TENANT'] as const
 type Subject = (typeof SUBJECTS)[number]
 
@@ -93,9 +100,22 @@ export async function POST(req: Request) {
     )
   }
 
-  // Mentions resolve against this tenant only, so a handle cannot be used to
-  // probe for users elsewhere.
-  const handles = extractMentions(text)
+  // MENTION RESOLUTION IS NOT TENANT-SCOPED, and the comment here used to
+  // claim that it was.
+  //
+  // It cannot be, yet: `User` has no `tenantId` and there is no membership
+  // table — the same stub `getTenantContext()` documents (ADR-002). So a
+  // resolved mention confirms that a GitHub handle exists somewhere in this
+  // install, which is an enumeration oracle the moment a second tenant shares
+  // it.
+  //
+  // Two mitigations until membership lands, neither of which closes it:
+  //   - the handle cap below makes bulk probing slow rather than free
+  //   - resolution happens on write only, so nothing is echoed back except
+  //     ids the author already guessed
+  //
+  // When membership exists, scope this query and delete this note.
+  const handles = extractMentions(text).slice(0, MAX_MENTIONS_PER_COMMENT)
   const mentioned = handles.length
     ? await prisma.user.findMany({
         where: { githubId: { in: handles } },

@@ -44,13 +44,31 @@ export async function GET(req: Request) {
       // "connecting" for HEARTBEAT_MS.
       controller.enqueue(encoder.encode(`: connected\n\n`))
 
-      // Replay before subscribing, so a reconnecting client sees what it
-      // missed. A silently stale dashboard is worse than an obviously broken
-      // one — and worse still is one that looks live but has a hole in it.
+      // SUBSCRIBE FIRST, then replay.
+      //
+      // The obvious order (replay, then subscribe) loses anything published
+      // while the replay query is in flight: too new for the replay, too early
+      // for the subscription. That is precisely the gap replay exists to
+      // close. Subscribing first can only duplicate an event, never drop one,
+      // and duplicates are withheld until the replay has been written so the
+      // client still receives everything in order.
+      const buffered: StreamEvent[] = []
+      let replaying = true
+      unsubscribe = subscribeToEvents(
+        ctx.tenantId,
+        (e) => {
+          if (replaying) buffered.push(e)
+          else send(e)
+        },
+        requested
+      )
+
+      const seen = new Set<string>()
       if (sinceId) {
         try {
           const missed = await replayEvents(ctx.tenantId, sinceId)
           for (const e of missed) {
+            seen.add(e.id)
             if (requested.length === 0 || requested.includes(e.channel)) send(e)
           }
         } catch {
@@ -60,7 +78,10 @@ export async function GET(req: Request) {
         }
       }
 
-      unsubscribe = subscribeToEvents(ctx.tenantId, send, requested)
+      // Whatever landed during the replay, minus what the replay already sent.
+      for (const e of buffered) if (!seen.has(e.id)) send(e)
+      replaying = false
+      buffered.length = 0
 
       // SSE connections behind some proxies/load balancers get killed if
       // nothing is sent for a while — a comment frame keeps it alive

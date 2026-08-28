@@ -170,3 +170,51 @@ describe('FleetView', () => {
     expect(screen.queryByText('Runs over time')).not.toBeInTheDocument()
   })
 })
+
+describe('FleetView with no telemetry in the window', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('renders instead of crashing when buckets is empty', () => {
+    // `buckets` is non-null but EMPTY for a new tenant, or for an engine
+    // filter matching nothing in the last 24h. The "NOW" captions indexed
+    // length-1 on it, and because they are computed in FleetView's own render
+    // the throw escaped PanelBoundary and took the whole /fleet page down.
+    mockSWR({
+      '/api/agents': { data: { mode: 'internal', agents: [agent()] }, error: undefined, isLoading: false },
+      '/api/metrics': {
+        data: { engines: [ENGINE], engine: ENGINE, buckets: [] },
+        error: undefined,
+        isLoading: false,
+      },
+    })
+    expect(() => render(<FleetView />)).not.toThrow()
+    expect(screen.getByText('orion')).toBeInTheDocument()
+  })
+
+  it('says there is nothing rather than printing a misleading zero', () => {
+    mockSWR({
+      '/api/agents': { data: { mode: 'internal', agents: [agent()] }, error: undefined, isLoading: false },
+      '/api/metrics': {
+        data: { engines: [ENGINE], engine: ENGINE, buckets: [] },
+        error: undefined,
+        isLoading: false,
+      },
+    })
+    render(<FleetView />)
+    expect(screen.getByText(/NO LATENCY IN THE LAST 24H/i)).toBeInTheDocument()
+    expect(screen.getByText(/NO RUNS IN THE LAST 24H/i)).toBeInTheDocument()
+  })
+
+  it('still renders the charts when telemetry is present', () => {
+    mockSWR({
+      '/api/agents': { data: { mode: 'internal', agents: [agent()] }, error: undefined, isLoading: false },
+      '/api/metrics': {
+        data: { engines: [ENGINE], engine: ENGINE, buckets: [bucket] },
+        error: undefined,
+        isLoading: false,
+      },
+    })
+    render(<FleetView />)
+    expect(screen.queryByText(/NO LATENCY IN THE LAST 24H/i)).not.toBeInTheDocument()
+  })
+})

@@ -190,6 +190,10 @@ export function Lane({
   const [undo, setUndo] = useState<Undo | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [edit, setEdit] = useState<Edit | null>(null)
+  // Mirrors `edit` so mouseup can read the final position without doing work
+  // inside a state updater. See the note in the mouseup handler.
+  const editRef = useRef<Edit | null>(null)
+  editRef.current = edit
 
   const timeAt = (clientX: number, snap = true) => {
     const el = trackRef.current
@@ -232,14 +236,20 @@ export function Lane({
         current ? { ...current, ...applyEdit(current, timeAt(e.clientX), tier) } : current
       )
     const up = () => {
-      setEdit((current) => {
-        if (!current) return null
-        // A click that moved nothing is not an edit; do not write a no-op.
-        if (current.from !== current.origFrom || current.to !== current.origTo) {
-          void commitEdit(current)
-        }
-        return null
-      })
+      // Read the edit from a ref and commit OUTSIDE the updater.
+      //
+      // This previously fired the PATCH from inside setEdit's updater. React
+      // is free to invoke an updater more than once — Strict Mode does it on
+      // every render in development — so one drag became two writes and two
+      // undo entries. An updater must be pure; a network call is not. This is
+      // the same mistake as the zoom window, in a different costume.
+      const current = editRef.current
+      setEdit(null)
+      if (!current) return
+      // A click that moved nothing is not an edit; do not write a no-op.
+      if (current.from !== current.origFrom || current.to !== current.origTo) {
+        void commitEdit(current)
+      }
     }
     window.addEventListener('mousemove', move)
     window.addEventListener('mouseup', up)

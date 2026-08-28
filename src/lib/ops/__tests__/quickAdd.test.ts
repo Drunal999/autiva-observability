@@ -98,3 +98,25 @@ describe('quickAdd — refuses to guess', () => {
     expect(r.summary).toContain('every weekday')
   })
 })
+
+
+describe('all-day events start at midnight', () => {
+  it('does not carry the current clock time into an all-day event', () => {
+    // Typed at 14:37, "quarter close tomorrow" stored a 14:37 -> 23:59 event
+    // that still claimed to be all-day.
+    const now = new Date(2026, 8, 14, 14, 37, 0)
+    const r = quickAdd('quarter close tomorrow', now)
+    expect(r.ok).toBe(true)
+    expect(r.allDay).toBe(true)
+    expect(r.startsAt?.getHours()).toBe(0)
+    expect(r.startsAt?.getMinutes()).toBe(0)
+  })
+
+  it('still honours an explicit time, which is not all-day', () => {
+    const now = new Date(2026, 8, 14, 14, 37, 0)
+    const r = quickAdd('review tomorrow at 16:00', now)
+    expect(r.ok).toBe(true)
+    expect(r.allDay).toBeFalsy()
+    expect(r.startsAt?.getHours()).toBe(16)
+  })
+})

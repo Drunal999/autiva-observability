@@ -101,3 +101,70 @@ describe('buildIcs', () => {
     expect(buildIcs([event()], 'Autiva')).toContain('REFRESH-INTERVAL')
   })
 })
+
+describe('all-day events in the feed', () => {
+  const CRLF = String.fromCharCode(13, 10)
+  const line = (ics: string, key: string) =>
+    ics.split(CRLF).find((l) => l.startsWith(key)) ?? ''
+
+  const allDay = (startsAt: Date, endsAt: Date) => ({
+    uid: 'e1',
+    title: 'Quarter close',
+    startsAt,
+    endsAt,
+    allDay: true,
+  })
+
+  it('uses the LOCAL date, not the UTC one', () => {
+    // Midnight local, east of Greenwich, is the PREVIOUS day in UTC. Reading
+    // the date off toISOString() put every all-day event a day early for the
+    // person who created it.
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 8, 15, 23, 59, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTSTART')).toBe('DTSTART;VALUE=DATE:20260915')
+  })
+
+  it('emits an EXCLUSIVE DTEND, as RFC 5545 defines it', () => {
+    // A one-day event used to come out with DTSTART == DTEND, which most
+    // clients drop entirely.
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 8, 15, 23, 59, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTEND')).toBe('DTEND;VALUE=DATE:20260916')
+  })
+
+  it('spans the right number of days for a multi-day event', () => {
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 8, 17, 23, 59, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTEND')).toBe('DTEND;VALUE=DATE:20260918')
+  })
+
+  it('never emits an end before the start, even on a malformed row', () => {
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 7, 1, 0, 0, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTEND')).toBe('DTEND;VALUE=DATE:20260916')
+  })
+
+  it('leaves timed events in UTC with a trailing Z', () => {
+    const ics = buildIcs(
+      [
+        {
+          uid: 'e2',
+          title: 'Standup',
+          startsAt: new Date('2026-09-15T09:30:00Z'),
+          endsAt: new Date('2026-09-15T09:45:00Z'),
+        },
+      ],
+      'Autiva'
+    )
+    expect(line(ics, 'DTSTART')).toBe('DTSTART:20260915T093000Z')
+  })
+})
+

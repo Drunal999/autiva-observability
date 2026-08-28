@@ -57,9 +57,17 @@ export async function GET(req: Request) {
     prisma.calendarEvent.findMany({
       where: {
         ...tenantScope(ctx),
-        // A recurring event's stored startsAt may predate the window, so
-        // recurring rows are always fetched and filtered after expansion.
-        OR: [{ startsAt: { gte: from, lte: to } }, { rrule: { not: null } }],
+        // OVERLAP, not "starts inside". Matching on startsAt alone made an
+        // event that spans the window boundary vanish completely — a
+        // three-day offsite was invisible from its second day onward, which
+        // is exactly when someone looks it up.
+        //
+        // A recurring event's stored startsAt may predate the window entirely,
+        // so recurring rows are always fetched and filtered after expansion.
+        OR: [
+          { AND: [{ startsAt: { lte: to } }, { endsAt: { gte: from } }] },
+          { rrule: { not: null } },
+        ],
       },
       include: { module: { select: { displayName: true } } },
       orderBy: { startsAt: 'asc' },
@@ -91,7 +99,9 @@ export async function GET(req: Request) {
       : undefined
 
     if (!e.rrule) {
-      if (e.startsAt >= from && e.startsAt <= to) {
+      // Same overlap test as the query, so a row fetched for spanning the
+      // window is not then dropped here.
+      if (e.startsAt <= to && e.endsAt >= from) {
         items.push({
           id: e.id, layer, title: e.title,
           startsAt: e.startsAt.toISOString(), endsAt: e.endsAt.toISOString(),

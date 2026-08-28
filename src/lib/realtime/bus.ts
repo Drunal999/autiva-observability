@@ -107,6 +107,17 @@ export async function replayEvents(
     ? await prisma.event.findFirst({ where: { id: sinceId, tenantId }, select: { at: true } })
     : null
 
+  // An id we cannot find is NOT the same as no cursor.
+  //
+  // publishBoardEvent mints `local-…` ids that are never persisted, and the
+  // client stores whatever id it last saw as its Last-Event-ID. Treating an
+  // unknown cursor as "start from the beginning" therefore replayed the
+  // tenant's OLDEST hundred events on reconnect and the client rendered them
+  // as if they had just happened. Replaying nothing is the honest answer: the
+  // client is already live from this point on, and a small gap beats a
+  // fabricated history.
+  if (sinceId && !since) return []
+
   const rows = await prisma.event.findMany({
     where: { tenantId, ...(since ? { at: { gt: since.at } } : {}) },
     orderBy: { at: 'asc' },
