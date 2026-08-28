@@ -2,7 +2,7 @@
 
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col justify-between border-r border-white/5 bg-[#0a0a0c] p-6 md:flex">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col justify-between border-r border-white/5 bg-[#0a1020]/70 p-6 backdrop-blur-xl md:flex">
       <div>
         <div className="mb-10 flex items-center gap-2">
           <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-500" />

@@ -1,0 +1,31 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900, "title": "Board — desktop (interactive)" },
+    { "file": "Mobile.dc.html", "x": 1560, "y": 0, "w": 390, "h": 844, "title": "Board — mobile" },
+    { "file": "System.dc.html", "x": 0, "y": 1060, "w": 940, "h": 900, "title": "Design system" }
+  ],
+  "annotations": [
+    {
+      "id": "how-to-drive",
+      "x": 1560,
+      "y": 920,
+      "w": 390,
+      "text": "This one is live — click it.\n\n· Search bar or New Task → command palette\n· Any card → task detail slide-over\n· Board / List → switches layout\n· All · Mine · Overdue · High → filters both views\n\nAccent colour and density are levers on the chips above the artboard."
+    },
+    {
+      "id": "direction-note",
+      "x": -420,
+      "y": 0,
+      "w": 340,
+      "text": "DIRECTION — \"Mission Control\"\n\nKeeps the dark-glass DNA, trades sci-fi decoration for Linear-grade density.\n\nWhat changed from the shipped build:\n1. ⌘K command palette — keyboard is the primary input\n2. Slide-over replaces the centered modal, so board context survives\n3. Overdue reads as a red rail + border, not animate-pulse\n4. Heavy 24px blur → 1px hairline surfaces\n5. Cyan is reserved for active state only\n6. Fixed bottom meter bar → inline status strip\n7. Empty states designed, not defaulted"
+    },
+    {
+      "id": "open-questions",
+      "x": 1020,
+      "y": 1060,
+      "w": 340,
+      "text": "OPEN QUESTIONS\n\n· Is 'Cycles' real, or should the rail stop at Board + Inbox?\n· Density default — comfortable or compact?\n· Presence avatars need a real source; right now they are sample teammates.\n\nEverything else is grepped from the repo, not invented."
+    }
+  ],
+  "launch": { "view": "focused", "file": "Main.dc.html" }
+}

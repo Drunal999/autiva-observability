@@ -15,6 +15,12 @@ model User {
   email      String?  @unique
   muteSounds Boolean  @default(false)
   tasks      Task[]
+  decisions  Approval[]
+  comments   Comment[]
+  notifications Notification[]
+  threadReads   ThreadRead[]
+  calendarEvents CalendarEvent[] @relation("CalendarAuthor")
+  calendarResponses CalendarAttendee[]
   createdAt  DateTime @default(now())
 }
 
@@ -43,4 +49,555 @@ enum Priority {
   LOW
   MED
   HIGH
+}
+
+// ─────────────────────────────────────────────────────────────
+// Agent operations — the Autiva Mission Control surfaces.
+// Fleet reads Agent, Trace reads Run + Span, Terminal reads
+// LogLine + WorkspaceFile, Automations reads Flow + FlowNode.
+//
+// TENANCY: this deployment runs on Neon, which has no RLS. Every
+// tenant-scoped table therefore carries `tenantId`, and the boundary
+// is enforced in server routes via lib/ops/tenant.ts — never in the
+// browser. See ADR-002. A query that forgets tenantId is a security
+// bug, not a missing filter.
+// ─────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String         @id @default(cuid())
+  slug      String         @unique
+  name      String
+  /// Internal tenant = our own dev fleet. Client tenants get client mode.
+  isInternal Boolean       @default(false)
+  modules   Module[]
+  agents    Agent[]
+  runs      Run[]
+  flows     Flow[]
+  buckets   MetricBucket[]
+  approvals Approval[]
+  events    Event[]
+  comments  Comment[]
+  notifications Notification[]
+  threadReads   ThreadRead[]
+  calendarEvents CalendarEvent[]
+  createdAt DateTime       @default(now())
+}
+
+/// A customer-facing capability ("SEO Audit", "Lead Follow-up"). Client mode
+/// shows `displayName` in place of agent codenames and file paths.
+model Module {
+  id          String   @id @default(cuid())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  key         String
+  displayName String
+  /// Per-engine latency target — Part 4 colours latency against this, not one
+  /// global threshold.
+  targetMs    Int      @default(2000)
+  agents      Agent[]
+  approvals   Approval[]
+  buckets     MetricBucket[]
+  calendarEvents CalendarEvent[]
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, key])
+  @@index([tenantId])
+}
+
+model Agent {
+  id          String      @id @default(cuid())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  module      Module?     @relation(fields: [moduleId], references: [id])
+  moduleId    String?
+  name        String
+  model       String
+  status      AgentStatus @default(IDLE)
+  currentStep String?
+  startedAt   DateTime?
+  tokensIn    Int         @default(0)
+  tokensOut   Int         @default(0)
+  costInr     Float       @default(0)
+  // Recent per-step durations in ms, oldest first — drives the card sparkline.
+  stepMs      Int[]       @default([])
+  runs        Run[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId, status])
+}
+
+model Run {
+  id        String          @id @default(cuid())
+  ref       String          @unique
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId  String
+  agent     Agent           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  agentId   String
+  trigger   RunTrigger      @default(MANUAL)
+  status    RunStatus       @default(RUNNING)
+  summary   String?
+  exitCode  Int?
+  tokens    Int             @default(0)
+  costInr   Float           @default(0)
+  startedAt DateTime        @default(now())
+  endedAt   DateTime?
+  spans     Span[]
+  logLines  LogLine[]
+  files     WorkspaceFile[]
+  approvals Approval[]
+
+  @@index([agentId, startedAt])
+  @@index([tenantId, startedAt])
+}
+
+model Span {
+  id       String     @id @default(cuid())
+  run      Run        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  runId    String
+  parentId String?
+  type     SpanType
+  name     String
+  // Offsets from the run's start, so the waterfall shares one time axis.
+  startMs  Int
+  durMs    Int
+  status   SpanStatus @default(OK)
+  model    String?
+  tokens   Int?
+  error    String?
+  critical Boolean    @default(false)
+
+  @@index([runId, startMs])
+}
+
+model LogLine {
+  id     String    @id @default(cuid())
+  run    Run       @relation(fields: [runId], references: [id], onDelete: Cascade)
+  runId  String
+  ts     DateTime  @default(now())
+  stream LogStream @default(STDOUT)
+  level  LogLevel  @default(INFO)
+  text   String
+  // Structured blocks interleave with raw output: a tool call carries its
+  // args, a diff its hunk, a stack trace its frames. TEXT lines use none.
+  kind   LogKind   @default(TEXT)
+  args   String?
+  meta   String?
+  lines  String[]  @default([])
+
+  @@index([runId, ts])
+}
+
+model WorkspaceFile {
+  id      String     @id @default(cuid())
+  run     Run        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  runId   String
+  path    String
+  status  FileStatus @default(READING)
+  added   Int        @default(0)
+  removed Int        @default(0)
+  // Unified-diff hunk for the workspace diff pane, one entry per line
+  // prefixed with its sign — " ", "-" or "+".
+  diff    String[]   @default([])
+
+  @@index([runId])
+}
+
+model Flow {
+  id         String     @id @default(cuid())
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  name       String
+  trigger    RunTrigger @default(CRON)
+  enabled    Boolean    @default(true)
+  runsToday  Int        @default(0)
+  p95Ms      Int        @default(0)
+  failures1h Int        @default(0)
+  nodes      FlowNode[]
+  runsLog    FlowRun[]
+  createdAt  DateTime   @default(now())
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
+model FlowNode {
+  id       String   @id @default(cuid())
+  flow     Flow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  flowId   String
+  kind     NodeKind
+  title    String
+  meta     String?
+  // Canvas coordinates in CSS px, straight from the design's DAG layout.
+  x        Int
+  y        Int
+  runs     Int      @default(0)
+  p95Ms    Int      @default(0)
+  failures Int      @default(0)
+  // Outgoing edges, stored as the ids of downstream nodes.
+  edgesTo  String[] @default([])
+
+  @@index([flowId])
+}
+
+model FlowRun {
+  id      String     @id @default(cuid())
+  ref     String     @unique
+  flow    Flow       @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  flowId  String
+  status  SpanStatus @default(OK)
+  summary String
+  durMs   Int        @default(0)
+  at      DateTime   @default(now())
+
+  @@index([flowId, at])
+}
+
+/// A planned thing on the timeline.
+///
+/// AGENT RUNS ARE NOT COPIED HERE. The past layer is read live from Run and
+/// merged at query time, so there is exactly one source of truth for what
+/// actually happened. A second copy would drift, and a calendar that disagrees
+/// with the trace is worse than no calendar.
+model CalendarEvent {
+  id          String             @id @default(cuid())
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  kind        CalendarEventKind  @default(HUMAN)
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime
+  allDay      Boolean            @default(false)
+  /// RFC 5545 RRULE string, or null for a one-off. Never a bespoke repeat
+  /// format — recurrence is a solved problem and rrule.js solves it.
+  rrule       String?
+  module      Module?            @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  moduleId    String?
+  createdBy   User?              @relation("CalendarAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+  attendees   CalendarAttendee[]
+  createdAt   DateTime           @default(now())
+
+  @@index([tenantId, startsAt])
+  @@index([tenantId, kind, startsAt])
+}
+
+model CalendarAttendee {
+  event    CalendarEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId  String
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  /// Attendees may only change their own row.
+  response AttendeeResponse   @default(PENDING)
+
+  @@id([eventId, userId])
+  @@index([userId])
+}
+
+enum CalendarEventKind {
+  HUMAN
+  SCHEDULED_RUN
+  DEADLINE
+  MILESTONE
+}
+
+enum AttendeeResponse {
+  YES
+  NO
+  MAYBE
+  PENDING
+}
+
+/// Conversation attached to the thing being discussed, rather than a general
+/// team chat. When an agent fails at 3am, the fix and the reasoning belong next
+/// to the failure — not in a scroll nobody can find next month.
+///
+/// Never hard-deleted: a thread hanging off an approval is part of the audit
+/// trail. Deleting soft-fills the body with a tombstone in the UI.
+model Comment {
+  id          String      @id @default(cuid())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  /// Polymorphic subject. Not a FK, because a comment must outlive the run or
+  /// approval it discusses.
+  subjectType SubjectType
+  subjectId   String
+
+  /// Null for agent- and system-authored entries, which have no user behind
+  /// them. An entry that looks human but was written by a model is how bad
+  /// decisions get made, so authorship is a stored fact, not a convention.
+  author      User?       @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId    String?
+  authorKind  AuthorKind  @default(HUMAN)
+  /// Kept so a deleted account's past comments still show who wrote them.
+  authorName  String
+
+  /// Untrusted. May have originated from a customer email or a scraped page.
+  /// Rendered as text, never as HTML.
+  body      String
+  /// User ids mentioned in the body, resolved at write time.
+  mentions  String[]  @default([])
+  notifications Notification[]
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+  deletedAt DateTime?
+
+  @@index([tenantId, subjectType, subjectId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+/// A mention waiting to be seen. No email or push — the header badge only.
+model Notification {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String?
+  subjectType SubjectType
+  subjectId   String
+  preview   String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+/// Per-user, per-thread read position.
+///
+/// One row per thread a user has actually opened — NOT one row per comment.
+/// A read receipt per message would be users x comments rows for a number
+/// nobody reads at that resolution; a watermark answers the only question the
+/// UI asks ("anything since I last looked?") in one row.
+///
+/// This is deliberately not folded into Notification. A Notification exists
+/// only when someone is mentioned, so it can never answer "is there new
+/// activity in a thread I am simply watching" — the common case.
+///
+/// A MISSING ROW MEANS UNREAD, not read. That is the honest reading: you have
+/// not opened it. The consequence is that every pre-existing thread lights up
+/// the first time this ships, which is correct rather than a bug to backfill
+/// away.
+model ThreadRead {
+  id          String      @id @default(cuid())
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  subjectType SubjectType
+  subjectId   String
+  /// Everything authored at or before this instant has been seen.
+  lastReadAt  DateTime
+
+  /// Tenant is in the key so the same user id in two tenants cannot collide,
+  /// and so the upsert can be scoped without a second lookup.
+  @@unique([tenantId, userId, subjectType, subjectId])
+  @@index([tenantId, userId, subjectType])
+}
+
+enum SubjectType {
+  RUN
+  APPROVAL
+  AGENT
+  MODULE
+  TENANT
+}
+
+/// Who wrote an entry. Agents and system summaries are labelled and styled
+/// distinctly; they must never be mistakable for a person.
+enum AuthorKind {
+  HUMAN
+  AGENT
+  SYSTEM
+}
+
+/// The realtime event log. One stream feeds both this dashboard and the
+/// animated city UI — they subscribe to the same channels rather than each
+/// opening their own socket stack.
+///
+/// Persisted rather than fire-and-forget so a client that connects late, or
+/// reconnects after a drop, can replay what it missed instead of showing a
+/// silently incomplete picture.
+model Event {
+  id       String       @id @default(cuid())
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  channel  EventChannel
+  /// Dotted event name within the channel, e.g. "task.created".
+  type     String
+  /// Untrusted: may have originated from a customer email or a scraped page.
+  /// Never rendered as HTML.
+  payload  Json
+  at       DateTime     @default(now())
+
+  @@index([tenantId, at])
+  @@index([tenantId, channel, at])
+}
+
+/// Channels a subscriber can filter on. A new realtime feature adds a channel
+/// here — it does not open a second connection.
+enum EventChannel {
+  BOARD
+  COMMENTS
+  FLEET
+  RUNS
+  APPROVALS
+  SYSTEM
+}
+
+/// A risky action an agent has paused on, waiting for a human.
+///
+/// Append-only in the sense that matters: rows are never deleted, and a
+/// decision is written exactly once. The decide route updates only where
+/// status is still PENDING, so a double-click or a replayed request cannot
+/// overwrite an existing decision — see /api/approvals/[id]/decide.
+model Approval {
+  id       String   @id @default(cuid())
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  /// The run that paused. Null if the request came from a flow rather than a
+  /// specific run.
+  run      Run?     @relation(fields: [runId], references: [id], onDelete: SetNull)
+  runId    String?
+  module   Module?  @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  moduleId String?
+
+  /// What the agent wants to do, in the operator's words.
+  action      String
+  detail      String?
+  risk        ApprovalRisk   @default(OTHER)
+  /// Set when the action moves money, so the amount is reviewable at a glance.
+  amountInr   Float?
+  status      ApprovalStatus @default(PENDING)
+  requestedAt DateTime       @default(now())
+
+  /// Audit trail. Written once, alongside the status transition.
+  decidedBy   User?     @relation(fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedById String?
+  decidedAt   DateTime?
+  /// Required when rejecting — a rejection with no reason is not reviewable.
+  reason      String?
+
+  @@index([tenantId, status, requestedAt])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Why this action needed a human. Drives how loudly the row presents.
+enum ApprovalRisk {
+  MONEY
+  PUBLISH
+  BULK_MESSAGE
+  DATA_DELETE
+  OTHER
+}
+
+/// One hourly rollup of fleet-wide activity. Fleet's four telemetry charts
+/// read these directly — per-agent step durations cannot be aggregated into a
+/// time series after the fact, so the bucket is written as runs complete.
+model MetricBucket {
+  id          String   @id @default(cuid())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  /// Null means the fleet-wide rollup. A moduleId scopes the bucket to one
+  /// engine, so latency can be judged against that engine own target rather
+  /// than one global threshold.
+  module      Module?  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  moduleId    String?
+  /// Start of the hour this bucket covers.
+  at          DateTime
+  runs        Int      @default(0)
+  failed      Int      @default(0)
+  p50Ms       Int      @default(0)
+  p95Ms       Int      @default(0)
+  p99Ms       Int      @default(0)
+  tokens      Int      @default(0)
+  costInr     Float    @default(0)
+  successRate Float    @default(100)
+
+  @@unique([tenantId, moduleId, at])
+  @@index([tenantId, at])
+  @@index([tenantId, moduleId, at])
+}
+
+/// Agent-level state. IDLE is not a run status — it means the agent has no
+/// active run at all — so it lives here and never on Run.
+enum AgentStatus {
+  IDLE
+  RUNNING
+  SUCCESS
+  FAILED
+  AWAITING_APPROVAL
+}
+
+/// The four backend run states, and the single source of truth for status.
+/// Display labels ("Done", "Blocked") are derived from these by statusLabel()
+/// and are never hardcoded anywhere else.
+enum RunStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  AWAITING_APPROVAL
+}
+
+enum RunTrigger {
+  MANUAL
+  CRON
+  WEBHOOK
+  AGENT
+}
+
+enum SpanType {
+  LLM
+  TOOL
+  SHELL
+  FILE
+  SUBAGENT
+}
+
+enum SpanStatus {
+  OK
+  RUNNING
+  ERROR
+  WARN
+}
+
+enum LogStream {
+  STDOUT
+  STDERR
+  SYSTEM
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
+
+enum LogKind {
+  TEXT
+  TOOL
+  DIFF
+  STACK
+}
+
+enum FileStatus {
+  READING
+  WRITING
+  MODIFIED
+  COMMITTED
+}
+
+enum NodeKind {
+  TRIGGER
+  CONDITION
+  ACTION
 }

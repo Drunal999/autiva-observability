@@ -2,15 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #0a0a0c;
-  --foreground: #f5f5f7;
+body {
+  font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
+/* ── Agent-ops motion system ──────────────────────────────────────
+   Every loop below is bound to genuinely continuous work: a dot
+   breathes while an agent runs, an edge flows while a packet is in
+   flight, a rail shimmers while a file is being written, a caret
+   blinks at a live stream head. Nothing else loops. Everything else
+   fires once, on a real state transition. */
+@keyframes breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes skel { 0%, 100% { opacity: 0.34; } 50% { opacity: 0.7; } }
+@keyframes enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+@keyframes shimmerRail { 0% { background-position: 0 -40px; } 100% { background-position: 0 40px; } }
+@keyframes caret { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+@keyframes logLine { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+@keyframes demoExit { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-4px); } }
+@keyframes demoExpand { from { height: 22px; } to { height: 74px; } }
+@keyframes stateFlip {
+  from { border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.05); }
+  to { border-color: rgba(52,211,153,0.45); background: rgba(52,211,153,0.10); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
 }
 
 @layer utilities {
@@ -31,5 +52,74 @@ body {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-jakarta);
+    --font-sans: var(--font-jakarta);
+  }
+
+  /* JARVIS is a dark-only surface, so the shadcn/reui tokens carry their
+     dark values here rather than in a `.dark` class that nothing sets. */
+  :root {
+    --background: #0a1020;
+    --foreground: #f5f5f7;
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --destructive-foreground: oklch(0.985 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+    --success: oklch(0.696 0.17 162.48);
+    --success-foreground: oklch(0.985 0 0);
+    --info: oklch(0.606 0.25 292.717);
+    --info-foreground: oklch(0.985 0 0);
+    --warning: oklch(0.795 0.184 86.047);
+    --warning-foreground: oklch(0.145 0 0);
+    --invert: oklch(0.985 0 0);
+    --invert-foreground: oklch(0.145 0 0);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  /* The canvas colour lives on <html>, not <body>: the ambient video sits on a
+     fixed layer at z-index -10, and an opaque body background would paint
+     straight over it. */
+  html {
+    @apply bg-background;
+  }
+
+  body {
+    @apply text-foreground;
+    background: transparent;
   }
 }

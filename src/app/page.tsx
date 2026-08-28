@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { CalendarClient } from '@/components/CalendarClient'
 import { KanbanBoard } from '@/components/KanbanBoard'
+import { TaskDataGrid } from '@/components/TaskDataGrid'
 import { TaskDetailModal } from '@/components/TaskDetailModal'
 import { Sidebar } from '@/components/Sidebar'
 import { LiveActivity } from '@/components/LiveActivity'
@@ -18,6 +20,8 @@ function greeting(now: Date) {
 export default function Page() {
   const { data: session } = useSession()
   const [showCreate, setShowCreate] = useState(false)
+  const [view, setView] = useState<'board' | 'list'>('board')
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [muteSounds, setMuteSounds] = useState(false)
   const [now, setNow] = useState<Date | null>(null)
 
@@ -47,7 +51,7 @@ export default function Page() {
   const firstName = session?.user?.name?.split(' ')[0] ?? 'there'
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c]">
+    <div className="min-h-screen">
       <Sidebar />
       <div className="pb-28 md:pl-64">
         <div className="flex flex-col gap-6 p-6 xl:flex-row">
@@ -65,6 +69,20 @@ export default function Page() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <div className="flex gap-1 rounded-xl border border-white/10 bg-white/5 p-1">
+                  {(['board', 'list'] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setView(v)}
+                      className={`rounded-lg px-3 py-1 text-xs font-semibold capitalize transition ${
+                        view === v ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
+                      }`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
                 <button
                   type="button"
                   onClick={toggleMute}
@@ -82,9 +100,20 @@ export default function Page() {
               </div>
             </div>
             <h2 className="sr-only">Team Board</h2>
-            <KanbanBoard muteSounds={muteSounds} />
+            {view === 'board' ? <KanbanBoard muteSounds={muteSounds} /> : <TaskDataGrid />}
           </div>
-          <div className="w-full shrink-0 xl:w-80">
+          <div className="flex w-full shrink-0 flex-col gap-6 xl:w-80">
+            <div className="glass rounded-3xl p-5">
+              <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-white/40">
+                Calendar
+              </h2>
+              <CalendarClient
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="w-full bg-transparent p-0"
+              />
+            </div>
             <LiveActivity />
           </div>
         </div>

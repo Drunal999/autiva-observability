@@ -26,14 +26,16 @@ function describeUpdated(task: Pick<Task, 'title' | 'status'>) {
 
 const statusDotClass: Record<RealtimeConnectionState, string> = {
   connected: 'bg-emerald-400',
-  connecting: 'bg-amber-400 animate-pulse',
-  disconnected: 'bg-red-400',
+  connecting: 'bg-amber-400',
+  reconnecting: 'bg-amber-400 animate-pulse',
+  offline: 'bg-red-400',
 }
 
 const statusLabel: Record<RealtimeConnectionState, string> = {
   connected: 'Live',
   connecting: 'Connecting',
-  disconnected: 'Offline',
+  reconnecting: 'Reconnecting',
+  offline: 'Offline',
 }
 
 export function LiveActivity() {

@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #0a0a0c; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #22d3ee; text-decoration: none; }
+    a:hover { color: #67e8f9; }
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 0; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #0a0a0c; color: #f5f5f7; display: flex; flex-direction: column; overflow: hidden;">
+
+  <header style="padding: 20px 18px 14px 18px; display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="width: 24px; height: 24px; border-radius: 8px; background: linear-gradient(135deg, #22d3ee, #3b82f6);"></span>
+      <span style="font-size: 15px; font-weight: 800; letter-spacing: -0.02em; flex-grow: 1;">JARVIS.</span>
+      <button type="button" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5);">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      </button>
+      <span style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #22d3ee; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">DR</span>
+    </div>
+
+    <div>
+      <h1 style="margin: 0; font-size: 25px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;">Good evening,<br>Devarshi.</h1>
+      <p style="margin: 6px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.38);">3 tasks need you today</p>
+    </div>
+
+    <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px;">
+      <span style="flex-shrink: 0; height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 10px; border: 1px solid rgba(34,211,238,0.33); background: rgba(34,211,238,0.09); color: #22d3ee; font-size: 12px; font-weight: 700;">To Do <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7;">3</span></span>
+      <span style="flex-shrink: 0; height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600;">In Progress <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7;">2</span></span>
+      <span style="flex-shrink: 0; height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 600;">Done <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; opacity: 0.7;">2</span></span>
+    </div>
+  </header>
+
+  <div style="flex-grow: 1; min-height: 0; overflow-y: auto; padding: 4px 18px 18px 18px; display: flex; flex-direction: column; gap: 10px;">
+
+    <div style="position: relative; padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.035); border: 1px solid rgba(248,113,113,0.28); min-height: 88px;">
+      <span style="position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; border-radius: 0 2px 2px 0; background: #f87171;"></span>
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <p style="margin: 0; flex-grow: 1; font-size: 15px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92); text-wrap: pretty;">Swap in-memory SSE bus for Redis pub/sub</p>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; color: #f87171; background: rgba(248,113,113,0.10); flex-shrink: 0;">HIGH</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; margin-top: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #22d3ee; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">DR</span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.42); flex-grow: 1;">Devarshi R.</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #f87171; background: rgba(248,113,113,0.10); border-radius: 6px; padding: 3px 7px;">Overdue 2d</span>
+      </div>
+    </div>
+
+    <div style="position: relative; padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06); min-height: 88px;">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <p style="margin: 0; flex-grow: 1; font-size: 15px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92); text-wrap: pretty;">Replace centered modal with a slide-over panel</p>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; color: #f87171; background: rgba(248,113,113,0.10); flex-shrink: 0;">HIGH</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; margin-top: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #f472b6; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">PS</span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.42); flex-grow: 1;">Priya S.</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fbbf24; background: rgba(251,191,36,0.10); border-radius: 6px; padding: 3px 7px;">Aug 28</span>
+      </div>
+    </div>
+
+    <div style="position: relative; padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06); min-height: 88px;">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <p style="margin: 0; flex-grow: 1; font-size: 15px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92); text-wrap: pretty;">Audit AA contrast across every white/opacity pair</p>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; color: #fbbf24; background: rgba(251,191,36,0.10); flex-shrink: 0;">MED</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; margin-top: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #a78bfa; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">AM</span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.42); flex-grow: 1;">Aarav M.</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.32);">Sep 2</span>
+      </div>
+    </div>
+
+    <div style="position: relative; padding: 15px; border-radius: 15px; background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.06); min-height: 88px;">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <p style="margin: 0; flex-grow: 1; font-size: 15px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92); text-wrap: pretty;">Stale-task detection past 5 days idle</p>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 6px; color: #34d399; background: rgba(52,211,153,0.10); flex-shrink: 0;">LOW</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; margin-top: 13px;">
+        <span style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #f472b6; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);">PS</span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.42); flex-grow: 1;">Priya S.</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.32);">Sep 5</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex-shrink: 0; padding: 12px 18px 26px 18px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px;">
+    <div style="flex-grow: 1; display: flex; align-items: center; gap: 8px;">
+      <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399;"></span>
+      <span style="font-size: 12px; color: rgba(255,255,255,0.45);">2 of 7 done</span>
+    </div>
+    <button type="button" style="height: 48px; padding: 0 20px; border-radius: 15px; border: none; background: #22d3ee; color: #06171a; font-size: 13px; font-weight: 800; letter-spacing: 0.02em; display: flex; align-items: center; gap: 8px; font-family: 'Plus Jakarta Sans', sans-serif;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      New Task
+    </button>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview": {"width": 390, "height": 844}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

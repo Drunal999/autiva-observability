@@ -1,0 +1,170 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { icsToken, verifyIcsToken, buildIcs } from '../ics'
+
+beforeEach(() => {
+  process.env.ICS_FEED_SECRET = 'test-ics-secret-0123456789abcdefghij'
+})
+
+const event = (over: Partial<Parameters<typeof buildIcs>[0][number]> = {}) => ({
+  uid: 'e1',
+  title: 'Standup',
+  startsAt: new Date('2026-09-01T09:30:00.000Z'),
+  endsAt: new Date('2026-09-01T09:45:00.000Z'),
+  ...over,
+})
+
+describe('ICS feed tokens', () => {
+  it('is stable for the same user, so a subscription keeps working', () => {
+    expect(icsToken('t1', 'u1')).toBe(icsToken('t1', 'u1'))
+  })
+
+  it('differs per user and per tenant', () => {
+    expect(icsToken('t1', 'u1')).not.toBe(icsToken('t1', 'u2'))
+    expect(icsToken('t1', 'u1')).not.toBe(icsToken('t2', 'u1'))
+  })
+
+  it('is not sequential or guessable from the ids', () => {
+    // A feed URL is effectively a password; a token derived visibly from a
+    // user id would let anyone construct someone else's feed.
+    const token = icsToken('tnt_internal', 'user-000001')
+    expect(token).not.toContain('user-000001')
+    expect(token).not.toContain('tnt_internal')
+    expect(token.length).toBeGreaterThanOrEqual(32)
+  })
+
+  it('accepts a correct token and rejects a wrong one', () => {
+    const good = icsToken('t1', 'u1')
+    expect(verifyIcsToken('t1', 'u1', good)).toBe(true)
+    expect(verifyIcsToken('t1', 'u1', good.slice(0, -1) + 'x')).toBe(false)
+  })
+
+  it('rejects one user token used for another user', () => {
+    expect(verifyIcsToken('t1', 'u2', icsToken('t1', 'u1'))).toBe(false)
+  })
+
+  it('rejects empty and malformed tokens without throwing', () => {
+    expect(verifyIcsToken('t1', 'u1', '')).toBe(false)
+    expect(verifyIcsToken('t1', 'u1', 'short')).toBe(false)
+  })
+
+  it('is revoked by rotating the secret', () => {
+    const before = icsToken('t1', 'u1')
+    process.env.ICS_FEED_SECRET = 'rotated-0123456789abcdefghijklmnopqr'
+    expect(verifyIcsToken('t1', 'u1', before)).toBe(false)
+  })
+})
+
+describe('buildIcs', () => {
+  it('produces a well-formed calendar with CRLF line endings', () => {
+    const ics = buildIcs([event()], 'Autiva')
+    expect(ics.startsWith('BEGIN:VCALENDAR\r\n')).toBe(true)
+    expect(ics.trimEnd().endsWith('END:VCALENDAR')).toBe(true)
+    expect(ics).toContain('VERSION:2.0')
+  })
+
+  it('escapes the five characters that would otherwise change a line meaning', () => {
+    const ics = buildIcs([event({ title: 'Review; notes, part\\one' })], 'Autiva')
+    expect(ics).toContain('Review\\; notes\\, part\\\\one')
+  })
+
+  it('escapes newlines rather than emitting a broken multi-line field', () => {
+    const ics = buildIcs([event({ description: 'line one\nline two' })], 'Autiva')
+    expect(ics).toContain('line one\\nline two')
+    // The literal newline must not survive into the body of the field.
+    expect(ics).not.toMatch(/DESCRIPTION:line one\r?\nline two/)
+  })
+
+  it('folds long lines to 75 octets, the usual cause of a silent import failure', () => {
+    const ics = buildIcs([event({ title: 'x'.repeat(200) })], 'Autiva')
+    for (const line of ics.split('\r\n')) {
+      expect(line.length).toBeLessThanOrEqual(75)
+    }
+  })
+
+  it('emits DATE values for all-day events, not timestamps', () => {
+    const ics = buildIcs([event({ allDay: true })], 'Autiva')
+    expect(ics).toContain('DTSTART;VALUE=DATE:20260901')
+  })
+
+  it('carries an RRULE through unchanged', () => {
+    const ics = buildIcs([event({ rrule: 'FREQ=WEEKLY;BYDAY=MO' })], 'Autiva')
+    expect(ics).toContain('RRULE:FREQ=WEEKLY;BYDAY=MO')
+  })
+
+  it('does not double the RRULE prefix if one is already present', () => {
+    const ics = buildIcs([event({ rrule: 'RRULE:FREQ=DAILY' })], 'Autiva')
+    expect(ics).toContain('RRULE:FREQ=DAILY')
+    expect(ics).not.toContain('RRULE:RRULE:')
+  })
+
+  it('tells clients how often to refresh rather than letting them guess', () => {
+    expect(buildIcs([event()], 'Autiva')).toContain('REFRESH-INTERVAL')
+  })
+})
+
+describe('all-day events in the feed', () => {
+  const CRLF = String.fromCharCode(13, 10)
+  const line = (ics: string, key: string) =>
+    ics.split(CRLF).find((l) => l.startsWith(key)) ?? ''
+
+  const allDay = (startsAt: Date, endsAt: Date) => ({
+    uid: 'e1',
+    title: 'Quarter close',
+    startsAt,
+    endsAt,
+    allDay: true,
+  })
+
+  it('uses the LOCAL date, not the UTC one', () => {
+    // Midnight local, east of Greenwich, is the PREVIOUS day in UTC. Reading
+    // the date off toISOString() put every all-day event a day early for the
+    // person who created it.
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 8, 15, 23, 59, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTSTART')).toBe('DTSTART;VALUE=DATE:20260915')
+  })
+
+  it('emits an EXCLUSIVE DTEND, as RFC 5545 defines it', () => {
+    // A one-day event used to come out with DTSTART == DTEND, which most
+    // clients drop entirely.
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 8, 15, 23, 59, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTEND')).toBe('DTEND;VALUE=DATE:20260916')
+  })
+
+  it('spans the right number of days for a multi-day event', () => {
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 8, 17, 23, 59, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTEND')).toBe('DTEND;VALUE=DATE:20260918')
+  })
+
+  it('never emits an end before the start, even on a malformed row', () => {
+    const ics = buildIcs(
+      [allDay(new Date(2026, 8, 15, 0, 0, 0), new Date(2026, 7, 1, 0, 0, 0))],
+      'Autiva'
+    )
+    expect(line(ics, 'DTEND')).toBe('DTEND;VALUE=DATE:20260916')
+  })
+
+  it('leaves timed events in UTC with a trailing Z', () => {
+    const ics = buildIcs(
+      [
+        {
+          uid: 'e2',
+          title: 'Standup',
+          startsAt: new Date('2026-09-15T09:30:00Z'),
+          endsAt: new Date('2026-09-15T09:45:00Z'),
+        },
+      ],
+      'Autiva'
+    )
+    expect(line(ics, 'DTSTART')).toBe('DTSTART:20260915T093000Z')
+  })
+})
+

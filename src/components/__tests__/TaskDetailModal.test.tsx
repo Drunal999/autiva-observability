@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// The due-date picker is a next/dynamic({ ssr: false }) import that pulls in
+// react-day-picker. These tests are about saving a task, not about the
+// calendar, and resolving that chunk under full-suite load pushed them past
+// the default timeout. Stub it so the subject under test is the only thing
+// being measured; CalendarClient has its own coverage.
+vi.mock('@/components/CalendarClient', () => ({
+  CalendarClient: () => null,
+}))
+
 import { TaskDetailModal } from '../TaskDetailModal'
 
 describe('TaskDetailModal', () => {

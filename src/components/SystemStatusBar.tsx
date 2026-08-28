@@ -10,13 +10,17 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 const connectionLabel: Record<RealtimeConnectionState, string> = {
   connected: 'OS Stable',
   connecting: 'Syncing',
-  disconnected: 'Offline',
+  reconnecting: 'Reconnecting',
+  offline: 'Offline',
 }
 
 const connectionDot: Record<RealtimeConnectionState, string> = {
   connected: 'bg-emerald-400',
-  connecting: 'bg-amber-400 animate-pulse',
-  disconnected: 'bg-red-400',
+  connecting: 'bg-amber-400',
+  // Reconnecting is the one state that must be impossible to miss: a stale
+  // dashboard that looks live is worse than one that looks broken.
+  reconnecting: 'bg-amber-400 animate-pulse',
+  offline: 'bg-red-400',
 }
 
 export function SystemStatusBar() {

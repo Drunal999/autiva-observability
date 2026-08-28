@@ -1,0 +1,627 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; background: #0a0a0c; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #22d3ee; text-decoration: none; }
+    a:hover { color: #67e8f9; }
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 900px; display: flex; background: #0a0a0c; color: #f5f5f7; overflow: hidden; position: relative;">
+
+  <!-- ══ NAV RAIL ══ -->
+  <aside style="width: 232px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid rgba(255,255,255,0.05); padding: 20px 14px;">
+    <div style="display: flex; flex-direction: column; gap: 26px;">
+
+      <div style="display: flex; align-items: center; gap: 9px; padding: 0 8px;">
+        <span style="width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, {{accent}}, #3b82f6); display: block;"></span>
+        <span style="font-size: 16px; font-weight: 800; letter-spacing: -0.02em;">JARVIS.</span>
+        <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 2px 5px;">v2</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <p style="margin: 0 0 6px 8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Workspace</p>
+        <button type="button" onClick="{{ navPickBoard }}" style="{{navBoardStyle}}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>
+          <span style="flex-grow: 1; text-align: left;">Board</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">7</span>
+        </button>
+        <button type="button" onClick="{{ navPickInbox }}" style="{{navInboxStyle}}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2 3h4l2-3h5"/><path d="M4.5 6h15l1.5 6v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5z"/></svg>
+          <span style="flex-grow: 1; text-align: left;">Inbox</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">3</span>
+        </button>
+        <button type="button" onClick="{{ navPickCycles }}" style="{{navCyclesStyle}}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 4v5h-5"/></svg>
+          <span style="flex-grow: 1; text-align: left;">Cycles</span>
+        </button>
+        <button type="button" onClick="{{ navPickDocs }}" style="{{navDocsStyle}}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+          <span style="flex-grow: 1; text-align: left;">Docs</span>
+        </button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <p style="margin: 0 0 6px 8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Views</p>
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="3">
+          <button type="button" onClick="{{ f.pick }}" style="{{f.style}}">
+            <span style="width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: {{f.dot}};"></span>
+            <span style="flex-grow: 1; text-align: left;">{{ f.label }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3);">{{ f.count }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 9px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.03); border-radius: 14px; padding: 10px 11px;">
+        <span style="width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px rgba(52,211,153,0.6);"></span>
+        <span style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.55);">Realtime · SSE</span>
+        <span style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3);">14ms</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 6px 8px;">
+        <span style="width: 28px; height: 28px; border-radius: 9px; background: #1c1c22; border: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: {{accent}};">DR</span>
+        <div style="line-height: 1.25; flex-grow: 1;">
+          <p style="margin: 0; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8);">Devarshi R.</p>
+          <p style="margin: 0; font-size: 10px; color: rgba(255,255,255,0.3);">Maintainer</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+
+    <!-- Header -->
+    <header style="padding: 22px 24px 0 24px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;">
+        <div>
+          <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1;">Good evening, Devarshi.</h1>
+          <p style="margin: 6px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.38);">
+            3 tasks need you today ·
+            <span style="font-family: 'JetBrains Mono', monospace; color: rgba(255,255,255,0.28);">Tuesday, August 25</span>
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" onClick="{{ openPalette }}" style="display: flex; align-items: center; gap: 9px; height: 36px; padding: 0 12px 0 11px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; min-width: 210px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <span style="flex-grow: 1; text-align: left;">Search or run a command</span>
+            <kbd style="font-family: 'JetBrains Mono', monospace; font-size: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 5px; padding: 2px 5px; color: rgba(255,255,255,0.35);">⌘K</kbd>
+          </button>
+          <button type="button" onClick="{{ openNew }}" style="display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 15px; border-radius: 11px; border: none; background: {{accent}}; color: #06171a; font-size: 12px; font-weight: 800; letter-spacing: 0.02em; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New Task
+          </button>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 14px;">
+        <div style="display: flex; gap: 2px; padding: 3px; border-radius: 11px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+          <button type="button" onClick="{{ viewPickBoard }}" style="{{viewBoardStyle}}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>
+            Board
+          </button>
+          <button type="button" onClick="{{ viewPickList }}" style="{{viewListStyle}}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            List
+          </button>
+        </div>
+
+        <span style="width: 1px; height: 20px; background: rgba(255,255,255,0.07);"></span>
+
+        <sc-for list="{{chips}}" as="c" hint-placeholder-count="3">
+          <button type="button" onClick="{{ c.pick }}" style="{{c.style}}">{{ c.label }}</button>
+        </sc-for>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="display: flex; align-items: center; gap: 0;">
+          <sc-for list="{{presence}}" as="p" hint-placeholder-count="3">
+            <span style="{{p.style}}" title="{{p.name}}">{{ p.initials }}</span>
+          </sc-for>
+        </div>
+        <span style="font-size: 11px; color: rgba(255,255,255,0.3); margin-left: 8px;">3 online</span>
+      </div>
+    </header>
+
+    <!-- Body -->
+    <div style="flex-grow: 1; min-height: 0; display: flex; gap: 16px; padding: 16px 24px 0 24px;">
+
+      <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+
+        <!-- BOARD -->
+        <sc-if value="{{isBoard}}" hint-placeholder-val="{{ true }}">
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; height: 100%; min-height: 0;">
+            <sc-for list="{{columns}}" as="col" hint-placeholder-count="3">
+              <section style="display: flex; flex-direction: column; min-height: 0; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 14px 14px 10px 14px;">
+                  <span style="width: 7px; height: 7px; border-radius: 2px; background: {{col.dot}};"></span>
+                  <h2 style="margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45);">{{ col.label }}</h2>
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); border-radius: 20px; padding: 1px 7px;">{{ col.count }}</span>
+                  <span style="flex-grow: 1;"></span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                </div>
+
+                <div style="{{col.listStyle}}">
+                  <sc-for list="{{col.tasks}}" as="t" hint-placeholder-count="3">
+                    <button type="button" onClick="{{ t.pick }}" style="{{t.cardStyle}}">
+                      <span style="{{t.railStyle}}"></span>
+                      <div style="display: flex; align-items: flex-start; gap: 8px;">
+                        <p style="margin: 0; flex-grow: 1; font-size: 13px; font-weight: 600; line-height: 1.4; color: rgba(255,255,255,0.92); text-wrap: pretty;">{{ t.title }}</p>
+                        <span style="{{t.prioStyle}}">{{ t.priority }}</span>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                        <span style="{{t.avatarStyle}}">{{ t.initials }}</span>
+                        <span style="font-size: 11px; color: rgba(255,255,255,0.4); flex-grow: 1; text-align: left;">{{ t.assignee }}</span>
+                        <span style="{{t.dueStyle}}">{{ t.due }}</span>
+                      </div>
+                    </button>
+                  </sc-for>
+
+                  <sc-if value="{{col.empty}}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 12px; border: 1px dashed rgba(255,255,255,0.07); border-radius: 14px;">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="1.8" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                      <p style="margin: 0; font-size: 11px; color: rgba(255,255,255,0.28); text-align: center;">Nothing here. Drop a card or press N.</p>
+                    </div>
+                  </sc-if>
+                </div>
+              </section>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- LIST -->
+        <sc-if value="{{isList}}" hint-placeholder-val="{{ false }}">
+          <div style="border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; background: rgba(255,255,255,0.02); overflow: hidden;">
+            <div style="display: grid; grid-template-columns: 26px 1fr 130px 92px 104px; gap: 12px; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.28);">
+              <span></span><span>Task</span><span>Assignee</span><span>Priority</span><span>Due</span>
+            </div>
+            <sc-for list="{{allTasks}}" as="t" hint-placeholder-count="6">
+              <button type="button" onClick="{{ t.pick }}" style="{{t.rowStyle}}">
+                <span style="width: 7px; height: 7px; border-radius: 2px; background: {{t.statusDot}}; justify-self: center;"></span>
+                <span style="font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ t.title }}</span>
+                <span style="display: flex; align-items: center; gap: 7px;">
+                  <span style="{{t.avatarStyle}}">{{ t.initials }}</span>
+                  <span style="font-size: 11px; color: rgba(255,255,255,0.45);">{{ t.assignee }}</span>
+                </span>
+                <span style="{{t.prioStyle}} justify-self: start;">{{ t.priority }}</span>
+                <span style="{{t.dueStyle}} justify-self: start;">{{ t.due }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- ACTIVITY RAIL -->
+      <aside style="width: 264px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0;">
+        <div style="border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h2 style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.4);">Throughput</h2>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #34d399;">+18%</span>
+          </div>
+          <div style="display: flex; align-items: flex-end; gap: 4px; height: 44px;">
+            <sc-for list="{{spark}}" as="s" hint-placeholder-count="12">
+              <span style="{{s.style}}"></span>
+            </sc-for>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25);">
+            <span>Aug 11</span><span>Aug 25</span>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1; min-height: 0; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); border-radius: 18px; padding: 14px; display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <h2 style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.4);">Live Activity</h2>
+            <span style="display: flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.35);">
+              <span style="width: 5px; height: 5px; border-radius: 50%; background: #34d399;"></span>LIVE
+            </span>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px;">
+            <sc-for list="{{activity}}" as="a" hint-placeholder-count="6">
+              <div style="display: flex; gap: 9px; padding: 7px 0;">
+                <span style="{{a.avatarStyle}}">{{ a.initials }}</span>
+                <div style="flex-grow: 1; min-width: 0; line-height: 1.35;">
+                  <p style="margin: 0; font-size: 11.5px; color: rgba(255,255,255,0.62); text-wrap: pretty;">{{ a.text }}</p>
+                  <p style="margin: 2px 0 0 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.24);">{{ a.time }}</p>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- STATUS BAR -->
+    <footer style="height: 60px; flex-shrink: 0; margin: 14px 24px 16px 24px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.03); border-radius: 16px; display: flex; align-items: center; padding: 0 18px; gap: 22px;">
+      <sc-for list="{{meters}}" as="m" hint-placeholder-count="3">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <span style="width: 7px; height: 7px; border-radius: 2px; background: {{m.color}};"></span>
+          <div style="line-height: 1.2;">
+            <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3);">{{ m.label }}</p>
+            <p style="margin: 0; font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.82);">{{ m.value }}</p>
+          </div>
+          <div style="width: 56px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.06); overflow: hidden;">
+            <span style="{{m.barStyle}}"></span>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="flex-grow: 1;"></div>
+
+      <div style="display: flex; align-items: center; gap: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">
+        <span><span style="color: rgba(255,255,255,0.5);">⌘K</span> command</span>
+        <span><span style="color: rgba(255,255,255,0.5);">N</span> new</span>
+        <span><span style="color: rgba(255,255,255,0.5);">1–3</span> move</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ══ SLIDE-OVER ══ -->
+  <sc-if value="{{detailOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; background: rgba(4,4,6,0.55); display: flex; justify-content: flex-end;">
+      <div style="width: 460px; height: 100%; background: #0e0e12; border-left: 1px solid rgba(255,255,255,0.07); box-shadow: -24px 0 60px rgba(0,0,0,0.5); display: flex; flex-direction: column;">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 2px 6px;">{{ detail.ref }}</span>
+          <span style="{{detail.statusStyle}}">{{ detail.status }}</span>
+          <span style="flex-grow: 1;"></span>
+          <button type="button" onClick="{{ closeDetail }}" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5); cursor: pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div style="flex-grow: 1; overflow-y: auto; padding: 22px 20px; display: flex; flex-direction: column; gap: 22px;">
+          <h2 style="margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; text-wrap: pretty;">{{ detail.title }}</h2>
+
+          <div style="display: grid; grid-template-columns: 88px 1fr; gap: 12px 14px; align-items: center;">
+            <span style="font-size: 11px; color: rgba(255,255,255,0.35);">Assignee</span>
+            <span style="display: flex; align-items: center; gap: 8px;">
+              <span style="{{detail.avatarStyle}}">{{ detail.initials }}</span>
+              <span style="font-size: 13px; color: rgba(255,255,255,0.85);">{{ detail.assignee }}</span>
+            </span>
+
+            <span style="font-size: 11px; color: rgba(255,255,255,0.35);">Priority</span>
+            <span><span style="{{detail.prioStyle}}">{{ detail.priority }}</span></span>
+
+            <span style="font-size: 11px; color: rgba(255,255,255,0.35);">Due</span>
+            <span style="font-size: 13px; color: {{detail.dueColor}};">{{ detail.dueLong }}</span>
+
+            <span style="font-size: 11px; color: rgba(255,255,255,0.35);">Last moved</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.5);">{{ detail.lastMoved }}</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3);">Description</p>
+            <p style="margin: 0; font-size: 13px; line-height: 1.65; color: rgba(255,255,255,0.6); text-wrap: pretty;">{{ detail.body }}</p>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3);">Move to</p>
+            <div style="display: flex; gap: 7px;">
+              <sc-for list="{{moveTargets}}" as="mt" hint-placeholder-count="3">
+                <button type="button" onClick="{{ mt.pick }}" style="{{mt.style}}">
+                  <span style="width: 6px; height: 6px; border-radius: 2px; background: {{mt.dot}};"></span>
+                  {{ mt.label }}
+                  <kbd style="font-family: 'JetBrains Mono', monospace; font-size: 9px; opacity: 0.5;">{{ mt.key }}</kbd>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.3);">Timeline</p>
+            <sc-for list="{{detail.timeline}}" as="tl" hint-placeholder-count="3">
+              <div style="display: flex; gap: 11px;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: {{tl.dot}}; margin-top: 5px; flex-shrink: 0;"></span>
+                <div style="line-height: 1.4;">
+                  <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.62);">{{ tl.text }}</p>
+                  <p style="margin: 1px 0 0 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25);">{{ tl.time }}</p>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+          <button type="button" style="font-size: 12px; color: #f87171; background: none; border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; padding: 8px 0;">Delete</button>
+          <span style="flex-grow: 1;"></span>
+          <button type="button" onClick="{{ closeDetail }}" style="height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: rgba(255,255,255,0.55); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Cancel</button>
+          <button type="button" onClick="{{ closeDetail }}" style="height: 34px; padding: 0 16px; border-radius: 10px; border: none; background: {{accent}}; color: #06171a; font-size: 12px; font-weight: 800; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;">Save</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ══ COMMAND PALETTE ══ -->
+  <sc-if value="{{paletteOpen}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; background: rgba(4,4,6,0.6); display: flex; justify-content: center; padding-top: 130px;">
+      <div style="width: 580px; height: fit-content; max-height: 440px; background: #101015; border: 1px solid rgba(255,255,255,0.09); border-radius: 18px; box-shadow: 0 32px 80px rgba(0,0,0,0.6); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 11px; padding: 15px 17px; border-bottom: 1px solid rgba(255,255,255,0.06);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span style="flex-grow: 1; font-size: 14px; color: rgba(255,255,255,0.9);">assign</span>
+          <span style="width: 1px; height: 15px; background: {{accent}};"></span>
+          <button type="button" onClick="{{ closePalette }}" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; border: 1px solid rgba(255,255,255,0.1); background: transparent; border-radius: 5px; padding: 3px 6px; color: rgba(255,255,255,0.35); cursor: pointer;">ESC</button>
+        </div>
+        <div style="overflow-y: auto; padding: 7px;">
+          <div style="padding: 8px 10px 4px 10px;">
+            <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Actions</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 9px; color: #f5f5f7; background: rgba(255,255,255,0.06);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0115 0"/></svg>
+            <span style="flex-grow: 1; font-size: 13px;">Assign to…</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">A</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 9px; color: rgba(255,255,255,0.62);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <span style="flex-grow: 1; font-size: 13px;">Move to In Progress</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">2</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 9px; color: rgba(255,255,255,0.62);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+            <span style="flex-grow: 1; font-size: 13px;">Set priority High</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">P</span>
+          </div>
+
+          <div style="padding: 12px 10px 4px 10px;">
+            <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.25);">Create</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 9px; color: rgba(255,255,255,0.62);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span style="flex-grow: 1; font-size: 13px;">New task in To Do</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">N</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 11px; height: 38px; padding: 0 10px; border-radius: 9px; color: rgba(255,255,255,0.62);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+            <span style="flex-grow: 1; font-size: 13px;">New doc</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.28);">⇧N</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.06); font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.25);">
+          <span><span style="color: rgba(255,255,255,0.45);">↑↓</span> navigate</span>
+          <span><span style="color: rgba(255,255,255,0.45);">↵</span> select</span>
+          <span><span style="color: rgba(255,255,255,0.45);">⌘↵</span> open in new tab</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{
+  "accent": {"editor": "color", "default": "#22d3ee", "options": ["#22d3ee", "#a78bfa", "#f59e0b", "#34d399"], "section": "Theme"},
+  "density": {"editor": "enum", "default": "comfortable", "options": ["comfortable", "compact"], "section": "Layout"},
+  "$preview": {"width": 1440, "height": 900}
+}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { view: 'board', filter: 'all', nav: 'board', detail: null, palette: false };
+  }
+
+  renderVals() {
+    const accent = this.props.accent ?? '#22d3ee';
+    const compact = (this.props.density ?? 'comfortable') === 'compact';
+    const pad = compact ? '10px 11px' : '13px 13px';
+    const gap = compact ? '6px' : '9px';
+    const st = this.state;
+
+    const PRIO = {
+      HIGH: { fg: '#f87171', bg: 'rgba(248,113,113,0.10)' },
+      MED:  { fg: '#fbbf24', bg: 'rgba(251,191,36,0.10)' },
+      LOW:  { fg: '#34d399', bg: 'rgba(52,211,153,0.10)' },
+    };
+    const STATUS = { TODO: '#38bdf8', IN_PROGRESS: accent, DONE: '#34d399' };
+
+    const prioStyle = (p) =>
+      `font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.06em; ` +
+      `padding: 2px 6px; border-radius: 5px; flex-shrink: 0; color: ${PRIO[p].fg}; background: ${PRIO[p].bg};`;
+
+    const avatar = (size, tint) =>
+      `width: ${size}px; height: ${size}px; border-radius: 50%; flex-shrink: 0; display: flex; ` +
+      `align-items: center; justify-content: center; font-size: ${Math.round(size * 0.4)}px; font-weight: 700; ` +
+      `color: ${tint}; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07);`;
+
+    const dueStyle = (state) => {
+      const c = state === 'overdue' ? '#f87171' : state === 'soon' ? '#fbbf24' : 'rgba(255,255,255,0.3)';
+      const bg = state === 'overdue' ? 'rgba(248,113,113,0.10)' : state === 'soon' ? 'rgba(251,191,36,0.10)' : 'transparent';
+      return `font-family: 'JetBrains Mono', monospace; font-size: 10px; color: ${c}; background: ${bg}; ` +
+             `border-radius: 5px; padding: 2px 6px; flex-shrink: 0;`;
+    };
+
+    const raw = [
+      { id: 't1', ref: 'JRV-118', title: 'Swap in-memory SSE bus for Redis pub/sub', status: 'IN_PROGRESS', priority: 'HIGH', assignee: 'Devarshi R.', initials: 'DR', due: 'Overdue 2d', dueLong: 'Aug 23, 2026 — 2 days overdue', dueState: 'overdue', lastMoved: '4h ago', tint: '#22d3ee',
+        body: 'The in-process event bus only broadcasts within one server instance. On Vercel an SSE connection and a mutation can land on different containers and miss each other. Move to shared pub/sub so cross-instance delivery is instant.' },
+      { id: 't2', ref: 'JRV-124', title: 'Command palette (⌘K) with fuzzy task search', status: 'IN_PROGRESS', priority: 'MED', assignee: 'Aarav M.', initials: 'AM', due: 'Aug 27', dueLong: 'Aug 27, 2026', dueState: 'soon', lastMoved: '35m ago', tint: '#a78bfa',
+        body: 'Keyboard-first entry point for search, task creation, assignment and status moves. Should resolve in under 50ms against the local SWR cache before hitting the API.' },
+      { id: 't3', ref: 'JRV-131', title: 'Replace centered modal with a slide-over panel', status: 'TODO', priority: 'HIGH', assignee: 'Priya S.', initials: 'PS', due: 'Aug 28', dueLong: 'Aug 28, 2026', dueState: 'soon', lastMoved: '1d ago', tint: '#f472b6',
+        body: 'A centered modal destroys board context every time a card is opened. A right-anchored slide-over keeps the columns visible so you never lose your place.' },
+      { id: 't4', ref: 'JRV-133', title: 'Audit AA contrast across every white/opacity pair', status: 'TODO', priority: 'MED', assignee: 'Aarav M.', initials: 'AM', due: 'Sep 2', dueLong: 'Sep 2, 2026', dueState: 'none', lastMoved: '2d ago', tint: '#a78bfa',
+        body: 'Several text tokens sit at rgba(255,255,255,0.30) on #0a0a0c, which fails AA at body size. Raise the floor and reserve the lowest tier for non-essential metadata only.' },
+      { id: 't5', ref: 'JRV-136', title: 'Stale-task detection past 5 days idle', status: 'TODO', priority: 'LOW', assignee: 'Priya S.', initials: 'PS', due: 'Sep 5', dueLong: 'Sep 5, 2026', dueState: 'none', lastMoved: '3d ago', tint: '#f472b6',
+        body: 'Use lastStatusChangeAt to dim cards that have not moved in five days, so the board surfaces neglect without another notification channel.' },
+      { id: 't6', ref: 'JRV-109', title: 'Overdue-flagging cron on Vercel schedule', status: 'DONE', priority: 'HIGH', assignee: 'Devarshi R.', initials: 'DR', due: 'Aug 20', dueLong: 'Aug 20, 2026', dueState: 'none', lastMoved: '5d ago', tint: '#22d3ee',
+        body: 'Nightly job stamps overdueFlaggedAt on tasks past their due date. Shipped and running on the Hobby-plan interval.' },
+      { id: 't7', ref: 'JRV-112', title: 'Drag-and-drop with optimistic rollback', status: 'DONE', priority: 'MED', assignee: 'Aarav M.', initials: 'AM', due: 'Aug 22', dueLong: 'Aug 22, 2026', dueState: 'none', lastMoved: '3d ago', tint: '#a78bfa',
+        body: 'dnd-kit move writes the optimistic status immediately and restores the previous list if the PATCH fails.' },
+    ];
+
+    const matches = (t) =>
+      st.filter === 'all' ? true :
+      st.filter === 'mine' ? t.assignee === 'Devarshi R.' :
+      st.filter === 'overdue' ? t.dueState === 'overdue' :
+      t.priority === 'HIGH';
+
+    const decorate = (t) => ({
+      ...t,
+      pick: () => this.setState({ detail: t.id }),
+      statusDot: STATUS[t.status],
+      prioStyle: prioStyle(t.priority),
+      dueStyle: dueStyle(t.dueState),
+      avatarStyle: avatar(20, t.tint),
+      railStyle: `position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 0 2px 2px 0; background: ${t.dueState === 'overdue' ? '#f87171' : 'transparent'};`,
+      cardStyle:
+        `position: relative; width: 100%; text-align: left; cursor: pointer; padding: ${pad}; border-radius: 13px; ` +
+        `font-family: 'Plus Jakarta Sans', sans-serif; background: rgba(255,255,255,0.035); ` +
+        `border: 1px solid ${t.dueState === 'overdue' ? 'rgba(248,113,113,0.28)' : 'rgba(255,255,255,0.06)'}; ` +
+        `transition: transform 200ms cubic-bezier(0.4,0,0.2,1), border-color 200ms; ` +
+        `opacity: ${t.status === 'DONE' ? 0.62 : 1};`,
+      rowStyle:
+        `display: grid; grid-template-columns: 26px 1fr 130px 92px 104px; gap: 12px; align-items: center; ` +
+        `width: 100%; padding: 11px 16px; border: none; border-bottom: 1px solid rgba(255,255,255,0.04); ` +
+        `background: transparent; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;`,
+    });
+
+    const visible = raw.filter(matches).map(decorate);
+    const byStatus = (s) => visible.filter((t) => t.status === s);
+
+    const columns = [
+      { key: 'TODO', label: 'To Do', dot: STATUS.TODO },
+      { key: 'IN_PROGRESS', label: 'In Progress', dot: STATUS.IN_PROGRESS },
+      { key: 'DONE', label: 'Done', dot: STATUS.DONE },
+    ].map((c) => {
+      const tasks = byStatus(c.key);
+      return { ...c, tasks, count: tasks.length, empty: tasks.length === 0,
+        listStyle: `flex-grow: 1; min-height: 0; overflow-y: auto; padding: 0 10px 10px 10px; display: flex; flex-direction: column; gap: ${gap};` };
+    });
+
+    const navBtn = (on) =>
+      `display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 9px; border-radius: 10px; ` +
+      `border: none; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: ${on ? 600 : 500}; ` +
+      `background: ${on ? 'rgba(255,255,255,0.06)' : 'transparent'}; color: ${on ? accent : 'rgba(255,255,255,0.5)'};`;
+
+    const filters = [
+      { key: 'all', label: 'All tasks', dot: 'rgba(255,255,255,0.25)', count: raw.length },
+      { key: 'mine', label: 'Assigned to me', dot: accent, count: raw.filter((t) => t.assignee === 'Devarshi R.').length },
+      { key: 'overdue', label: 'Overdue', dot: '#f87171', count: raw.filter((t) => t.dueState === 'overdue').length },
+      { key: 'high', label: 'High priority', dot: '#fbbf24', count: raw.filter((t) => t.priority === 'HIGH').length },
+    ].map((f) => ({ ...f, pick: () => this.setState({ filter: f.key }), style: navBtn(st.filter === f.key) }));
+
+    const segBtn = (on) =>
+      `display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 8px; border: none; cursor: pointer; ` +
+      `font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; ` +
+      `background: ${on ? 'rgba(255,255,255,0.07)' : 'transparent'}; color: ${on ? '#f5f5f7' : 'rgba(255,255,255,0.4)'};`;
+
+    const chipStyle = (on) =>
+      `height: 28px; padding: 0 11px; border-radius: 8px; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; ` +
+      `font-size: 12px; font-weight: 600; ` +
+      `border: 1px solid ${on ? accent + '55' : 'rgba(255,255,255,0.07)'}; ` +
+      `background: ${on ? accent + '18' : 'transparent'}; color: ${on ? accent : 'rgba(255,255,255,0.45)'};`;
+
+    const chips = [
+      { key: 'all', label: 'All' },
+      { key: 'mine', label: 'Mine' },
+      { key: 'overdue', label: 'Overdue' },
+      { key: 'high', label: 'High' },
+    ].map((c) => ({ ...c, pick: () => this.setState({ filter: c.key }), style: chipStyle(st.filter === c.key) }));
+
+    const presence = [
+      { name: 'Devarshi R.', initials: 'DR', tint: '#22d3ee' },
+      { name: 'Aarav M.', initials: 'AM', tint: '#a78bfa' },
+      { name: 'Priya S.', initials: 'PS', tint: '#f472b6' },
+    ].map((p, i) => ({
+      ...p,
+      style: avatar(24, p.tint) + ` margin-left: ${i === 0 ? 0 : -7}px; box-shadow: 0 0 0 2px #0a0a0c;`,
+    }));
+
+    const activity = [
+      { initials: 'AM', tint: '#a78bfa', text: '"Command palette (⌘K)" moved to In Progress', time: '2 min ago' },
+      { initials: 'PS', tint: '#f472b6', text: 'Commented on "Replace centered modal"', time: '18 min ago' },
+      { initials: 'DR', tint: '#22d3ee', text: 'Flagged "Redis pub/sub" as overdue', time: '1 hr ago' },
+      { initials: 'AM', tint: '#a78bfa', text: '"Drag-and-drop rollback" moved to Done', time: '3 hr ago' },
+      { initials: 'PS', tint: '#f472b6', text: 'Created "Stale-task detection"', time: '5 hr ago' },
+      { initials: 'DR', tint: '#22d3ee', text: 'Assigned "AA contrast audit" to Aarav M.', time: 'Yesterday' },
+    ].map((a) => ({ ...a, avatarStyle: avatar(22, a.tint) }));
+
+    const sparkVals = [30, 44, 38, 62, 50, 71, 58, 82, 66, 90, 76, 100];
+    const spark = sparkVals.map((v, i) => ({
+      style: `flex-grow: 1; border-radius: 2px 2px 1px 1px; height: ${v}%; ` +
+             `background: ${i >= sparkVals.length - 3 ? accent : 'rgba(255,255,255,0.10)'};`,
+    }));
+
+    const doneCount = raw.filter((t) => t.status === 'DONE').length;
+    const wipCount = raw.filter((t) => t.status === 'IN_PROGRESS').length;
+    const meters = [
+      { label: 'Completed', value: doneCount + ' / ' + raw.length, color: '#34d399', pct: (doneCount / raw.length) * 100 },
+      { label: 'In flight', value: String(wipCount), color: accent, pct: (wipCount / raw.length) * 100 },
+      { label: 'Overdue', value: String(raw.filter((t) => t.dueState === 'overdue').length), color: '#f87171', pct: 14 },
+    ].map((m) => ({ ...m, barStyle: `display: block; height: 100%; width: ${m.pct}%; background: ${m.color}; border-radius: 2px;` }));
+
+    const d = raw.find((t) => t.id === st.detail);
+    const statusLabel = { TODO: 'To Do', IN_PROGRESS: 'In Progress', DONE: 'Done' };
+    const detail = d ? {
+      ...d,
+      status: statusLabel[d.status],
+      prioStyle: prioStyle(d.priority),
+      avatarStyle: avatar(24, d.tint),
+      dueColor: d.dueState === 'overdue' ? '#f87171' : d.dueState === 'soon' ? '#fbbf24' : 'rgba(255,255,255,0.85)',
+      statusStyle: `font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 6px; color: ${STATUS[d.status]}; background: ${STATUS[d.status]}18;`,
+      timeline: [
+        { text: 'Moved to ' + statusLabel[d.status], time: d.lastMoved, dot: STATUS[d.status] },
+        { text: 'Assigned to ' + d.assignee, time: '1 day ago', dot: 'rgba(255,255,255,0.25)' },
+        { text: 'Created from GitHub issue', time: '4 days ago', dot: 'rgba(255,255,255,0.25)' },
+      ],
+    } : {};
+
+    const moveTargets = [
+      { key: 'TODO', label: 'To Do', dot: STATUS.TODO, mkey: '1' },
+      { key: 'IN_PROGRESS', label: 'In Progress', dot: STATUS.IN_PROGRESS, mkey: '2' },
+      { key: 'DONE', label: 'Done', dot: STATUS.DONE, mkey: '3' },
+    ].map((m) => {
+      const on = d && d.status === m.key;
+      return {
+        label: m.label, dot: m.dot, key: m.mkey,
+        pick: () => this.setState({ detail: st.detail }),
+        style: `display: flex; align-items: center; gap: 7px; flex-grow: 1; height: 34px; justify-content: center; ` +
+               `border-radius: 9px; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 600; ` +
+               `border: 1px solid ${on ? m.dot + '55' : 'rgba(255,255,255,0.07)'}; background: ${on ? m.dot + '15' : 'transparent'}; ` +
+               `color: ${on ? m.dot : 'rgba(255,255,255,0.5)'};`,
+      };
+    });
+
+    return {
+      accent,
+      filters, chips, presence, activity, spark, meters, moveTargets,
+      columns, allTasks: visible,
+
+      navBoardStyle: navBtn(st.nav === 'board'),
+      navInboxStyle: navBtn(st.nav === 'inbox'),
+      navCyclesStyle: navBtn(st.nav === 'cycles'),
+      navDocsStyle: navBtn(st.nav === 'docs'),
+      navPickBoard: () => this.setState({ nav: 'board' }),
+      navPickInbox: () => this.setState({ nav: 'inbox' }),
+      navPickCycles: () => this.setState({ nav: 'cycles' }),
+      navPickDocs: () => this.setState({ nav: 'docs' }),
+
+      viewBoardStyle: segBtn(st.view === 'board'),
+      viewListStyle: segBtn(st.view === 'list'),
+      viewPickBoard: () => this.setState({ view: 'board' }),
+      viewPickList: () => this.setState({ view: 'list' }),
+
+      isBoard: st.view === 'board',
+      isList: st.view === 'list',
+      detailOpen: !!d,
+      detail,
+      paletteOpen: st.palette,
+      openPalette: () => this.setState({ palette: true }),
+      closePalette: () => this.setState({ palette: false }),
+      closeDetail: () => this.setState({ detail: null }),
+      openNew: () => this.setState({ palette: true }),
+    };
+  }
+}
+</script>
+</body>
+</html>
