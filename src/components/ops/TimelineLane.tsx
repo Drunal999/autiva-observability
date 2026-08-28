@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { T } from '@/lib/ops/tokens'
 import { runTone, type TimelineItem, type Tier } from './Timeline'
+import { toDateOnly } from '@/lib/ops/allDay'
 
 const MINUTE = 60_000
 const HOUR = 3_600_000
@@ -132,6 +133,7 @@ export function editability(item: TimelineItem): { can: boolean; why?: string } 
 type Edit = {
   id: string
   title: string
+  allDay: boolean
   mode: 'move' | 'start' | 'end'
   from: number
   to: number
@@ -142,7 +144,7 @@ type Edit = {
 
 type Undo =
   | { kind: 'create'; id: string; title: string }
-  | { kind: 'move'; id: string; title: string; from: number; to: number }
+  | { kind: 'move'; id: string; title: string; from: number; to: number; allDay: boolean }
 
 /**
  * Applies a pointer position to an in-flight edit.
@@ -265,14 +267,17 @@ export function Lane({
     return () => clearTimeout(id)
   }, [undo])
 
-  async function patchTimes(id: string, from: number, to: number): Promise<boolean> {
+  async function patchTimes(id: string, from: number, to: number, allDay = false): Promise<boolean> {
     const res = await fetch('/api/calendar/' + id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        startsAt: new Date(from).toISOString(),
-        endsAt: new Date(to).toISOString(),
-      }),
+      // An all-day event is rescheduled by DATE. Sending an instant would ask
+      // the server which timezone it was, and it has no way to know.
+      body: JSON.stringify(
+        allDay
+          ? { startsAt: toDateOnly(new Date(from)), endsAt: toDateOnly(new Date(to)) }
+          : { startsAt: new Date(from).toISOString(), endsAt: new Date(to).toISOString() }
+      ),
     })
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}))
@@ -284,7 +289,7 @@ export function Lane({
   }
 
   async function commitEdit(current: Edit) {
-    const ok = await patchTimes(current.id, current.from, current.to)
+    const ok = await patchTimes(current.id, current.from, current.to, current.allDay)
     // Refresh either way: on failure the server's times are the truth, and the
     // bar must snap back to them rather than sit where the pointer left it.
     onCreated()
@@ -295,6 +300,7 @@ export function Lane({
         title: current.title,
         from: current.origFrom,
         to: current.origTo,
+        allDay: current.allDay,
       })
     }
   }
@@ -306,6 +312,7 @@ export function Lane({
     setEdit({
       id: item.id,
       title: item.title,
+      allDay: item.allDay === true,
       mode,
       from: item.from,
       to: item.to,
@@ -329,8 +336,11 @@ export function Lane({
       : { from: item.from + step, to: item.to + step }
 
     void (async () => {
-      if (await patchTimes(item.id, next.from, next.to)) {
-        setUndo({ kind: 'move', id: item.id, title: item.title, from: item.from, to: item.to })
+      if (await patchTimes(item.id, next.from, next.to, item.allDay === true)) {
+        setUndo({
+          kind: 'move', id: item.id, title: item.title,
+          from: item.from, to: item.to, allDay: item.allDay === true,
+        })
       }
       onCreated()
     })()
@@ -342,8 +352,8 @@ export function Lane({
     // all-day. Inventing a start of 09:00 nobody chose is the guess this UI
     // exists to avoid.
     const allDay = tier !== 'hour'
+    const start = new Date(pending.from)
     const end = new Date(pending.to)
-    if (allDay) end.setHours(23, 59, 0, 0)
 
     setError(null)
     const res = await fetch('/api/calendar', {
@@ -351,8 +361,10 @@ export function Lane({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: draft.trim(),
-        startsAt: new Date(pending.from).toISOString(),
-        endsAt: end.toISOString(),
+        // An all-day range is submitted as DATES; only this browser knows
+        // which days the drag covered.
+        startsAt: allDay ? toDateOnly(start) : start.toISOString(),
+        endsAt: allDay ? toDateOnly(end) : end.toISOString(),
         allDay,
       }),
     })
@@ -373,7 +385,7 @@ export function Lane({
     if (undo.kind === 'create') {
       await fetch('/api/calendar/' + undo.id, { method: 'DELETE' })
     } else {
-      await patchTimes(undo.id, undo.from, undo.to)
+      await patchTimes(undo.id, undo.from, undo.to, undo.allDay)
     }
     setUndo(null)
     onCreated()

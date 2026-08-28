@@ -110,3 +110,38 @@ A window is one value, so it is one piece of state.
 
 The regression test drives the real component rather than the pure function.
 Reintroducing the bug fails four of its cases; that was checked, not assumed.
+
+## Addendum — all-day events are dates, not instants
+
+Found by a second review, then confirmed by running the server in UTC while the
+browser sat in Asia/Kolkata.
+
+An all-day event was stored as a local-midnight *instant*, with nothing
+recording which local. That makes the date unrecoverable, and no formatting
+change fixes it:
+
+- reading with `toISOString()` interprets it in UTC, so 00:00 IST (18:30 UTC the
+  day before) comes back a day early;
+- reading with `getFullYear()/getMonth()/getDate()` interprets it in the
+  **server's** timezone, which on a UTC deployment gives the same wrong answer
+  and on a server west of UTC is wrong in the other direction.
+
+The first attempt at this fix did the second of those and looked correct,
+because its tests built Dates from local components and asserted on local
+output — test timezone equalled creation timezone, so the test agreed with the
+bug.
+
+**The contract now:** the browser submits `YYYY-MM-DD`, because it is the only
+party that knows which day the person meant. The server stores UTC midnight and
+reads back with UTC accessors. An ISO instant on an all-day event is **refused
+with a 400**, not interpreted — `2026-09-14T18:30:00Z` is the 15th in Kolkata
+and the 14th in London, and choosing between those is a guess.
+
+This applies to create, edit, quick-add, both drag-to-create surfaces, and
+drag-to-reschedule. Rendering follows: an all-day event buckets by its UTC day,
+a timed event by the viewer's local day.
+
+The tests now assert on fixed UTC instants and the suite is run under
+`TZ=UTC`, `Asia/Kolkata` and `America/Los_Angeles`. A migration normalised
+existing rows, assuming IST for them — stated in the migration, since it is an
+assumption and not a fact.

@@ -1,4 +1,4 @@
-import { subscribeToEvents, replayEvents, type StreamEvent, type EventChannel } from '@/lib/realtime/bus'
+import { subscribeToEvents, replayEvents, isReplayable, type StreamEvent, type EventChannel } from '@/lib/realtime/bus'
 import { getTenantContext } from '@/lib/ops/tenant'
 
 // Long-lived response — must never be statically optimized/cached.
@@ -33,9 +33,15 @@ export async function GET(req: Request) {
       const send = (event: StreamEvent) => {
         // The id: field is what the browser echoes back as Last-Event-ID on
         // reconnect, which is what makes replay work without client bookkeeping.
-        controller.enqueue(
-          encoder.encode(`id: ${event.id}\ndata: ${JSON.stringify(event)}\n\n`)
-        )
+        //
+        // It is therefore ONLY advertised for events that were persisted.
+        // publishBoardEvent mints ids for rows that never reach the Event
+        // table; advertising one of those parked an unresolvable cursor in the
+        // client, so after any task create/update/delete every subsequent
+        // reconnect replayed nothing — on the busiest channel. Withholding the
+        // id leaves the last replayable cursor in place.
+        const head = isReplayable(event.id) ? `id: ${event.id}\n` : ''
+        controller.enqueue(encoder.encode(`${head}data: ${JSON.stringify(event)}\n\n`))
       }
 
       // Flush a frame immediately: the browser only fires EventSource.onopen

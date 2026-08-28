@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publishBoardEvent } from '@/lib/realtime/bus'
+import { TASK_INCLUDE } from '@/lib/ops/taskShape'
 import type { UpdateTaskInput } from '@/types/task'
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
@@ -17,7 +18,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
   }
 
-  const task = await prisma.task.update({ where: { id: params.id }, data })
+  // Same include as GET: a realtime payload must not be a poorer version
+  // of the row the client already has.
+  const task = await prisma.task.update({
+    where: { id: params.id },
+    data,
+    include: TASK_INCLUDE,
+  })
   publishBoardEvent({ type: 'task-updated', payload: task })
   return NextResponse.json(task)
 }

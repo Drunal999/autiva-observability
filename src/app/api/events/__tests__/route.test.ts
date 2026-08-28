@@ -81,16 +81,20 @@ describe('/api/events (SSE)', () => {
     await reader.cancel()
   })
 
-  it('carries an id: field, which is what makes reconnect replay work', async () => {
+  it('withholds id: for an event that was never persisted', async () => {
     const res = await GET(req())
     const reader = res.body!.getReader()
 
     const chunkPromise = readUntilDataFrame(reader)
+    // publishBoardEvent mints a `local-…` id for a row that never reaches the
+    // Event table. Advertising it would park a cursor in the client that
+    // replay can never resolve, silently disabling catch-up from then on.
     publishBoardEvent({ type: 'task-updated', payload: { id: 't2' } })
     const chunk = await chunkPromise
 
-    // The browser echoes this back as Last-Event-ID on reconnect.
-    expect(chunk).toMatch(/id: .+\ndata: /)
+    expect(chunk).toContain('data: ')
+    expect(chunk.startsWith('id: ')).toBe(false)
+    expect(chunk).not.toContain('\nid: ')
 
     await reader.cancel()
   })

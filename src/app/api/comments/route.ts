@@ -115,7 +115,20 @@ export async function POST(req: Request) {
   //     ids the author already guessed
   //
   // When membership exists, scope this query and delete this note.
-  const handles = extractMentions(text).slice(0, MAX_MENTIONS_PER_COMMENT)
+  const allHandles = extractMentions(text)
+  if (allHandles.length > MAX_MENTIONS_PER_COMMENT) {
+    // Silently dropping the 11th mention is the worst outcome: the body still
+    // RENDERS it as a mention, so the author believes that person was
+    // notified. Every other limit in this route returns 400; so does this one.
+    return NextResponse.json(
+      {
+        error: `That mentions ${allHandles.length} people; ${MAX_MENTIONS_PER_COMMENT} is the limit. ` +
+          `Anything wider is an announcement, not a note.`,
+      },
+      { status: 400 }
+    )
+  }
+  const handles = allHandles
   const mentioned = handles.length
     ? await prisma.user.findMany({
         where: { githubId: { in: handles } },

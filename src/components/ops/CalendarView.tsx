@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 import { T } from '@/lib/ops/tokens'
 import { Timeline, LAYERS, runTone, type TimelineItem } from './Timeline'
+import { utcDateKey, toDateOnly } from '@/lib/ops/allDay'
 import { describeRRule } from '@/lib/ops/recurrence'
 import { EmptyState } from './Panel'
 import { DensityStrip, CostRibbon } from './DensityStrip'
@@ -106,15 +107,16 @@ export function CalendarView() {
     const end = new Date(pending.to)
     // A range picked on a day grid is an all-day event. Inventing a clock time
     // nobody chose is exactly the guess this UI avoids.
-    end.setHours(23, 59, 0, 0)
-
+    // Send the DATES, not instants. Only this browser knows which day the
+    // person dragged; an ISO instant would leave the server guessing, which is
+    // how an all-day event lands a day early.
     const res = await fetch('/api/calendar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: draftTitle.trim(),
-        startsAt: start.toISOString(),
-        endsAt: end.toISOString(),
+        startsAt: toDateOnly(start),
+        endsAt: toDateOnly(end),
         allDay: true,
       }),
     })
@@ -147,7 +149,14 @@ export function CalendarView() {
     const map = new Map<number, TimelineItem[]>()
     days.forEach((d) => map.set(d.getTime(), []))
     for (const item of items) {
-      const k = startOfDay(new Date(item.startsAt)).getTime()
+      // An all-day event is a date, stored at UTC midnight, so it buckets by
+      // its UTC date. Bucketing it locally would put it on the wrong day for
+      // anyone west of UTC — which is the same bug the storage fix removed,
+      // reintroduced on the way out. A timed event is a real instant and
+      // belongs on the viewer's local day.
+      const k = item.allDay
+        ? utcDateKey(new Date(item.startsAt))
+        : startOfDay(new Date(item.startsAt)).getTime()
       map.get(k)?.push(item)
     }
     return map

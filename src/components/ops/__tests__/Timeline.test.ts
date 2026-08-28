@@ -216,7 +216,7 @@ describe('drag snapping', () => {
 
 describe('rescheduling by drag', () => {
   const base = {
-    id: 'e1', title: 'offsite', mode: 'move' as const,
+    id: 'e1', title: 'offsite', mode: 'move' as const, allDay: false,
     from: at('2026-08-10T09:00:00'), to: at('2026-08-10T11:00:00'),
     origFrom: at('2026-08-10T09:00:00'), origTo: at('2026-08-10T11:00:00'),
     grabbedAt: at('2026-08-10T10:00:00'),

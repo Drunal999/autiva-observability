@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toDateOnly } from '@/lib/ops/allDay'
 import { quickAdd } from '@/lib/ops/quickAdd'
 import { validateRRule } from '@/lib/ops/recurrence'
 import { OK, ERR, WARN } from '@/lib/ops/tokens'
@@ -40,8 +41,11 @@ export function QuickAdd({ onCreated }: { onCreated?: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: parsed.title,
-          startsAt: parsed.startsAt.toISOString(),
-          endsAt: parsed.endsAt.toISOString(),
+          // An all-day result is submitted as DATES: the parser ran here, in
+          // the viewer's timezone, so this is the only place that knows which
+          // day "tomorrow" meant.
+          startsAt: parsed.allDay ? toDateOnly(parsed.startsAt) : parsed.startsAt.toISOString(),
+          endsAt: parsed.allDay ? toDateOnly(parsed.endsAt) : parsed.endsAt.toISOString(),
           allDay: parsed.allDay,
           rrule: parsed.rrule,
         }),

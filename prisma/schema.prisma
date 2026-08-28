@@ -282,6 +282,10 @@ model CalendarEvent {
 
   @@index([tenantId, startsAt])
   @@index([tenantId, kind, startsAt])
+  /// The window query is an OVERLAP (startsAt <= to AND endsAt >= from). Without
+  /// an endsAt index that half is a scan of everything that ever started before
+  /// `to`, which grows with history rather than with the window.
+  @@index([tenantId, endsAt])
 }
 
 model CalendarAttendee {

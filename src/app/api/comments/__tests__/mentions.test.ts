@@ -51,15 +51,22 @@ describe('mention resolution', () => {
     })
   })
 
-  it('caps how many handles one comment can resolve', async () => {
-    // Mention resolution is not tenant-scoped — User has no tenantId and there
-    // is no membership table yet — so a resolved mention confirms a handle
-    // exists somewhere in the install. The cap does not close that, but it
-    // stops one request resolving a dictionary of handles at a time.
+  it('refuses a comment that mentions more people than the cap, rather than silently dropping them', async () => {
+    // Slicing was worse than refusing: the body still RENDERED the 11th
+    // mention, so the author believed that person had been notified.
     const many = Array.from({ length: 40 }, (_, i) => '@user' + i).join(' ')
-    await POST(post('hello ' + many))
-    expect(h.userFindMany).toHaveBeenCalled()
-    expect(h.userFindMany.mock.calls[0][0].where.githubId.in.length).toBeLessThanOrEqual(10)
+    const res = await POST(post('hello ' + many))
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/limit/i)
+    expect(h.userFindMany).not.toHaveBeenCalled()
+    expect(h.commentCreate).not.toHaveBeenCalled()
+  })
+
+  it('allows a comment exactly at the cap', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => '@user' + i).join(' ')
+    const res = await POST(post(ten))
+    expect(res.status).toBe(200)
+    expect(h.userFindMany.mock.calls[0][0].where.githubId.in).toHaveLength(10)
   })
 
   it('still resolves an ordinary handful of mentions', async () => {

@@ -134,6 +134,23 @@ export async function replayEvents(
   }))
 }
 
+/**
+ * Ids minted for events that are NEVER written to the Event table.
+ *
+ * The client stores whatever id it last saw as its Last-Event-ID, so
+ * advertising one of these hands it a cursor that can never be resolved. The
+ * SSE route therefore withholds the `id:` field for them — see `isReplayable`.
+ */
+export const LOCAL_ID_PREFIX = 'local-'
+
+/**
+ * True when an id can be used as a replay cursor, i.e. the event behind it was
+ * persisted. Everything else is live-only.
+ */
+export function isReplayable(id: string): boolean {
+  return !id.startsWith(LOCAL_ID_PREFIX)
+}
+
 // ── Board compatibility ──────────────────────────────────────────
 // The task board predates channels. These keep its call sites unchanged while
 // routing everything through the one bus.
@@ -146,7 +163,7 @@ export type BoardEvent =
 /** Maps a board event onto the BOARD channel. */
 export function publishBoardEvent(event: BoardEvent): void {
   boardBus.emit(STREAM_EVENT, {
-    id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `${LOCAL_ID_PREFIX}${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     // The board is single-tenant today; '*' means "deliver to any listener".
     tenantId: '*',
     channel: 'BOARD' as EventChannel,

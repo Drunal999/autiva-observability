@@ -76,8 +76,12 @@ describe('the calendar window', () => {
     const or = h.findMany.mock.calls[0][0].where.OR
     const overlap = or.find((c: Record<string, unknown>) => 'AND' in c)
     expect(overlap).toBeDefined()
-    expect(overlap.AND[0].startsAt.lte).toEqual(new Date(TO))
-    expect(overlap.AND[1].endsAt.gte).toEqual(new Date(FROM))
+    const clauses = overlap.AND as Record<string, Record<string, Date>>[]
+    // Both bounds on startsAt, so the (tenantId, startsAt) index stays usable;
+    // an unbounded lower end degrades into a scan of all history.
+    expect(clauses.some((c) => c.startsAt?.lte?.getTime() === new Date(TO).getTime())).toBe(true)
+    expect(clauses.some((c) => c.startsAt?.gte instanceof Date)).toBe(true)
+    expect(clauses.some((c) => c.endsAt?.gte?.getTime() === new Date(FROM).getTime())).toBe(true)
   })
 
   it('returns an event that began before the window and is still running', async () => {

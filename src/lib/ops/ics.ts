@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 import { requireSecret } from './secrets'
+import { utcDateStamp, exclusiveEndStamp } from './allDay'
 
 /**
  * Read-only ICS feed.
@@ -61,35 +62,6 @@ function stamp(d: Date): string {
 }
 
 /**
- * A DATE value for an all-day event, in LOCAL calendar terms.
- *
- * Taking the date off `toISOString()` reads it in UTC, so an all-day event
- * created anywhere east of Greenwich lands a day early for the person who
- * created it — an event at 00:00 IST is 18:30 UTC the PREVIOUS day.
- */
-function dateStamp(d: Date): string {
-  const p = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`
-}
-
-/**
- * RFC 5545 defines a DATE-valued DTEND as EXCLUSIVE — the first day NOT in the
- * event. Emitting the inclusive last day makes a one-day event come out as
- * DTSTART == DTEND, which most clients drop entirely, and a two-day event show
- * as one.
- */
-function exclusiveEndDate(startsAt: Date, endsAt: Date): string {
-  const end = new Date(endsAt)
-  end.setHours(0, 0, 0, 0)
-  const start = new Date(startsAt)
-  start.setHours(0, 0, 0, 0)
-  // Never emit an end at or before the start; a same-day event runs one day.
-  if (end.getTime() <= start.getTime()) end.setTime(start.getTime())
-  end.setDate(end.getDate() + 1)
-  return dateStamp(end)
-}
-
-/**
  * Folds a line to 75 octets as RFC 5545 requires. Unfolded long lines are the
  * most common reason a feed silently fails to import.
  */
@@ -123,8 +95,10 @@ export function buildIcs(events: IcsEvent[], calendarName: string): string {
     lines.push(`UID:${e.uid}@autiva`)
     lines.push(`DTSTAMP:${stamp(new Date())}`)
     if (e.allDay) {
-      lines.push(`DTSTART;VALUE=DATE:${dateStamp(e.startsAt)}`)
-      lines.push(`DTEND;VALUE=DATE:${exclusiveEndDate(e.startsAt, e.endsAt)}`)
+      // Read in UTC, because all-day events are STORED at UTC midnight.
+      // See src/lib/ops/allDay.ts for why no formatting-only fix works.
+      lines.push(`DTSTART;VALUE=DATE:${utcDateStamp(e.startsAt)}`)
+      lines.push(`DTEND;VALUE=DATE:${exclusiveEndStamp(e.startsAt, e.endsAt)}`)
     } else {
       lines.push(`DTSTART:${stamp(e.startsAt)}`)
       lines.push(`DTEND:${stamp(e.endsAt)}`)

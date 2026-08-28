@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getTenantContext, tenantScope } from '@/lib/ops/tenant'
 import { rateLimit, logWriteAttempt } from '@/lib/ops/rateLimit'
 import { validateRRule, expandInWindow } from '@/lib/ops/recurrence'
+import { normaliseAllDay } from '@/lib/ops/allDay'
 
 /**
  * The timeline.
@@ -18,6 +19,16 @@ import { validateRRule, expandInWindow } from '@/lib/ops/recurrence'
  * Everything is stored and returned in UTC. Rendering in the viewer's timezone
  * is the client's job — the server never guesses where anyone is.
  */
+
+/**
+ * How far back to look for an event that is still running.
+ *
+ * The overlap query needs a lower bound on `startsAt` to stay on its index; an
+ * unbounded one degrades into a scan of all history. A year is far longer than
+ * any real calendar entry and longer than the 400-day window cap allows to be
+ * requested.
+ */
+const MAX_EVENT_SPAN_MS = 366 * 86400_000
 
 export interface TimelineItem {
   id: string
@@ -65,12 +76,28 @@ export async function GET(req: Request) {
         // A recurring event's stored startsAt may predate the window entirely,
         // so recurring rows are always fetched and filtered after expansion.
         OR: [
-          { AND: [{ startsAt: { lte: to } }, { endsAt: { gte: from } }] },
+          {
+            AND: [
+              // Both bounds on startsAt keep the (tenantId, startsAt) index
+              // usable; endsAt has its own index for the other half. Dropping
+              // the lower bound turned this into "everything that ever started
+              // before `to`", which grows with history, not with the window.
+              //
+              // MAX_EVENT_SPAN_MS is the assumption made explicit: an event
+              // longer than this that overlaps the window will be missed. The
+              // API already caps a window at 400 days, so a year is generous.
+              { startsAt: { gte: new Date(from.getTime() - MAX_EVENT_SPAN_MS) } },
+              { startsAt: { lte: to } },
+              { endsAt: { gte: from } },
+            ],
+          },
           { rrule: { not: null } },
         ],
       },
       include: { module: { select: { displayName: true } } },
       orderBy: { startsAt: 'asc' },
+      // A window this wide is already capped at 400 days; this caps the rows.
+      take: 2000,
     }),
     prisma.run.findMany({
       where: { ...tenantScope(ctx), startedAt: { gte: from, lte: to } },
@@ -190,6 +217,9 @@ export async function POST(req: Request) {
   if (title.length > 200) {
     return NextResponse.json({ error: 'Title is limited to 200 characters.' }, { status: 400 })
   }
+  // A date-only all-day submission still parses as a valid Date here (as UTC
+  // midnight), so this check holds for both shapes; the all-day branch below
+  // re-reads the raw strings to be sure the date was stated, not inferred.
   if (!startsAt || !endsAt || Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
     return NextResponse.json({ error: 'A valid start and end are required.' }, { status: 400 })
   }
@@ -204,15 +234,34 @@ export async function POST(req: Request) {
     if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 })
   }
 
+  // An all-day event is a DATE, and must be submitted as one.
+  //
+  // The server cannot derive a date from an instant: 2026-09-14T18:30:00Z is
+  // the 15th in Kolkata and the 14th in London, and nothing in the request
+  // says which was meant. So the browser — the only party that knows — names
+  // the date, and anything else is refused rather than guessed.
+  const allDay = body.allDay === true
+  let times = { startsAt, endsAt }
+  if (allDay) {
+    const dates = normaliseAllDay(String(body.startsAt), String(body.endsAt))
+    if (!dates) {
+      return NextResponse.json(
+        { error: 'An all-day event needs plain dates (YYYY-MM-DD), not timestamps.' },
+        { status: 400 }
+      )
+    }
+    times = dates
+  }
+
   const event = await prisma.calendarEvent.create({
     data: {
       tenantId: ctx.tenantId,
       kind: 'HUMAN',
       title,
       description: typeof body.description === 'string' ? body.description.slice(0, 2000) : null,
-      startsAt,
-      endsAt,
-      allDay: body.allDay === true,
+      startsAt: times.startsAt,
+      endsAt: times.endsAt,
+      allDay,
       rrule,
       createdById: userId,
     },

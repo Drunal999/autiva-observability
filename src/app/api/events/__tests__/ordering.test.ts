@@ -11,6 +11,9 @@ const h = vi.hoisted(() => ({
 vi.mock('@/lib/ops/tenant', () => ({ getTenantContext: () => h.getTenantContext() }))
 vi.mock('@/lib/realtime/bus', () => ({
   replayEvents: (...a: unknown[]) => h.replayEvents(...a),
+  // The route withholds `id:` for non-replayable events; an incomplete mock
+  // made `send` throw and the stream produced nothing at all.
+  isReplayable: (id: string) => !id.startsWith('local-'),
   subscribeToEvents: (tenantId: string, send: (e: unknown) => void) => {
     h.live = send
     h.subscribeToEvents(tenantId)

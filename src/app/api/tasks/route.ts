@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publishBoardEvent } from '@/lib/realtime/bus'
 import type { CreateTaskInput } from '@/types/task'
+import { TASK_INCLUDE } from '@/lib/ops/taskShape'
+
+
 
 export async function GET() {
   const tasks = await prisma.task.findMany({
-    include: { assignee: { select: { id: true, name: true, avatarUrl: true } } },
+    include: TASK_INCLUDE,
     orderBy: { createdAt: 'asc' },
   })
   return NextResponse.json(tasks)
@@ -25,6 +28,7 @@ export async function POST(req: Request) {
       dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
       priority: body.priority ?? 'MED',
     },
+    include: TASK_INCLUDE,
   })
 
   publishBoardEvent({ type: 'task-created', payload: task })

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getTenantContext } from '@/lib/ops/tenant'
 import { rateLimit, logWriteAttempt } from '@/lib/ops/rateLimit'
 import { validateRRule } from '@/lib/ops/recurrence'
+import { normaliseAllDay, toDateOnlyUtc } from '@/lib/ops/allDay'
 
 /**
  * Edit or delete one calendar event.
@@ -45,7 +46,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const existing = await prisma.calendarEvent.findFirst({
     where: { id: params.id, tenantId: ctx.tenantId },
-    select: { kind: true, startsAt: true, endsAt: true },
+    select: { kind: true, startsAt: true, endsAt: true, allDay: true },
   })
   if (!existing) return NextResponse.json({ error: 'event not found' }, { status: 404 })
 
@@ -86,13 +87,35 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   // Compare against what the row WILL hold, not only against what this request
   // happened to send. Requiring both fields let a PATCH carrying just `endsAt`
   // write an event that ends before it begins.
+  // An all-day row keeps the date contract on edit too. Accepting an instant
+  // here would quietly reintroduce the ambiguity the create path refuses:
+  // the drag that rescheduled it happened in a browser whose timezone the
+  // server does not know.
+  const staysAllDay = body.allDay === undefined ? existing.allDay : body.allDay === true
+  if (staysAllDay && (body.startsAt !== undefined || body.endsAt !== undefined)) {
+    const dates = normaliseAllDay(
+      String(body.startsAt ?? toDateOnlyUtc(existing.startsAt)),
+      String(body.endsAt ?? toDateOnlyUtc(existing.endsAt))
+    )
+    if (!dates) {
+      return NextResponse.json(
+        { error: 'An all-day event needs plain dates (YYYY-MM-DD), not timestamps.' },
+        { status: 400 }
+      )
+    }
+    data.startsAt = dates.startsAt
+    data.endsAt = dates.endsAt
+  }
+
   const finalStart = startsAt ?? existing.startsAt
   const finalEnd = endsAt ?? existing.endsAt
   if (finalEnd < finalStart) {
     return NextResponse.json({ error: 'An event cannot end before it starts.' }, { status: 400 })
   }
-  if (startsAt) data.startsAt = startsAt
-  if (endsAt) data.endsAt = endsAt
+  if (!staysAllDay) {
+    if (startsAt) data.startsAt = startsAt
+    if (endsAt) data.endsAt = endsAt
+  }
 
   if (typeof body.rrule === 'string') {
     const rule = body.rrule.trim()

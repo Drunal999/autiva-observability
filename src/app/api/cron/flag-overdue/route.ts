@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publishBoardEvent } from '@/lib/realtime/bus'
 import { bearerMatches } from '@/lib/ops/bearerAuth'
+import { TASK_INCLUDE } from '@/lib/ops/taskShape'
 
 export async function GET(req: Request) {
   // Was a plain !== against `Bearer ${process.env.CRON_SECRET}`. With the
@@ -20,6 +21,9 @@ export async function GET(req: Request) {
     const updated = await prisma.task.update({
       where: { id: task.id },
       data: { overdueFlaggedAt: new Date() },
+      // Same include as every other producer, so a flagged task does not lose
+      // its assignee in the client the moment the cron touches it.
+      include: TASK_INCLUDE,
     })
     publishBoardEvent({ type: 'task-updated', payload: updated })
   }
