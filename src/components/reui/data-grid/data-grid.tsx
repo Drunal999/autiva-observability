@@ -408,8 +408,15 @@ function DataGridProvider<TData extends object>({
   // stable for the life of the table, rather than on `table` itself: the
   // wrapper is re-created on every state change, and re-creating the
   // controller with it would reset its applied-once bookkeeping mid-drag.
+  // `table.store` is deliberately a dependency the factory does not read: it is
+  // an IDENTITY KEY, present so the controller is rebuilt only when a genuinely
+  // new table exists. exhaustive-deps cannot express that and reports it as
+  // unnecessary; removing it would rebuild the controller on every state change
+  // and reset its applied-once bookkeeping mid-drag, which is the bug the
+  // comment above describes.
   const autoSize = useMemo(
     () => createDataGridAutoSizeController(() => tableRef.current),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [table.store]
   )
 

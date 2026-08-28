@@ -30,6 +30,20 @@ import {
 import { flexRender } from "@tanstack/react-table"
 import type { Column, Row, Table } from "@tanstack/react-table"
 import { useVirtualizer } from "@tanstack/react-virtual"
+
+/**
+ * Stable empty list for when virtualization is off.
+ *
+ * This was an inline `[]`, which is a NEW array on every render. It feeds the
+ * dependency array of the infinite-scroll effect below, so that effect re-ran
+ * on every single render — and it is the one that can call `onFetchMore`. Only
+ * a count ref kept it from firing repeatedly.
+ *
+ * The enabled branch needs no such treatment: TanStack memoises
+ * `getVirtualItems()` and returns the same reference until the visible range
+ * actually changes.
+ */
+const NO_VIRTUAL_ITEMS: VirtualItem[] = []
 import type {
   VirtualItem,
   Virtualizer,
@@ -683,7 +697,7 @@ function DataGridTableVirtual<TData extends object>({
 
   const virtualItems = isVirtualizationEnabled
     ? virtualizer.getVirtualItems()
-    : []
+    : NO_VIRTUAL_ITEMS
   const totalSize = isVirtualizationEnabled ? virtualizer.getTotalSize() : 0
   const measureRowRef =
     isVirtualizationEnabled && customMeasureElement
