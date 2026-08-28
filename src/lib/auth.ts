@@ -36,7 +36,19 @@ export const authOptions: NextAuthOptions = {
         const githubProfile = profile as { id: number; login: string; avatar_url?: string }
         await prisma.user.upsert({
           where: { githubId: String(githubProfile.id) },
-          update: { name: user.name ?? githubProfile.login, avatarUrl: user.image ?? null },
+          update: {
+            name: user.name ?? githubProfile.login,
+            avatarUrl: user.image ?? null,
+            // Backfill the email if the row does not have one yet.
+            //
+            // The session callback below resolves the signed-in user BY EMAIL,
+            // so a row created without one — a teammate seeded ahead of their
+            // first login — would authenticate successfully and then carry no
+            // `session.user.id`: no "My tasks", no commenting, no approvals.
+            // `undefined` leaves the column untouched when GitHub gives us
+            // nothing, so this can never blank an address we already hold.
+            email: user.email ?? undefined,
+          },
           create: {
             githubId: String(githubProfile.id),
             name: user.name ?? githubProfile.login,
