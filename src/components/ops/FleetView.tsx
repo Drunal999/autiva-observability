@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { ChartPanel, RunBars, LatencyLines, AreaChart, SuccessRate, Sparkline } from './Charts'
 import { EmptyState } from './Panel'
 import { ThreadToggle, useThreadBadges } from './Thread'
+import { AddAgent } from './AddAgent'
 import { fmtElapsed } from '@/lib/ops/tokens'
 import { statusLabel, statusColor, statusGlyph, statusIsLive } from '@/lib/ops/status'
 import { inr, inrCompact, tokens as fmtTokens } from '@/lib/ops/format'
@@ -213,7 +214,7 @@ export function FleetView({
   /** Demo/preview override only. The real mode always comes from the server. */
   mode?: ViewMode
 }) {
-  const { data, error, isLoading } = useSWR<FleetResponse>('/api/agents', fetcher, {
+  const { data, error, isLoading, mutate: mutateAgents } = useSWR<FleetResponse>('/api/agents', fetcher, {
     refreshInterval: 15000,
   })
   const agents = data?.agents
@@ -275,6 +276,12 @@ export function FleetView({
               {running} RUNNING · {failed} FAILED · {inrCompact(totalCost)} ACROSS CURRENT RUNS
             </span>
           )}
+          <span className="flex-1" />
+          {/* The fleet had no create path at all — it could be watched but
+              never added to. Revalidate rather than optimistically insert: a
+              new agent's shape comes from the server, including the engine it
+              resolved to. */}
+          <AddAgent modules={engines} onCreated={() => void mutateAgents()} />
         </div>
 
         {state === 'loading' && (
