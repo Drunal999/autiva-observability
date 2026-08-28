@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { NAV, fmtClock } from '@/lib/ops/tokens'
 import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
 import { usePresence, PresenceBar } from './Presence'
+import { Dock } from './Dock'
 import { useEventListener } from '@/lib/realtime/client'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -39,6 +40,7 @@ function Clock() {
 
 export function OpsShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   // /api/agents returns { mode, agents } — the mode is decided server-side, so
   // the payload is an object, not a bare array.
   const { data } = useSWR<FleetResponse>('/api/agents', fetcher, { refreshInterval: 20000 })
@@ -187,6 +189,27 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="min-h-0 flex-1">{children}</main>
+
+      {/*
+        Pointer-only, by design. Magnification reacts to a cursor and says
+        nothing on a touchscreen, so on touch this is simply absent and the
+        labelled top nav — which is the wayfinding, and carries the approvals
+        badge — remains the whole story. `pointer-events-none` on the wrapper
+        keeps the strip from swallowing clicks meant for the content beneath.
+      */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 hidden justify-center [@media(hover:hover)_and_(pointer:fine)]:flex">
+        <Dock
+          className="pointer-events-auto"
+          onNavigate={(href) => router.push(href)}
+          items={NAV.map((n) => ({
+            href: n.href,
+            label: n.label,
+            glyph: n.glyph,
+            active: pathname === n.href,
+            badge: n.href === '/approvals' ? pendingApprovals : undefined,
+          }))}
+        />
+      </div>
     </div>
   )
 }

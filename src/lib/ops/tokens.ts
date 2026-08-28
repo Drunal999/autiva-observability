@@ -43,17 +43,23 @@ export const SPAN_STATUS_COLOR: Record<string, string> = {
   WARN: WARN,
 }
 
+/**
+ * `glyph` keeps the dock in the same monospace vocabulary the rest of the app
+ * speaks (the trace waterfall already reads in ◇ ▸ $ ▤ ◈), rather than pulling
+ * in an icon library whose stroke style would sit apart from everything else.
+ */
 export const NAV = [
-  { label: 'Board', href: '/' },
-  { label: 'Mission', href: '/board' },
-  { label: 'Approvals', href: '/approvals' },
-  { label: 'Calendar', href: '/calendar' },
-  { label: 'Fleet', href: '/fleet' },
-  { label: 'Trace', href: '/trace' },
-  { label: 'Terminal', href: '/terminal' },
-  { label: 'Automations', href: '/automations' },
-  { label: 'States', href: '/states' },
-  { label: 'Motion', href: '/motion' },
+  // '/' used to have its own dashboard; it now redirects to /board, so a
+  // separate "Board" entry pointed at the same place as "Mission".
+  { label: 'Mission', href: '/board', glyph: '◈' },
+  { label: 'Approvals', href: '/approvals', glyph: '✓' },
+  { label: 'Calendar', href: '/calendar', glyph: '▦' },
+  { label: 'Fleet', href: '/fleet', glyph: '◇' },
+  { label: 'Trace', href: '/trace', glyph: '⑂' },
+  { label: 'Terminal', href: '/terminal', glyph: '$' },
+  { label: 'Automations', href: '/automations', glyph: '↻' },
+  { label: 'States', href: '/states', glyph: '◐' },
+  { label: 'Motion', href: '/motion', glyph: '∿' },
 ] as const
 
 // ── formatters ───────────────────────────────────────────────────
