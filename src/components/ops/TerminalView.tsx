@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
-import { OK, WARN, ERR, T } from '@/lib/ops/tokens'
+import { OK, WARN, T } from '@/lib/ops/tokens'
 import type { RunDetail, LogLine, WorkspaceFile } from '@/types/agentOps'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())

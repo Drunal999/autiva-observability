@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
-import { OK, WARN, BLOCKED, T } from '@/lib/ops/tokens'
+import { WARN, BLOCKED, T } from '@/lib/ops/tokens'
 import { relative, absolute } from '@/lib/ops/format'
 import { parseCommentBody, MAX_COMMENT_LENGTH } from '@/lib/ops/safeMarkdown'
 import { useEventListener } from '@/lib/realtime/client'

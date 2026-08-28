@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { OK, WARN, ERR, T } from '@/lib/ops/tokens'
+import { OK, WARN, ERR } from '@/lib/ops/tokens'
 
 const TABLE = [
   { token: 'enter / reveal', duration: '160ms', easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
