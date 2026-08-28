@@ -6,12 +6,15 @@ import { runTone, type TimelineItem, type Tier } from './Timeline'
 
 const MINUTE = 60_000
 const HOUR = 3_600_000
+const DAY = 86_400_000
 
 /** Rows within one lane, so overlapping items do not hide each other. */
 const MAX_ROWS = 3
 /** Above this, individual bars are slivers and the lane becomes a histogram. */
 const DENSITY_THRESHOLD = 60
 const ROW_H = 19
+/** Grab zone for a resize, in pixels at either end of a bar. */
+const EDGE_PX = 7
 
 interface Placed extends TimelineItem {
   row: number
@@ -96,6 +99,70 @@ export function snapTo(t: number, tier: Tier): number {
   return d.getTime()
 }
 
+/** The smallest an event can be dragged down to at this zoom. */
+export function minDuration(tier: Tier): number {
+  return tier === 'hour' ? 15 * MINUTE : DAY
+}
+
+/**
+ * What a drag on this item would mean, or why it means nothing.
+ *
+ * A recurring occurrence has a DERIVED id (`eventId@instant`) and no row of its
+ * own. Dragging one would have to either move the whole series or invent an
+ * exception, and silently doing the first is the kind of guess that loses
+ * somebody's standup. Until there is an exception model, it says so instead.
+ */
+export function editability(item: TimelineItem): { can: boolean; why?: string } {
+  if (item.layer !== 'human') {
+    return {
+      can: false,
+      why:
+        item.layer === 'run'
+          ? 'A run already happened — the past is not editable'
+          : 'Managed in Automations',
+    }
+  }
+  if (item.readOnly) return { can: false, why: item.readOnlyReason ?? 'Read only' }
+  if (item.recurring) {
+    return { can: false, why: 'Part of a repeating series — edit the series to move it' }
+  }
+  return { can: true }
+}
+
+type Edit = {
+  id: string
+  title: string
+  mode: 'move' | 'start' | 'end'
+  from: number
+  to: number
+  origFrom: number
+  origTo: number
+  grabbedAt: number
+}
+
+type Undo =
+  | { kind: 'create'; id: string; title: string }
+  | { kind: 'move'; id: string; title: string; from: number; to: number }
+
+/**
+ * Applies a pointer position to an in-flight edit.
+ *
+ * Kept pure so the rules — a move preserves duration, a resize cannot invert
+ * the event or shrink it below the zoom's smallest unit — are testable without
+ * a mouse.
+ */
+export function applyEdit(edit: Edit, pointerT: number, tier: Tier): { from: number; to: number } {
+  const min = minDuration(tier)
+  if (edit.mode === 'move') {
+    const delta = pointerT - edit.grabbedAt
+    return { from: edit.origFrom + delta, to: edit.origTo + delta }
+  }
+  if (edit.mode === 'start') {
+    return { from: Math.min(pointerT, edit.origTo - min), to: edit.origTo }
+  }
+  return { from: edit.origFrom, to: Math.max(pointerT, edit.origFrom + min) }
+}
+
 export function Lane({
   layer, items, pct, winStart, winEnd, span, tier, onPan, onCreated,
 }: {
@@ -120,17 +187,20 @@ export function Lane({
   const [drag, setDrag] = useState<{ from: number; to: number } | null>(null)
   const [pending, setPending] = useState<{ from: number; to: number } | null>(null)
   const [draft, setDraft] = useState('')
-  const [undo, setUndo] = useState<{ id: string; title: string } | null>(null)
+  const [undo, setUndo] = useState<Undo | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [edit, setEdit] = useState<Edit | null>(null)
 
-  const timeAt = (clientX: number) => {
+  const timeAt = (clientX: number, snap = true) => {
     const el = trackRef.current
     if (!el) return winStart
     const rect = el.getBoundingClientRect()
     const fraction = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
-    return snapTo(winStart + fraction * span, tier)
+    const t = winStart + fraction * span
+    return snap ? snapTo(t, tier) : t
   }
 
+  // ── creating ────────────────────────────────────────────────────
   useEffect(() => {
     if (!drag) return
     const move = (e: MouseEvent) => setDrag((d) => (d ? { ...d, to: timeAt(e.clientX) } : d))
@@ -140,9 +210,34 @@ export function Lane({
         const from = Math.min(d.from, d.to)
         let to = Math.max(d.from, d.to)
         // A click rather than a drag still means something: one unit.
-        if (to === from) to = from + (tier === 'hour' ? HOUR : 86_400_000)
+        if (to === from) to = from + (tier === 'hour' ? HOUR : DAY)
         setPending({ from, to })
         setTimeout(() => titleRef.current?.focus(), 0)
+        return null
+      })
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+    return () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+  })
+
+  // ── moving and resizing ─────────────────────────────────────────
+  useEffect(() => {
+    if (!edit) return
+    const move = (e: MouseEvent) =>
+      setEdit((current) =>
+        current ? { ...current, ...applyEdit(current, timeAt(e.clientX), tier) } : current
+      )
+    const up = () => {
+      setEdit((current) => {
+        if (!current) return null
+        // A click that moved nothing is not an edit; do not write a no-op.
+        if (current.from !== current.origFrom || current.to !== current.origTo) {
+          void commitEdit(current)
+        }
         return null
       })
     }
@@ -159,6 +254,77 @@ export function Lane({
     const id = setTimeout(() => setUndo(null), 8000)
     return () => clearTimeout(id)
   }, [undo])
+
+  async function patchTimes(id: string, from: number, to: number): Promise<boolean> {
+    const res = await fetch('/api/calendar/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        startsAt: new Date(from).toISOString(),
+        endsAt: new Date(to).toISOString(),
+      }),
+    })
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({}))
+      setError(payload.error ?? 'Could not move that event.')
+      return false
+    }
+    setError(null)
+    return true
+  }
+
+  async function commitEdit(current: Edit) {
+    const ok = await patchTimes(current.id, current.from, current.to)
+    // Refresh either way: on failure the server's times are the truth, and the
+    // bar must snap back to them rather than sit where the pointer left it.
+    onCreated()
+    if (ok) {
+      setUndo({
+        kind: 'move',
+        id: current.id,
+        title: current.title,
+        from: current.origFrom,
+        to: current.origTo,
+      })
+    }
+  }
+
+  function beginEdit(e: React.MouseEvent, item: Placed, mode: Edit['mode']) {
+    e.stopPropagation()
+    e.preventDefault()
+    setUndo(null)
+    setEdit({
+      id: item.id,
+      title: item.title,
+      mode,
+      from: item.from,
+      to: item.to,
+      origFrom: item.from,
+      origTo: item.to,
+      grabbedAt: timeAt(e.clientX),
+    })
+  }
+
+  /**
+   * Keyboard equivalent, so rescheduling is not a mouse-only capability.
+   * Alt+arrow moves the event; Alt+Shift+arrow resizes its end.
+   */
+  function nudge(item: Placed, e: React.KeyboardEvent) {
+    if (!e.altKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return
+    e.preventDefault()
+    const step = (tier === 'hour' ? 15 * MINUTE : DAY) * (e.key === 'ArrowLeft' ? -1 : 1)
+
+    const next = e.shiftKey
+      ? { from: item.from, to: Math.max(item.to + step, item.from + minDuration(tier)) }
+      : { from: item.from + step, to: item.to + step }
+
+    void (async () => {
+      if (await patchTimes(item.id, next.from, next.to)) {
+        setUndo({ kind: 'move', id: item.id, title: item.title, from: item.from, to: item.to })
+      }
+      onCreated()
+    })()
+  }
 
   async function create() {
     if (!pending || !draft.trim()) return
@@ -186,16 +352,29 @@ export function Lane({
       return
     }
     const created = await res.json().catch(() => null)
-    if (created?.id) setUndo({ id: created.id, title: draft.trim() })
+    if (created?.id) setUndo({ kind: 'create', id: created.id, title: draft.trim() })
     setPending(null)
     setDraft('')
+    onCreated()
+  }
+
+  async function runUndo() {
+    if (!undo) return
+    if (undo.kind === 'create') {
+      await fetch('/api/calendar/' + undo.id, { method: 'DELETE' })
+    } else {
+      await patchTimes(undo.id, undo.from, undo.to)
+    }
+    setUndo(null)
     onCreated()
   }
 
   const { placed, overflow } = dense
     ? { placed: [] as Placed[], overflow: 0 }
     : packRows(items, span)
-  const rows = dense ? 2 : Math.max(1, Math.min(MAX_ROWS, placed.length ? Math.max(...placed.map((p) => p.row)) + 1 : 1))
+  const rows = dense
+    ? 2
+    : Math.max(1, Math.min(MAX_ROWS, placed.length ? Math.max(...placed.map((p) => p.row)) + 1 : 1))
   const height = rows * ROW_H + 10
 
   const selection = drag
@@ -217,7 +396,7 @@ export function Lane({
       <div
         ref={trackRef}
         className="relative min-w-0 flex-1"
-        style={{ height, cursor: creatable ? 'cell' : 'grab' }}
+        style={{ height, cursor: edit ? 'grabbing' : creatable ? 'cell' : 'grab' }}
         onMouseDown={(e) => {
           if (e.button !== 0) return
           if (!creatable) {
@@ -242,30 +421,75 @@ export function Lane({
         )}
 
         {dense ? (
-          <DensityLane items={items} winStart={winStart} winEnd={winEnd} tone={layer.tone} height={height} />
+          <DensityLane
+            items={items}
+            winStart={winStart}
+            winEnd={winEnd}
+            tone={layer.tone}
+            height={height}
+          />
         ) : (
-          placed.map((item) => {
+          placed.map((raw) => {
+            // While an edit is in flight the bar follows the pointer, so the
+            // gesture shows its own result rather than waiting for a round trip.
+            const live = edit && edit.id === raw.id
+            const item: Placed = live ? { ...raw, from: edit.from, to: edit.to } : raw
+
             const left = pct(item.from)
             const width = pct(item.to) - left
             const tone = item.layer === 'run' ? runTone(item.status) : layer.tone
-            const label =
-              item.title + (item.moduleName ? ' · ' + item.moduleName : '')
+            const { can, why } = editability(item)
+            const label = item.title + (item.moduleName ? ' · ' + item.moduleName : '')
+            const title = can
+              ? label + ' — drag to move, edges to resize, alt+← → by keyboard'
+              : label + (why ? ' — ' + why : '')
+
+            const style = {
+              left: left + '%',
+              top: item.row * ROW_H + 5,
+              height: ROW_H - 4,
+              width: 'max(' + width + '%, 3px)',
+              cursor: can ? 'grab' : undefined,
+              zIndex: live ? 5 : undefined,
+            } as const
 
             const bar = (
               <>
                 <span
-                  className="absolute inset-y-0 rounded-[3px]"
+                  className="absolute inset-y-0 left-0 w-full rounded-[3px]"
                   style={{
-                    left: 0,
-                    width: 'max(' + width + '%, 3px)',
                     background: item.layer === 'run' ? tone : tone + '33',
                     borderLeft: '2px solid ' + tone,
                     opacity: item.readOnly ? 0.65 : 1,
+                    boxShadow: live ? '0 0 0 1px rgba(34,211,238,0.8)' : undefined,
                   }}
                 />
+                {can && (
+                  <>
+                    {/* Resize grips. Only on what can actually be resized —
+                        a col-resize cursor over a run would promise an edit
+                        the server would refuse.
+
+                        Capped at 30% of the bar rather than a flat 7px. A
+                        two-hour event at day zoom is about eight pixels wide,
+                        and two fixed grips consumed the whole of it: there was
+                        no middle left to grab, so dragging the body silently
+                        resized instead of moving. */}
+                    <span
+                      className="absolute inset-y-0 left-0 cursor-col-resize"
+                      style={{ width: 'min(' + EDGE_PX + 'px, 30%)' }}
+                      onMouseDown={(e) => beginEdit(e, raw, 'start')}
+                    />
+                    <span
+                      className="absolute inset-y-0 right-0 cursor-col-resize"
+                      style={{ width: 'min(' + EDGE_PX + 'px, 30%)' }}
+                      onMouseDown={(e) => beginEdit(e, raw, 'end')}
+                    />
+                  </>
+                )}
                 <span
-                  className="pointer-events-none absolute inset-y-0 flex items-center truncate pl-1 text-[10px] leading-none"
-                  style={{ left: 'max(' + width + '%, 3px)', color: T(0.7), paddingLeft: 4 }}
+                  className="pointer-events-none absolute inset-y-0 flex items-center truncate text-[10px] leading-none"
+                  style={{ left: '100%', paddingLeft: 4, color: T(0.7) }}
                 >
                   {item.readOnly && <span className="mr-[3px] opacity-60">🔒</span>}
                   {item.recurring && <span className="mr-[3px] opacity-60">↻</span>}
@@ -274,31 +498,34 @@ export function Lane({
               </>
             )
 
-            const style = {
-              left: left + '%',
-              right: 'auto',
-              top: item.row * ROW_H + 5,
-              height: ROW_H - 4,
-              width: 'max(' + width + '%, 3px)',
-            } as const
+            if (item.href) {
+              return (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  title={title}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70"
+                  style={style}
+                >
+                  {bar}
+                </a>
+              )
+            }
 
-            return item.href ? (
-              <a
-                key={item.id}
-                href={item.href}
-                title={label}
-                onMouseDown={(e) => e.stopPropagation()}
-                className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70"
-                style={style}
-              >
-                {bar}
-              </a>
-            ) : (
+            return (
               <span
                 key={item.id}
-                title={item.readOnly ? label + ' — ' + item.readOnlyReason : label}
-                onMouseDown={(e) => e.stopPropagation()}
-                className="absolute"
+                title={title}
+                role={can ? 'button' : undefined}
+                tabIndex={can ? 0 : undefined}
+                aria-label={can ? label + ', alt plus arrow keys to move' : undefined}
+                onKeyDown={can ? (e) => nudge(raw, e) : undefined}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  if (can) beginEdit(e, raw, 'move')
+                }}
+                className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70"
                 style={style}
               >
                 {bar}
@@ -335,7 +562,6 @@ export function Lane({
             aria-label="New event title"
             className="min-w-0 flex-1 bg-transparent text-[12px] text-white/85 outline-none placeholder:text-white/25"
           />
-          {error && <span className="font-mono text-[9px] text-red-300">{error}</span>}
           <button
             type="button"
             onClick={() => { setPending(null); setDraft('') }}
@@ -346,17 +572,21 @@ export function Lane({
         </div>
       )}
 
-      {undo && (
+      {!pending && error && (
+        <div className="absolute inset-x-0 top-full z-40 mt-1 rounded-[10px] border border-red-400/35 bg-[#0b1220] px-2 py-1.5">
+          <span className="font-mono text-[10px] text-red-300">{error}</span>
+        </div>
+      )}
+
+      {undo && !error && (
         <div className="absolute inset-x-0 top-full z-40 mt-1 flex items-center gap-2 rounded-[10px] border border-white/10 bg-[#0b1220] px-2 py-1.5">
-          <span className="truncate text-[11.5px] text-white/70">Added “{undo.title}”</span>
+          <span className="truncate text-[11.5px] text-white/70">
+            {undo.kind === 'create' ? 'Added' : 'Moved'} “{undo.title}”
+          </span>
           <span className="flex-1" />
           <button
             type="button"
-            onClick={async () => {
-              await fetch('/api/calendar/' + undo.id, { method: 'DELETE' })
-              setUndo(null)
-              onCreated()
-            }}
+            onClick={() => void runUndo()}
             className="font-mono text-[10px] text-cyan-300 hover:text-cyan-200"
           >
             Undo

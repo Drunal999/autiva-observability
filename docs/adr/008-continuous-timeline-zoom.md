@@ -65,6 +65,33 @@ scheduled row belongs to Automations (see the read-only rule in
 `/api/calendar/[id]`). Those lanes pan instead, so the whole surface is
 draggable.
 
+## Rescheduling, and what refuses to be rescheduled
+
+Dragging a bar's body moves it (duration preserved exactly); dragging either
+edge resizes it, holding the opposite edge still and refusing to invert the
+event or shrink it below the zoom's smallest unit. `Alt`+arrow does the same
+from the keyboard and `Alt`+`Shift`+arrow resizes, so this is not a mouse-only
+capability. Every change offers undo, consistent with create.
+
+Four things refuse the gesture, each saying why in its tooltip rather than
+failing silently at the server:
+
+- **runs** — the past is not editable
+- **scheduled rows** — owned by Automations
+- **read-only rows** — using the reason the server itself gave
+- **recurring occurrences** — an occurrence has a *derived* id
+  (`eventId@instant`) and no row of its own. Moving one would have to either
+  rewrite the whole series or invent an exception. Silently doing the first
+  loses somebody's standup, so until there is an exception model (EXDATE plus
+  an override row) it declines and says so.
+
+**A sizing lesson worth keeping.** The resize grips were a flat 7px at each
+end. A two-hour event at day zoom is about *eight pixels wide*, so the two
+grips consumed the entire bar and there was no middle left to grab — dragging
+the body silently resized instead of moving. Grips are now capped at 30% of the
+bar. Any fixed-pixel hit target inside an element whose width is data-dependent
+has this bug latent in it.
+
 ## The grid stays
 
 The timeline is more capable; the grid shows more detail per day. That is a

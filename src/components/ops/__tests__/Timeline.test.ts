@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildTicks, tierFor, zoomWindow, MIN_SPAN, MAX_SPAN } from '../Timeline'
-import { packRows, densify, snapTo } from '../TimelineLane'
+import { packRows, densify, snapTo, applyEdit, editability, minDuration } from '../TimelineLane'
 import type { TimelineItem } from '../Timeline'
 
 const HOUR = 3_600_000
@@ -210,5 +210,88 @@ describe('drag snapping', () => {
       const d = new Date(snapTo(at('2026-08-28T17:42:00'), tier))
       expect([d.getHours(), d.getMinutes()]).toEqual([0, 0])
     }
+  })
+})
+
+
+describe('rescheduling by drag', () => {
+  const base = {
+    id: 'e1', title: 'offsite', mode: 'move' as const,
+    from: at('2026-08-10T09:00:00'), to: at('2026-08-10T11:00:00'),
+    origFrom: at('2026-08-10T09:00:00'), origTo: at('2026-08-10T11:00:00'),
+    grabbedAt: at('2026-08-10T10:00:00'),
+  }
+
+  it('a move preserves duration exactly', () => {
+    const next = applyEdit(base, at('2026-08-10T14:00:00'), 'hour')
+    expect(next.to - next.from).toBe(base.origTo - base.origFrom)
+    expect(next.from).toBe(at('2026-08-10T13:00:00'))
+  })
+
+  it('a move tracks the grab point, not the bar start', () => {
+    // Grabbing the middle of a bar and dragging must not teleport its start to
+    // the cursor.
+    const grabbedLate = { ...base, grabbedAt: at('2026-08-10T10:30:00') }
+    const next = applyEdit(grabbedLate, at('2026-08-10T10:30:00'), 'hour')
+    expect(next.from).toBe(base.origFrom)
+  })
+
+  it('resizing the end cannot invert the event', () => {
+    const next = applyEdit({ ...base, mode: 'end' }, at('2026-08-09T00:00:00'), 'hour')
+    expect(next.to).toBeGreaterThan(next.from)
+    expect(next.to - next.from).toBe(minDuration('hour'))
+  })
+
+  it('resizing the start cannot invert the event either', () => {
+    const next = applyEdit({ ...base, mode: 'start' }, at('2026-08-12T00:00:00'), 'hour')
+    expect(next.from).toBeLessThan(next.to)
+    expect(next.to - next.from).toBe(minDuration('hour'))
+  })
+
+  it('resizing holds the opposite edge still', () => {
+    const end = applyEdit({ ...base, mode: 'end' }, at('2026-08-10T15:00:00'), 'hour')
+    expect(end.from).toBe(base.origFrom)
+    const start = applyEdit({ ...base, mode: 'start' }, at('2026-08-10T08:00:00'), 'hour')
+    expect(start.to).toBe(base.origTo)
+  })
+
+  it('has a bigger floor at coarser zoom, where a 15-minute event is invisible', () => {
+    expect(minDuration('hour')).toBeLessThan(minDuration('day'))
+    expect(minDuration('month')).toBe(minDuration('day'))
+  })
+})
+
+describe('what may be dragged', () => {
+  const ev = (over: Partial<TimelineItem>): TimelineItem => ({
+    id: 'x', layer: 'human', title: 't',
+    startsAt: '2026-08-10T09:00:00', endsAt: '2026-08-10T10:00:00', ...over,
+  })
+
+  it('allows a plain human event', () => {
+    expect(editability(ev({})).can).toBe(true)
+  })
+
+  it('refuses a run, because the past is not editable', () => {
+    const v = editability(ev({ layer: 'run' }))
+    expect(v.can).toBe(false)
+    expect(v.why).toMatch(/already happened/i)
+  })
+
+  it('refuses a scheduled row and points at where it is owned', () => {
+    expect(editability(ev({ layer: 'scheduled' })).why).toMatch(/automations/i)
+  })
+
+  it('refuses a read-only row using the reason the server gave', () => {
+    const v = editability(ev({ readOnly: true, readOnlyReason: 'because reasons' }))
+    expect(v.can).toBe(false)
+    expect(v.why).toBe('because reasons')
+  })
+
+  it('refuses a recurring occurrence rather than silently moving the series', () => {
+    // Its id is derived and it has no row; moving it would rewrite every
+    // occurrence, which is not what dragging one of them means.
+    const v = editability(ev({ recurring: true }))
+    expect(v.can).toBe(false)
+    expect(v.why).toMatch(/series/i)
   })
 })
