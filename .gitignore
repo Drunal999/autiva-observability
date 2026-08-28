@@ -43,3 +43,6 @@ next-env.d.ts
 # local config backups from the Tailwind v3/v4 reconciliation
 *.bak
 .env.bak-*
+
+# local scratch scripts
+src/app/automations/*.mjs
