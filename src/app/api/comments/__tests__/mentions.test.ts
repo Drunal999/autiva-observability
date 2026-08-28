@@ -66,12 +66,22 @@ describe('mention resolution', () => {
     const ten = Array.from({ length: 10 }, (_, i) => '@user' + i).join(' ')
     const res = await POST(post(ten))
     expect(res.status).toBe(200)
-    expect(h.userFindMany.mock.calls[0][0].where.githubId.in).toHaveLength(10)
+    expect(h.userFindMany.mock.calls[0][0].where.handle.in).toHaveLength(10)
   })
 
-  it('still resolves an ordinary handful of mentions', async () => {
+  it('resolves against the handle, not the numeric github id', async () => {
+    // githubId holds "300780152". Matching typed text against it meant no
+    // mention ever resolved and no notification was ever sent — while the
+    // comment still rendered the mention, so the author believed otherwise.
     await POST(post('@alice @bob can you look'))
-    expect(h.userFindMany.mock.calls[0][0].where.githubId.in).toEqual(['alice', 'bob'])
+    const where = h.userFindMany.mock.calls[0][0].where
+    expect(where.githubId).toBeUndefined()
+    expect(where.handle.in).toEqual(['alice', 'bob'])
+  })
+
+  it('folds case, because GitHub logins are case-insensitive', async () => {
+    await POST(post('@Alice @BOB'))
+    expect(h.userFindMany.mock.calls[0][0].where.handle.in).toEqual(['alice', 'bob'])
   })
 
   it('does not query at all when nobody is mentioned', async () => {

@@ -37,6 +37,9 @@ export const authOptions: NextAuthOptions = {
         await prisma.user.upsert({
           where: { githubId: String(githubProfile.id) },
           update: {
+            // Kept current: a person can rename their GitHub account, and a
+            // stale handle silently stops matching their mentions.
+            handle: githubProfile.login.toLowerCase(),
             name: user.name ?? githubProfile.login,
             avatarUrl: user.image ?? null,
             // Backfill the email if the row does not have one yet.
@@ -51,6 +54,7 @@ export const authOptions: NextAuthOptions = {
           },
           create: {
             githubId: String(githubProfile.id),
+            handle: githubProfile.login.toLowerCase(),
             name: user.name ?? githubProfile.login,
             avatarUrl: user.image ?? null,
             email: user.email ?? null,

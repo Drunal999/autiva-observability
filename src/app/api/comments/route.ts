@@ -131,7 +131,14 @@ export async function POST(req: Request) {
   const handles = allHandles
   const mentioned = handles.length
     ? await prisma.user.findMany({
-        where: { githubId: { in: handles } },
+        // `handle`, not `githubId`. githubId is the NUMERIC GitHub account id,
+        // so matching typed text against it meant no mention ever resolved and
+        // no notification was ever sent — while the comment still rendered the
+        // mention, so the author believed someone had been told.
+        //
+        // Both sides are lowercased: GitHub logins are case-insensitive, and
+        // folding at the edges keeps the unique index usable.
+        where: { handle: { in: handles.map((h) => h.toLowerCase()) } },
         select: { id: true },
       })
     : []

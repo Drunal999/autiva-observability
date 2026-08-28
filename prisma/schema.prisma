@@ -10,6 +10,17 @@ datasource db {
 model User {
   id         String   @id @default(cuid())
   githubId   String   @unique
+  /// The GitHub LOGIN, lowercased — what a person types after an @.
+  ///
+  /// Mentions used to resolve against `githubId`, which holds the numeric
+  /// account id ("300780152"). Nobody types that, so no mention ever matched
+  /// and no notification was ever created — while the comment still RENDERED
+  /// the mention, so the author believed someone had been told.
+  ///
+  /// Lowercased on write and queried lowercased: GitHub logins are
+  /// case-insensitive, and folding at the edges keeps the unique index usable
+  /// instead of needing a case-insensitive scan.
+  handle     String?  @unique
   name       String
   avatarUrl  String?
   email      String?  @unique

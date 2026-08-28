@@ -14,9 +14,8 @@
  * The upsert deliberately mirrors that callback exactly, so a seeded row is
  * the same row their login updates rather than a competing one.
  *
- * Mentions resolve on `githubId`, which is the numeric id, so `@octocat` will
- * not match — mention them by the handle stored in `name` once they have
- * logged in. That is a pre-existing wrinkle, not something this script adds.
+ * It also records `handle` (the lowercased GitHub login), which is what
+ * mentions resolve against, so `@their-login` works before they ever sign in.
  */
 import { PrismaClient } from '@prisma/client'
 
@@ -52,11 +51,13 @@ for (const login of logins) {
       // Never overwrite a name or avatar the person has already established by
       // logging in; only fill what is missing.
       update: {
+        handle: p.login.toLowerCase(),
         name: existing?.name ?? p.name ?? p.login,
         avatarUrl: existing?.avatarUrl ?? p.avatar_url ?? null,
       },
       create: {
         githubId,
+        handle: p.login.toLowerCase(),
         name: p.name ?? p.login,
         avatarUrl: p.avatar_url ?? null,
         // Usually null: GitHub hides addresses by default. The sign-in callback
