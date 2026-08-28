@@ -1,4 +1,5 @@
 import { createHmac } from 'crypto'
+import { requireSecret } from './secrets'
 
 /**
  * Room naming for embedded calls.
@@ -21,12 +22,10 @@ import { createHmac } from 'crypto'
 const ROOM_PREFIX = 'autiva'
 
 function secret(): string {
-  // Falls back to NEXTAUTH_SECRET so a dev environment works without extra
-  // setup; production should set CALL_ROOM_SECRET explicitly so rotating call
-  // rooms does not invalidate every session.
-  const s = process.env.CALL_ROOM_SECRET ?? process.env.NEXTAUTH_SECRET
-  if (!s) throw new Error('CALL_ROOM_SECRET or NEXTAUTH_SECRET must be set to create call rooms')
-  return s
+  // No fallback to NEXTAUTH_SECRET. Rotating that is routine — it logs
+  // everyone out — and it must not also rename every call room, sending two
+  // people who follow an old link into different, empty rooms.
+  return requireSecret('CALL_ROOM_SECRET')
 }
 
 export function callRoomName(tenantId: string, subjectType: string, subjectId: string): string {

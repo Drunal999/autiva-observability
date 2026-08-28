@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { icsToken, verifyIcsToken, buildIcs } from '../ics'
 
 beforeEach(() => {
-  process.env.ICS_FEED_SECRET = 'test-ics-secret'
+  process.env.ICS_FEED_SECRET = 'test-ics-secret-0123456789abcdefghij'
 })
 
 const event = (over: Partial<Parameters<typeof buildIcs>[0][number]> = {}) => ({
@@ -49,7 +49,7 @@ describe('ICS feed tokens', () => {
 
   it('is revoked by rotating the secret', () => {
     const before = icsToken('t1', 'u1')
-    process.env.ICS_FEED_SECRET = 'rotated'
+    process.env.ICS_FEED_SECRET = 'rotated-0123456789abcdefghijklmnopqr'
     expect(verifyIcsToken('t1', 'u1', before)).toBe(false)
   })
 })

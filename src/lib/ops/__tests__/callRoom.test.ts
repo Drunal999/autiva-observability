@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { callRoomName } from '../callRoom'
 
 beforeEach(() => {
-  process.env.CALL_ROOM_SECRET = 'test-secret-for-room-naming'
+  process.env.CALL_ROOM_SECRET = 'test-secret-for-room-naming-0123456789'
 })
 
 describe('callRoomName', () => {
@@ -35,7 +35,7 @@ describe('callRoomName', () => {
 
   it('changes completely when the secret is rotated, so rooms are revocable', () => {
     const before = callRoomName('t1', 'APPROVAL', 'ap1')
-    process.env.CALL_ROOM_SECRET = 'a-different-secret'
+    process.env.CALL_ROOM_SECRET = 'a-different-secret-0123456789abcdefgh'
     expect(callRoomName('t1', 'APPROVAL', 'ap1')).not.toBe(before)
   })
 
@@ -46,9 +46,21 @@ describe('callRoomName', () => {
 
   it('refuses to mint a room with no secret configured', () => {
     delete process.env.CALL_ROOM_SECRET
-    const saved = process.env.NEXTAUTH_SECRET
-    delete process.env.NEXTAUTH_SECRET
-    expect(() => callRoomName('t1', 'APPROVAL', 'ap1')).toThrow(/secret/i)
-    if (saved) process.env.NEXTAUTH_SECRET = saved
+    expect(() => callRoomName('t1', 'APPROVAL', 'ap1')).toThrow(/CALL_ROOM_SECRET is not set/)
+  })
+
+  it('does NOT borrow NEXTAUTH_SECRET when its own secret is missing', () => {
+    // The old behaviour. Rotating NEXTAUTH_SECRET is routine — it logs
+    // everyone out — and it must not silently rename every call room as a
+    // side effect, which would send two people following the same link into
+    // different empty rooms.
+    delete process.env.CALL_ROOM_SECRET
+    process.env.NEXTAUTH_SECRET = 'a-perfectly-good-session-secret-0123456789'
+    expect(() => callRoomName('t1', 'APPROVAL', 'ap1')).toThrow(/CALL_ROOM_SECRET/)
+  })
+
+  it('refuses a secret short enough to guess', () => {
+    process.env.CALL_ROOM_SECRET = 'changeme'
+    expect(() => callRoomName('t1', 'APPROVAL', 'ap1')).toThrow(/too short/)
   })
 })

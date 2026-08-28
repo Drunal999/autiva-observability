@@ -19,7 +19,7 @@ import { GET } from '../route'
 describe('/api/cron/flag-overdue', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.CRON_SECRET = 'test-secret'
+    process.env.CRON_SECRET = 'test-secret-0123456789abcdefghijklmn'
   })
 
   it('rejects requests without the correct bearer token', async () => {
@@ -36,7 +36,7 @@ describe('/api/cron/flag-overdue', () => {
     )
 
     const req = new Request('http://localhost/api/cron/flag-overdue', {
-      headers: { Authorization: 'Bearer test-secret' },
+      headers: { Authorization: 'Bearer test-secret-0123456789abcdefghijklmn' },
     })
     const res = await GET(req)
 

@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { publishBoardEvent } from '@/lib/realtime/bus'
+import { bearerMatches } from '@/lib/ops/bearerAuth'
 
 export async function GET(req: Request) {
-  const authHeader = req.headers.get('Authorization')
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Was a plain !== against `Bearer ${process.env.CRON_SECRET}`. With the
+  // variable unset that compares to the literal "Bearer undefined", which
+  // anyone can send. An unset secret now denies, and the compare is
+  // constant-time so this endpoint is not an oracle for the token.
+  if (!bearerMatches(req.headers.get('Authorization'), 'CRON_SECRET')) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 

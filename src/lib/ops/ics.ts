@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'crypto'
+import { requireSecret } from './secrets'
 
 /**
  * Read-only ICS feed.
@@ -14,9 +15,11 @@ import { createHmac, timingSafeEqual } from 'crypto'
  */
 
 function secret(): string {
-  const s = process.env.ICS_FEED_SECRET ?? process.env.NEXTAUTH_SECRET
-  if (!s) throw new Error('ICS_FEED_SECRET or NEXTAUTH_SECRET must be set to issue calendar feeds')
-  return s
+  // No fallback to NEXTAUTH_SECRET. A feed URL is a long-lived password stored
+  // in plaintext by calendar clients; it must not share a key with sessions,
+  // and a routine session-key rotation must not silently kill every
+  // subscription somebody has already added.
+  return requireSecret('ICS_FEED_SECRET')
 }
 
 export function icsToken(tenantId: string, userId: string): string {
