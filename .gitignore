@@ -49,3 +49,4 @@ src/app/automations/*.mjs
 
 # verification builds that must not clobber the dev server
 .next-build
+.next-e2e

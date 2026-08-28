@@ -431,8 +431,12 @@ export function CalendarView() {
       {undo && (
         <div
           role="status"
-          className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-[12px] border border-emerald-400/40 bg-emerald-400/15 px-4 py-2.5 text-[12.5px] text-emerald-200 backdrop-blur"
-          style={{ animation: 'riseIn 160ms cubic-bezier(0.16,1,0.3,1) both' }}
+          className="fixed left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-[12px] border border-emerald-400/40 bg-emerald-400/15 px-4 py-2.5 text-[12.5px] text-emerald-200 backdrop-blur"
+          style={{
+            // Sits clear of the dock, which is also bottom-centred.
+            bottom: 'calc(1.5rem + var(--dock-space))',
+            animation: 'riseIn 160ms cubic-bezier(0.16,1,0.3,1) both',
+          }}
         >
           <span>Added “{undo.title}”.</span>
           <button

@@ -14,9 +14,11 @@ const items: DockItem[] = [
 ]
 
 describe('the dock', () => {
-  let navigate: ReturnType<typeof vi.fn>
+  let navigate: (href: string) => void
+  let calls: string[]
   beforeEach(() => {
-    navigate = vi.fn()
+    calls = []
+    navigate = (href) => calls.push(href)
   })
 
   const setup = () => render(<Dock items={items} onNavigate={navigate} />)
@@ -46,7 +48,7 @@ describe('the dock', () => {
   it('navigates client-side on a plain click', () => {
     setup()
     fireEvent.click(screen.getByLabelText('Fleet'), { button: 0 })
-    expect(navigate).toHaveBeenCalledWith('/fleet')
+    expect(calls).toEqual(['/fleet'])
   })
 
   it('leaves a modified click to the browser', () => {
@@ -56,7 +58,7 @@ describe('the dock', () => {
     fireEvent.click(screen.getByLabelText('Fleet'), { button: 0, metaKey: true })
     fireEvent.click(screen.getByLabelText('Fleet'), { button: 0, ctrlKey: true })
     fireEvent.click(screen.getByLabelText('Fleet'), { button: 1 })
-    expect(navigate).not.toHaveBeenCalled()
+    expect(calls).toEqual([])
   })
 
   it('shows a badge only where there is something waiting', () => {

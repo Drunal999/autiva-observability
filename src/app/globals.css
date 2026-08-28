@@ -6,6 +6,24 @@ body {
   font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
 }
 
+/* ── Space reserved by the quick-switcher dock ────────────────────
+   The dock is fixed to the bottom centre, and so are the toasts. Both
+   were centred within ~10px of each other, so a toast landed on top of
+   the dock the moment one appeared.
+
+   Anything anchored to the bottom centre offsets by this instead of
+   guessing, and the value is zero where the dock does not render — it
+   is pointer-only, because magnification means nothing without a
+   cursor. One declaration to change if the dock ever moves. */
+:root {
+  --dock-space: 0px;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root {
+    --dock-space: 78px;
+  }
+}
+
 /* ── Agent-ops motion system ──────────────────────────────────────
    Every loop below is bound to genuinely continuous work: a dot
    breathes while an agent runs, an edge flows while a packet is in

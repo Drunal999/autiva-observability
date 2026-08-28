@@ -385,8 +385,10 @@ export function ApprovalsView() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-[12px] border px-4 py-2.5 text-[12.5px] backdrop-blur"
+          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-[12px] border px-4 py-2.5 text-[12.5px] backdrop-blur"
           style={{
+            // Sits clear of the dock, which is also bottom-centred.
+            bottom: 'calc(1.5rem + var(--dock-space))',
             borderColor: toast.tone === 'ok' ? 'rgba(52,211,153,0.4)' : 'rgba(248,113,113,0.4)',
             background: toast.tone === 'ok' ? 'rgba(52,211,153,0.14)' : 'rgba(248,113,113,0.14)',
             color: toast.tone === 'ok' ? '#6ee7b7' : '#fca5a5',
