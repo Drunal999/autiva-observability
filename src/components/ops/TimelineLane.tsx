@@ -124,9 +124,9 @@ export function editability(item: TimelineItem): { can: boolean; why?: string } 
     }
   }
   if (item.readOnly) return { can: false, why: item.readOnlyReason ?? 'Read only' }
-  if (item.recurring) {
-    return { can: false, why: 'Part of a repeating series — edit the series to move it' }
-  }
+  // Recurring occurrences ARE editable now. Dropping one asks whether the
+  // change is for that occurrence or the whole series, because the gesture
+  // genuinely does not say and the two produce very different calendars.
   return { can: true }
 }
 
@@ -134,6 +134,8 @@ type Edit = {
   id: string
   title: string
   allDay: boolean
+  /** Set when this is one occurrence of a series, so the drop needs a scope. */
+  recurring: boolean
   mode: 'move' | 'start' | 'end'
   from: number
   to: number
@@ -192,6 +194,8 @@ export function Lane({
   const [undo, setUndo] = useState<Undo | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [edit, setEdit] = useState<Edit | null>(null)
+  /** A finished drag on a repeating occurrence, waiting for "this or all?". */
+  const [askScope, setAskScope] = useState<Edit | null>(null)
   // Mirrors `edit` so mouseup can read the final position without doing work
   // inside a state updater. See the note in the mouseup handler.
   const editRef = useRef<Edit | null>(null)
@@ -267,17 +271,24 @@ export function Lane({
     return () => clearTimeout(id)
   }, [undo])
 
-  async function patchTimes(id: string, from: number, to: number, allDay = false): Promise<boolean> {
+  async function patchTimes(
+    id: string,
+    from: number,
+    to: number,
+    allDay = false,
+    scope?: 'occurrence' | 'series'
+  ): Promise<boolean> {
     const res = await fetch('/api/calendar/' + id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       // An all-day event is rescheduled by DATE. Sending an instant would ask
       // the server which timezone it was, and it has no way to know.
-      body: JSON.stringify(
-        allDay
+      body: JSON.stringify({
+        ...(allDay
           ? { startsAt: toDateOnly(new Date(from)), endsAt: toDateOnly(new Date(to)) }
-          : { startsAt: new Date(from).toISOString(), endsAt: new Date(to).toISOString() }
-      ),
+          : { startsAt: new Date(from).toISOString(), endsAt: new Date(to).toISOString() }),
+        ...(scope ? { scope } : {}),
+      }),
     })
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}))
@@ -288,8 +299,15 @@ export function Lane({
     return true
   }
 
-  async function commitEdit(current: Edit) {
-    const ok = await patchTimes(current.id, current.from, current.to, current.allDay)
+  async function commitEdit(current: Edit, scope?: 'occurrence' | 'series') {
+    // An occurrence of a series needs a scope before anything is written. The
+    // server refuses without one; asking first means the drop does not have to
+    // fail before the question is put.
+    if (current.recurring && !scope) {
+      setAskScope(current)
+      return
+    }
+    const ok = await patchTimes(current.id, current.from, current.to, current.allDay, scope)
     // Refresh either way: on failure the server's times are the truth, and the
     // bar must snap back to them rather than sit where the pointer left it.
     onCreated()
@@ -313,6 +331,7 @@ export function Lane({
       id: item.id,
       title: item.title,
       allDay: item.allDay === true,
+      recurring: item.recurring === true,
       mode,
       from: item.from,
       to: item.to,
@@ -597,6 +616,53 @@ export function Lane({
       {!pending && error && (
         <div className="absolute inset-x-0 top-full z-40 mt-1 rounded-[10px] border border-red-400/35 bg-[#0b1220] px-2 py-1.5">
           <span className="font-mono text-[10px] text-red-300">{error}</span>
+        </div>
+      )}
+
+      {askScope && (
+        <div className="absolute inset-x-0 top-full z-50 mt-1 flex flex-wrap items-center gap-2 rounded-[10px] border border-cyan-400/35 bg-[#0b1220] px-2 py-1.5 shadow-lg">
+          {/* A disambiguation, not a confirmation. Dragging one instance of a
+              weekly meeting could mean "just this week" or "it is Wednesdays
+              now", and the two produce very different calendars for everyone
+              else. Guessing would be wrong half the time, silently. */}
+          <span className="truncate text-[11.5px] text-white/70">
+            “{askScope.title}” repeats. Change which?
+          </span>
+          <span className="flex-1" />
+          <button
+            type="button"
+            onClick={() => {
+              const current = askScope
+              setAskScope(null)
+              void commitEdit(current, 'occurrence')
+            }}
+            className="h-6 rounded-[7px] border border-cyan-400/40 bg-cyan-400/10 px-2 font-mono text-[10px] text-cyan-300 hover:bg-cyan-400/20"
+          >
+            This one
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const current = askScope
+              setAskScope(null)
+              void commitEdit(current, 'series')
+            }}
+            className="h-6 rounded-[7px] border border-white/15 px-2 font-mono text-[10px] text-white/60 hover:text-white"
+          >
+            All of them
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // Cancelling must put the bar back where it was, not leave it
+              // where the pointer dropped it.
+              setAskScope(null)
+              onCreated()
+            }}
+            className="font-mono text-[10px] text-white/35 hover:text-white/70"
+          >
+            cancel
+          </button>
         </div>
       )}
 

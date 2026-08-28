@@ -280,6 +280,25 @@ model CalendarEvent {
   attendees   CalendarAttendee[]
   createdAt   DateTime           @default(now())
 
+  /// RFC 5545 EXDATE: occurrences removed from this series' expansion.
+  ///
+  /// Deleting one occurrence of a repeating event cannot delete a row, because
+  /// occurrences have no rows — they are computed. So the series records which
+  /// instants to skip. Stored as the ORIGINAL occurrence start, which is the
+  /// only stable identifier an occurrence has.
+  exdates     DateTime[]         @default([])
+
+  /// RFC 5545 RECURRENCE-ID. Set on an OVERRIDE row: a real row that replaces
+  /// one computed occurrence of `recurrenceParent`, holding the instant of the
+  /// occurrence it stands in for — not its own (possibly moved) start.
+  recurrenceId       DateTime?
+  recurrenceParent   CalendarEvent?  @relation("SeriesOverrides", fields: [recurrenceParentId], references: [id], onDelete: Cascade)
+  recurrenceParentId String?
+  overrides          CalendarEvent[] @relation("SeriesOverrides")
+
+  /// One override per occurrence. The database refuses a second, so a double
+  /// submit cannot split one occurrence into two events.
+  @@unique([recurrenceParentId, recurrenceId])
   @@index([tenantId, startsAt])
   @@index([tenantId, kind, startsAt])
   /// The window query is an OVERLAP (startsAt <= to AND endsAt >= from). Without

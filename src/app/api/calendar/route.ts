@@ -42,6 +42,11 @@ export interface TimelineItem {
   moduleName?: string | null
   /** True for an expanded RRULE occurrence rather than a stored row. */
   recurring?: boolean
+  /**
+   * Set on anything belonging to a repeating series: a computed occurrence or
+   * an override row. Its presence is what tells the UI an edit needs a scope.
+   */
+  seriesId?: string
   /** Scheduled runs and live rows are not editable from the calendar. */
   readOnly?: boolean
   readOnlyReason?: string
@@ -112,9 +117,30 @@ export async function GET(req: Request) {
     }),
   ])
 
+  // Overrides are fetched by PARENT, not by window.
+  //
+  // An occurrence that was moved out of the window still has to suppress the
+  // computed occurrence it replaces, or the event would appear twice: once
+  // where it was moved to, and once where it used to be.
+  const seriesIds = events.filter((e) => e.rrule && !e.recurrenceParentId).map((e) => e.id)
+  const overrides = seriesIds.length
+    ? await prisma.calendarEvent.findMany({
+        where: { ...tenantScope(ctx), recurrenceParentId: { in: seriesIds } },
+        include: { module: { select: { displayName: true } } },
+      })
+    : []
+
+  const overrideKey = (parentId: string, at: Date) => `${parentId}@${at.toISOString()}`
+  const overridden = new Set(
+    overrides.map((o) => overrideKey(o.recurrenceParentId!, o.recurrenceId!))
+  )
+
   const items: TimelineItem[] = []
 
   for (const e of events) {
+    // An override is a real row and is emitted from `overrides` below. Without
+    // this it would also match the window query and be emitted twice.
+    if (e.recurrenceParentId) continue
     const durationMs = e.endsAt.getTime() - e.startsAt.getTime()
     const layer = e.kind === 'SCHEDULED_RUN' ? 'scheduled' : e.kind === 'DEADLINE' ? 'deadline' : 'human'
     // Scheduled runs are shown but not editable: the calendar must not become
@@ -139,10 +165,19 @@ export async function GET(req: Request) {
       continue
     }
 
+    const exdates = new Set(e.exdates.map((d) => d.toISOString()))
+
     for (const occurrence of expandInWindow(e.rrule, e.startsAt, from, to)) {
+      const iso = occurrence.toISOString()
+      // Deleted from the series: EXDATE holds the instants to skip, because an
+      // occurrence has no row to delete.
+      if (exdates.has(iso)) continue
+      // Replaced by an override row, which is emitted with its own real id.
+      if (overridden.has(overrideKey(e.id, occurrence))) continue
+
       items.push({
         // Occurrence ids are derived, not stored — there is no row per instance.
-        id: `${e.id}@${occurrence.toISOString()}`,
+        id: `${e.id}@${iso}`,
         layer,
         title: e.title,
         startsAt: occurrence.toISOString(),
@@ -150,12 +185,31 @@ export async function GET(req: Request) {
         allDay: e.allDay,
         moduleName: e.module?.displayName ?? null,
         recurring: true,
+        seriesId: e.id,
         readOnly, readOnlyReason,
       })
     }
   }
 
   // The past layer, read live. Never copied into CalendarEvent.
+  // Overrides: real rows standing in for one occurrence each. They are fully
+  // editable — that is the point of promoting an occurrence to a row — and
+  // still flagged as part of a series so the UI can say so.
+  for (const o of overrides) {
+    if (o.startsAt > to || o.endsAt < from) continue
+    items.push({
+      id: o.id,
+      layer: o.kind === 'SCHEDULED_RUN' ? 'scheduled' : o.kind === 'DEADLINE' ? 'deadline' : 'human',
+      title: o.title,
+      startsAt: o.startsAt.toISOString(),
+      endsAt: o.endsAt.toISOString(),
+      allDay: o.allDay,
+      moduleName: o.module?.displayName ?? null,
+      recurring: true,
+      seriesId: o.recurrenceParentId ?? undefined,
+    })
+  }
+
   for (const r of runs) {
     items.push({
       id: `run:${r.id}`,

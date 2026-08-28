@@ -216,7 +216,7 @@ describe('drag snapping', () => {
 
 describe('rescheduling by drag', () => {
   const base = {
-    id: 'e1', title: 'offsite', mode: 'move' as const, allDay: false,
+    id: 'e1', title: 'offsite', mode: 'move' as const, allDay: false, recurring: false,
     from: at('2026-08-10T09:00:00'), to: at('2026-08-10T11:00:00'),
     origFrom: at('2026-08-10T09:00:00'), origTo: at('2026-08-10T11:00:00'),
     grabbedAt: at('2026-08-10T10:00:00'),
@@ -287,11 +287,11 @@ describe('what may be dragged', () => {
     expect(v.why).toBe('because reasons')
   })
 
-  it('refuses a recurring occurrence rather than silently moving the series', () => {
-    // Its id is derived and it has no row; moving it would rewrite every
-    // occurrence, which is not what dragging one of them means.
-    const v = editability(ev({ recurring: true }))
-    expect(v.can).toBe(false)
-    expect(v.why).toMatch(/series/i)
+  it('allows a recurring occurrence, which now asks for a scope on drop', () => {
+    // It used to be refused because an occurrence has no row. It now has one
+    // available on demand: dropping it asks whether the change is for that
+    // occurrence or the whole series, and an override row is created for the
+    // former. See src/lib/ops/occurrence.ts.
+    expect(editability(ev({ recurring: true })).can).toBe(true)
   })
 })

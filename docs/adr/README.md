@@ -17,3 +17,4 @@ If you are about to change one of these, read the "when to revisit" line first
 | [006](006-internal-and-client-modes.md) | One component, two modes | Accepted |
 | [007](007-read-state-as-a-watermark.md) | Thread read-state is a watermark, not a receipt | Accepted |
 | [008](008-continuous-timeline-zoom.md) | One continuous timeline scale, not four views | Accepted |
+| [009](009-recurring-occurrence-exceptions.md) | EXDATE + RECURRENCE-ID; the edit scope is asked, not inferred | Accepted |
