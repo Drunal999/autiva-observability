@@ -162,22 +162,49 @@ export async function ingestSession(
   //
   // Locking the run row makes the replacement serial, so the last report wins
   // whole instead of both winning half.
+  //
+  // The timeouts are explicit because the defaults are wrong for this shape.
+  // Prisma allows an interactive transaction 5s by default; the lock makes
+  // concurrent reports queue, and against a hosted database each waiter can
+  // exceed that easily. It did: the endpoint started returning 500s under the
+  // very contention the lock was added to survive.
+  //
+  // `maxWait` is how long a report will queue for the lock before giving up,
+  // `timeout` how long it may hold it. Both are generous relative to the ~200ms
+  // of real work, because the cost of waiting is a slightly late fleet card and
+  // the cost of failing is a 500.
+  let spansWritten = true
   if (steps.length > 0) {
-    await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Run" WHERE id = ${run.id} FOR UPDATE`
-      await tx.span.deleteMany({ where: { runId: run.id } })
-      await tx.span.createMany({
+    try {
+      await prisma.$transaction(
+        async (tx) => {
+          await tx.$queryRaw`SELECT id FROM "Run" WHERE id = ${run.id} FOR UPDATE`
+          await tx.span.deleteMany({ where: { runId: run.id } })
+          await tx.span.createMany({
         data: steps.map((s, i) => ({
           runId: run.id,
           type: spanTypeForTool(String(s.tool ?? 'TOOL')),
           name: String(s.name ?? s.tool ?? 'step').slice(0, 200),
           startMs: Math.max(0, Math.round(s.startMs ?? i * 100)),
           durMs: Math.max(0, Math.round(s.durMs ?? 0)),
-          status: (s.ok === false ? 'ERROR' : 'OK') as SpanStatus,
-          error: s.error ? String(s.error).slice(0, 500) : null,
-        })),
-      })
-    })
+            status: (s.ok === false ? 'ERROR' : 'OK') as SpanStatus,
+            error: s.error ? String(s.error).slice(0, 500) : null,
+          })),
+          })
+        },
+        { maxWait: 10_000, timeout: 20_000 }
+      )
+    } catch (err) {
+      // A lost race for the lock must not fail the whole report. The RUN is
+      // already saved — status, project, timings, the fleet card — and the
+      // reporter sends the entire session again next turn, so the steps arrive
+      // shortly. Returning 500 here would turn a recoverable delay into a
+      // failed request, and the hook would surface nothing either way.
+      const code = (err as { code?: string }).code
+      if (code !== 'P2028' && code !== 'P2034') throw err
+      spansWritten = false
+      console.warn(`[ingest] span write for ${run.ref} lost the lock (${code}); next report will carry them`)
+    }
   }
 
   // Keep the fleet card honest about whether this person is working right now.
@@ -194,7 +221,10 @@ export async function ingestSession(
     status: 200,
     body: {
       ref: run.ref, runId: run.id, agent: agent.name,
-      status, project, steps: steps.length,
+      status, project,
+      // What was actually stored, so a caller is never told steps landed when
+      // they did not.
+      steps: spansWritten ? steps.length : 0,
     },
   }
 }
