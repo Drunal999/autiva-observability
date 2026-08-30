@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth'
 import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
+import { isAllowedLogin } from './ops/allowlist'
 
 const providers: NextAuthOptions['providers'] = [
   GitHubProvider({
@@ -10,9 +11,14 @@ const providers: NextAuthOptions['providers'] = [
   }),
 ]
 
-// Only enabled in E2E test runs — lets Playwright log in as a seeded
-// user without a real GitHub OAuth round-trip. Never active in production.
-if (process.env.E2E_TEST_MODE === 'true') {
+// Only enabled in E2E test runs — lets Playwright log in as a seeded user
+// without a real GitHub OAuth round-trip.
+//
+// The NODE_ENV guard is not belt-and-braces: this provider authenticates on a
+// githubId alone, with no secret. Left reachable in production it would let
+// anyone sign in as anyone, and it would bypass the allowlist entirely. A
+// stray environment variable must not be able to open that door.
+if (process.env.E2E_TEST_MODE === 'true' && process.env.NODE_ENV !== 'production') {
   providers.push(
     CredentialsProvider({
       id: 'e2e-test-login',
@@ -36,6 +42,15 @@ export const authOptions: NextAuthOptions = {
         const githubProfile = profile as { id: number; login: string; avatar_url?: string }
         const githubId = String(githubProfile.id)
         const handle = githubProfile.login.toLowerCase()
+
+        // THE DOOR. Anyone GitHub vouches for used to be let in and given a
+        // user row; this is the only thing that says no. Returning false makes
+        // NextAuth refuse the sign-in, and nothing is written — an account that
+        // may not enter does not get a row here either.
+        if (!isAllowedLogin(handle)) {
+          console.warn(`[auth] refused sign-in for @${handle}: not on ${'ALLOWED_GITHUB_LOGINS'}`)
+          return false
+        }
 
         const common = {
           name: user.name ?? githubProfile.login,
@@ -91,6 +106,25 @@ export const authOptions: NextAuthOptions = {
     async session({ session }) {
       if (session.user?.email) {
         const dbUser = await prisma.user.findUnique({ where: { email: session.user.email } })
+
+        // Checked on EVERY request, not only at sign-in.
+        //
+        // Sessions are JWTs: taking somebody off the allowlist would otherwise
+        // do nothing until their token expired, which is not what "revoke
+        // access" means to the person asking for it. Re-checking here makes
+        // removal take effect on their next page load.
+        //
+        // A user with no handle yet — seeded ahead of their first login — is
+        // not admitted on the strength of an email alone.
+        if (dbUser && !isAllowedLogin(dbUser.handle)) {
+          console.warn(`[auth] revoking session for @${dbUser.handle ?? dbUser.id}: no longer allowed`)
+          // Downstream reads `session.user.id`; with the user gone,
+          // getTenantContext() returns null and every route answers 401.
+          // The cast is needed because next-auth types `user` as always
+          // present, while the whole point here is to remove it.
+          return { ...session, user: undefined } as unknown as typeof session
+        }
+
         if (dbUser) {
           session.user.id = dbUser.id
           session.user.muteSounds = dbUser.muteSounds

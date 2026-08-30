@@ -13,4 +13,10 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
   const { assertSecretsPresent } = await import('@/lib/ops/secrets')
   assertSecretsPresent()
+
+  // Refuse to start with nobody allowed in. The list fails closed, so an unset
+  // one is not an open door — it is a locked one, and this says so at boot
+  // rather than leaving somebody to discover it at the sign-in screen.
+  const { assertAllowlistConfigured } = await import('@/lib/ops/allowlist')
+  assertAllowlistConfigured()
 }
