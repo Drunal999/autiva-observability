@@ -41,27 +41,29 @@ AUTIVA_URL=http://localhost:3000
 AUTIVA_INGEST_TOKEN=<the token from step 1>
 ```
 
-**3. Add the hook** to their `~/.claude/settings.json`:
+**3. Install the hooks:**
 
-```json
-{
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node C:/absolute/path/to/Dashboard/scripts/report-session.mjs"
-          }
-        ]
-      }
-    ]
-  }
-}
+```
+node scripts/install-hooks.mjs
 ```
 
-Use an absolute path — the hook runs from whatever directory the session is in,
-not from the dashboard.
+It merges into `~/.claude/settings.json` rather than replacing it: your own
+hooks and settings are left alone, it backs the file up first, and running it
+twice is the same as running it once. `--dry-run` shows the result without
+writing; `--remove` takes them out again.
+
+### Three hooks, three meanings
+
+| Hook | What it reports |
+|---|---|
+| `SessionStart` | the run appears, **RUNNING**, before any work |
+| `Stop` | steps so far, **still RUNNING** — fires after every turn |
+| `SessionEnd` | the final state, with an end time, settling to **SUCCESS** |
+
+`Stop` firing every turn is what makes the fleet live: a teammate's card updates
+while they are working, not once they have finished and gone. Treating `Stop` as
+the end would mark somebody finished several times a session and show them idle
+mid-task.
 
 **Check it works:** run the script by hand with `--verbose`. It prints why
 nothing arrived instead of staying quiet.
@@ -96,14 +98,22 @@ would double every step.
 make the seeded ones real. When you want the dashboard to show only genuine
 work, clear the seeded rows and set `NEXT_PUBLIC_SAMPLE_DATA=false`.
 
+**Timeouts differ on purpose.** `SessionStart` and `Stop` give up after 2.5s —
+they repeat, so a missed one costs nothing and a hook must never keep you
+waiting. `SessionEnd` waits 10s, because it has no next turn: abandon it and the
+run stays `RUNNING` forever and the fleet shows that person still working days
+later.
+
 ## What this does not do yet
 
-The hook fires at the **end** of a session, so the fleet shows work after the
-fact rather than live. A `SessionStart` hook posting the same session id would
-make the card go `RUNNING` while somebody is actually working — the ingest path
-already supports it (a report with no `endedAt` is `RUNNING`); nothing calls it
-yet.
+**A session that dies without `SessionEnd`** — a crash, a closed laptop — stays
+`RUNNING`, and the fleet keeps showing that person as working until their next
+session. Nothing sweeps stale runs.
 
-It also reports *what happened*, not *what was learned*. The "shared knowledge"
-half of the idea — decisions, gotchas, why something was done — is what the
-comment threads and `@mentions` are for, and nothing writes those automatically.
+**It reports what happened, not what was learned.** The "shared knowledge" half
+of the idea — decisions, gotchas, why something was done — is what the comment
+threads and `@mentions` are for, and nothing writes those automatically.
+
+**Projects are labels, not relations.** `Run.project` is the working directory's
+name. Good enough to filter and group by; it does not tie a run to a Module, so
+per-project latency targets are not a thing yet.

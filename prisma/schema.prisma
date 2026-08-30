@@ -148,6 +148,15 @@ model Run {
   agentId   String
   trigger   RunTrigger      @default(MANUAL)
   status    RunStatus       @default(RUNNING)
+  /// Which project this run belongs to, for work reported from outside.
+  ///
+  /// Three people across several repos is the case this exists for: an agent
+  /// is a PERSON, and one person moves between projects all day, so the
+  /// project cannot hang off the agent. It is a plain label rather than a
+  /// relation because it arrives from a laptop as a directory name — inventing
+  /// a Module row for every folder somebody opens would fill the engine list
+  /// with noise.
+  project   String?
   summary   String?
   exitCode  Int?
   tokens    Int             @default(0)
@@ -161,6 +170,9 @@ model Run {
 
   @@index([agentId, startedAt])
   @@index([tenantId, startedAt])
+  /// "what has happened on this project lately", the question three people
+  /// working across several repos actually ask.
+  @@index([tenantId, project, startedAt])
 }
 
 model Span {

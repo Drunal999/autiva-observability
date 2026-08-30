@@ -61,6 +61,8 @@ export interface SessionReport {
   steps?: ReportedStep[]
 }
 
+const MAX_PROJECT = 80
+
 /** A run carrying more steps than this is almost certainly a runaway loop. */
 export const MAX_STEPS = 500
 const MAX_SUMMARY = 500
@@ -109,6 +111,10 @@ export async function ingestSession(
   const status = endedAt ? (report.ok === false ? 'FAILED' : 'SUCCESS') : 'RUNNING'
 
   const steps = (report.steps ?? []).slice(0, MAX_STEPS)
+  const project =
+    typeof report.project === 'string' && report.project.trim()
+      ? report.project.trim().slice(0, MAX_PROJECT)
+      : null
   const summary =
     typeof report.summary === 'string' && report.summary.trim()
       ? report.summary.trim().slice(0, MAX_SUMMARY)
@@ -124,6 +130,7 @@ export async function ingestSession(
     update: {
       status,
       summary,
+      project,
       endedAt,
       tokens: Math.max(0, Math.round(report.tokens ?? 0)),
       costInr: Math.max(0, report.costInr ?? 0),
@@ -135,6 +142,7 @@ export async function ingestSession(
       trigger: 'AGENT',
       status,
       summary,
+      project,
       startedAt,
       endedAt,
       tokens: Math.max(0, Math.round(report.tokens ?? 0)),
@@ -142,12 +150,23 @@ export async function ingestSession(
     },
   })
 
-  // Spans are replaced wholesale rather than appended. A re-report carries the
+  // Spans are replaced wholesale rather than appended: a re-report carries the
   // whole session, so appending would double every step already recorded.
+  //
+  // THE ROW LOCK IS NOT OPTIONAL. Reports for one session overlap in practice —
+  // the `Stop` hook fires after every turn, and a reporter that gives up
+  // waiting does not cancel the work already running on the server. Two
+  // delete-then-create transactions then interleave as delete, delete, create,
+  // create, and the trace ends up with every step twice. That is exactly what
+  // happened the first time this was exercised: three steps became six.
+  //
+  // Locking the run row makes the replacement serial, so the last report wins
+  // whole instead of both winning half.
   if (steps.length > 0) {
-    await prisma.$transaction([
-      prisma.span.deleteMany({ where: { runId: run.id } }),
-      prisma.span.createMany({
+    await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Run" WHERE id = ${run.id} FOR UPDATE`
+      await tx.span.deleteMany({ where: { runId: run.id } })
+      await tx.span.createMany({
         data: steps.map((s, i) => ({
           runId: run.id,
           type: spanTypeForTool(String(s.tool ?? 'TOOL')),
@@ -157,8 +176,8 @@ export async function ingestSession(
           status: (s.ok === false ? 'ERROR' : 'OK') as SpanStatus,
           error: s.error ? String(s.error).slice(0, 500) : null,
         })),
-      }),
-    ])
+      })
+    })
   }
 
   // Keep the fleet card honest about whether this person is working right now.
@@ -173,6 +192,9 @@ export async function ingestSession(
 
   return {
     status: 200,
-    body: { ref: run.ref, runId: run.id, agent: agent.name, status, steps: steps.length },
+    body: {
+      ref: run.ref, runId: run.id, agent: agent.name,
+      status, project, steps: steps.length,
+    },
   }
 }

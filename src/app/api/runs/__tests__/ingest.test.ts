@@ -7,6 +7,7 @@ const h = vi.hoisted(() => ({
   runUpsert: vi.fn(),
   spanDeleteMany: vi.fn(),
   spanCreateMany: vi.fn(),
+  lockQuery: vi.fn(),
   transaction: vi.fn(),
 }))
 
@@ -37,7 +38,17 @@ beforeEach(() => {
   h.userFindMany.mockResolvedValue(USERS)
   h.agentUpsert.mockResolvedValue({ id: 'agent-1', name: 'drunal999' })
   h.runUpsert.mockResolvedValue({ id: 'run-1', ref: 'cc-s1' })
-  h.transaction.mockResolvedValue([])
+  // Run the interactive callback for real, with a tx that records what the
+  // transaction does — otherwise the span assertions would test the mock.
+  h.transaction.mockImplementation(async (fn: unknown) => {
+    if (typeof fn === 'function') {
+      return (fn as (tx: unknown) => unknown)({
+        $queryRaw: h.lockQuery,
+        span: { deleteMany: h.spanDeleteMany, createMany: h.spanCreateMany },
+      })
+    }
+    return []
+  })
   h.agentUpdate.mockResolvedValue({})
 })
 afterEach(() => {
@@ -148,6 +159,43 @@ describe('reporting a Claude Code session', () => {
       steps: [{ tool: 'Bash' }, { tool: 'Edit' }],
     })
     expect(h.runUpsert.mock.calls[0][0].create.summary).toBe('2 steps')
+  })
+
+  it('records the project, which is what "whose work, on what" needs', async () => {
+    await ingestSession(TENANT, tokenFor('user-1'), { sessionId: 's1', project: 'autiva-web' })
+    expect(h.runUpsert.mock.calls[0][0].create.project).toBe('autiva-web')
+    expect(h.runUpsert.mock.calls[0][0].update.project).toBe('autiva-web')
+  })
+
+  it('keeps the project off the agent, because a person works on many', async () => {
+    // An agent here is a PERSON. Hanging the project off them would make the
+    // fleet claim somebody only ever works on whatever they touched last.
+    await ingestSession(TENANT, tokenFor('user-1'), { sessionId: 's1', project: 'autiva-web' })
+    expect(h.agentUpsert.mock.calls[0][0].create).not.toHaveProperty('project')
+  })
+
+  it('treats a blank project as none rather than an empty label', async () => {
+    await ingestSession(TENANT, tokenFor('user-1'), { sessionId: 's1', project: '   ' })
+    expect(h.runUpsert.mock.calls[0][0].create.project).toBeNull()
+  })
+
+  it('locks the run row before replacing spans', async () => {
+    // The Stop hook fires every turn, and a reporter that stops waiting does
+    // not stop the server. Two delete-then-create passes interleaved once and
+    // turned three steps into six. The lock is what makes the last report win
+    // whole instead of both winning half.
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 's1',
+      steps: [{ tool: 'Bash' }],
+    })
+    expect(h.transaction).toHaveBeenCalled()
+    expect(h.lockQuery).toHaveBeenCalled()
+    const sql = String(h.lockQuery.mock.calls[0][0])
+    expect(sql).toContain('FOR UPDATE')
+    // And the lock is taken BEFORE anything is deleted.
+    expect(h.lockQuery.mock.invocationCallOrder[0]).toBeLessThan(
+      h.spanDeleteMany.mock.invocationCallOrder[0]
+    )
   })
 
   it('writes into the tenant it was told, never one from the payload', async () => {
