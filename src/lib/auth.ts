@@ -34,32 +34,57 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'github' && profile) {
         const githubProfile = profile as { id: number; login: string; avatar_url?: string }
-        await prisma.user.upsert({
-          where: { githubId: String(githubProfile.id) },
-          update: {
-            // Kept current: a person can rename their GitHub account, and a
-            // stale handle silently stops matching their mentions.
-            handle: githubProfile.login.toLowerCase(),
-            name: user.name ?? githubProfile.login,
-            avatarUrl: user.image ?? null,
-            // Backfill the email if the row does not have one yet.
-            //
-            // The session callback below resolves the signed-in user BY EMAIL,
-            // so a row created without one — a teammate seeded ahead of their
-            // first login — would authenticate successfully and then carry no
-            // `session.user.id`: no "My tasks", no commenting, no approvals.
-            // `undefined` leaves the column untouched when GitHub gives us
-            // nothing, so this can never blank an address we already hold.
-            email: user.email ?? undefined,
-          },
-          create: {
-            githubId: String(githubProfile.id),
-            handle: githubProfile.login.toLowerCase(),
-            name: user.name ?? githubProfile.login,
-            avatarUrl: user.image ?? null,
-            email: user.email ?? null,
-          },
-        })
+        const githubId = String(githubProfile.id)
+        const handle = githubProfile.login.toLowerCase()
+
+        const common = {
+          name: user.name ?? githubProfile.login,
+          avatarUrl: user.image ?? null,
+          // Backfill the email if the row does not have one yet.
+          //
+          // The session callback below resolves the signed-in user BY EMAIL,
+          // so a row created without one — a teammate seeded ahead of their
+          // first login — would authenticate successfully and then carry no
+          // `session.user.id`: no "My tasks", no commenting, no approvals.
+          // `undefined` leaves the column untouched when GitHub gives us
+          // nothing, so this can never blank an address we already hold.
+          email: user.email ?? undefined,
+        }
+
+        /**
+         * A duplicate handle must never cost somebody their login.
+         *
+         * `handle` is unique, and this writes it on every sign-in — so a
+         * recycled or renamed GitHub login, or a seeded row created by
+         * scripts/add-teammate.mjs for an account that later changed hands,
+         * can collide. An unhandled throw here does not degrade gracefully:
+         * NextAuth treats it as a failed sign-in, and the person simply
+         * cannot get in.
+         *
+         * So the handle is written on a best-effort basis. On a collision the
+         * sign-in proceeds without it: the worst outcome is that @mentions do
+         * not resolve for this person until the clash is sorted out, which is
+         * a great deal better than a locked door.
+         */
+        try {
+          await prisma.user.upsert({
+            where: { githubId },
+            update: { ...common, handle },
+            create: { ...common, githubId, handle, email: user.email ?? null },
+          })
+        } catch (err) {
+          if ((err as { code?: string }).code !== 'P2002') throw err
+          console.warn(
+            `[auth] handle "${handle}" is already taken by another account; ` +
+              `signing ${githubId} in without it. Mentions will not resolve for ` +
+              `them until the duplicate is resolved.`
+          )
+          await prisma.user.upsert({
+            where: { githubId },
+            update: common,
+            create: { ...common, githubId, email: user.email ?? null },
+          })
+        }
       }
       return true
     },

@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { getTenantContext } from '@/lib/ops/tenant'
 import { rateLimit, logWriteAttempt } from '@/lib/ops/rateLimit'
-import { validateRRule } from '@/lib/ops/recurrence'
+import { validateRRule, isOccurrenceOf } from '@/lib/ops/recurrence'
 import { normaliseAllDay, toDateOnlyUtc } from '@/lib/ops/allDay'
 import { parseOccurrenceId, parseScope, shiftedEnd } from '@/lib/ops/occurrence'
 
@@ -235,33 +236,102 @@ async function patchOccurrence(
     return NextResponse.json({ error: 'that event does not repeat' }, { status: 400 })
   }
 
+  // The instant has to be one the rule actually produces. Without this an
+  // override could be written for a date the series never falls on, and it
+  // would then render as a phantom member of the series that no expansion and
+  // no EXDATE can reconcile — an event that cannot be deleted from its own
+  // calendar.
+  if (!isOccurrenceOf(series.rrule, series.startsAt, occurrence.occurrenceAt)) {
+    return NextResponse.json(
+      { error: 'that is not one of this event’s occurrences' },
+      { status: 400 }
+    )
+  }
+
   // Editing the series is an ordinary update of the row that owns the rule.
   if (scope === 'series') {
     const data: Record<string, unknown> = {}
     if (typeof body.title === 'string' && body.title.trim()) data.title = body.title.trim()
+
+    // START and END move independently, so a RESIZE is expressible.
+    //
+    // Deriving both from the start delta meant dragging a repeating event's
+    // edge produced deltaMs === 0: a no-op update that returned 200 and
+    // offered undo, while the resize was silently discarded.
+    const durationMs = series.endsAt.getTime() - series.startsAt.getTime()
+    const occurrenceEnd = occurrence.occurrenceAt.getTime() + durationMs
+    let startDelta = 0
 
     if (typeof body.startsAt === 'string') {
       const nextStart = new Date(body.startsAt)
       if (Number.isNaN(nextStart.getTime())) {
         return NextResponse.json({ error: 'Invalid start time.' }, { status: 400 })
       }
-      // Moving the series moves its anchor by the same delta the occurrence
-      // moved, so "every Tuesday" becomes "every Wednesday" rather than
-      // collapsing onto the single date that was dragged.
-      const deltaMs = nextStart.getTime() - occurrence.occurrenceAt.getTime()
-      data.startsAt = new Date(series.startsAt.getTime() + deltaMs)
-      data.endsAt = new Date(series.endsAt.getTime() + deltaMs)
+      // Moving the series moves its ANCHOR by the delta the occurrence moved,
+      // so "every Tuesday" becomes "every Wednesday" rather than collapsing
+      // onto the single date that was dragged.
+      startDelta = nextStart.getTime() - occurrence.occurrenceAt.getTime()
+      data.startsAt = new Date(series.startsAt.getTime() + startDelta)
+    }
+
+    if (typeof body.endsAt === 'string') {
+      const nextEnd = new Date(body.endsAt)
+      if (Number.isNaN(nextEnd.getTime())) {
+        return NextResponse.json({ error: 'Invalid end time.' }, { status: 400 })
+      }
+      data.endsAt = new Date(series.endsAt.getTime() + (nextEnd.getTime() - occurrenceEnd))
+    } else if (startDelta !== 0) {
+      // A move with no explicit end keeps the duration.
+      data.endsAt = new Date(series.endsAt.getTime() + startDelta)
+    }
+
+    const finalStart = (data.startsAt as Date | undefined) ?? series.startsAt
+    const finalEnd = (data.endsAt as Date | undefined) ?? series.endsAt
+    if (finalEnd < finalStart) {
+      return NextResponse.json({ error: 'An event cannot end before it starts.' }, { status: 400 })
     }
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ error: 'nothing to change' }, { status: 400 })
     }
 
-    const result = await prisma.calendarEvent.updateMany({
-      where: { id: series.id, tenantId: ctx.tenantId, kind: { not: 'SCHEDULED_RUN' } },
-      data,
-    })
-    if (result.count === 0) return NextResponse.json({ error: 'event not found' }, { status: 404 })
+    // Shifting the anchor moves every computed occurrence, so anything keyed
+    // to an ORIGINAL instant has to move with it. Otherwise: delete the 15th,
+    // move the series a day later, and the deleted occurrence reappears on the
+    // 16th because its EXDATE now matches nothing. Overrides detach the same
+    // way and start rendering next to the duplicate they were replacing.
+    const writes: Prisma.PrismaPromise<unknown>[] = [
+      prisma.calendarEvent.updateMany({
+        where: { id: series.id, tenantId: ctx.tenantId, kind: { not: 'SCHEDULED_RUN' } },
+        data,
+      }),
+    ]
+
+    if (startDelta !== 0) {
+      writes.push(
+        prisma.calendarEvent.update({
+          where: { id: series.id },
+          data: { exdates: series.exdates.map((d) => new Date(d.getTime() + startDelta)) },
+        })
+      )
+      for (const o of await prisma.calendarEvent.findMany({
+        where: { tenantId: ctx.tenantId, recurrenceParentId: series.id },
+        select: { id: true, recurrenceId: true },
+      })) {
+        if (!o.recurrenceId) continue
+        writes.push(
+          prisma.calendarEvent.update({
+            where: { id: o.id },
+            data: { recurrenceId: new Date(o.recurrenceId.getTime() + startDelta) },
+          })
+        )
+      }
+    }
+
+    const [result] = await prisma.$transaction(writes)
+    if ((result as { count: number }).count === 0) {
+      return NextResponse.json({ error: 'event not found' }, { status: 404 })
+    }
 
     logWriteAttempt({
       route: 'calendar.series.edit', userId, tenantId: ctx.tenantId,

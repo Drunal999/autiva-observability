@@ -4,6 +4,7 @@ const h = vi.hoisted(() => ({
   findFirst: vi.fn(),
   updateMany: vi.fn(),
   deleteMany: vi.fn(),
+  findMany: vi.fn(),
   update: vi.fn(),
   upsert: vi.fn(),
   findUnique: vi.fn(),
@@ -16,6 +17,7 @@ vi.mock('@/lib/prisma', () => ({
   prisma: {
     calendarEvent: {
       findFirst: h.findFirst,
+      findMany: h.findMany,
       updateMany: h.updateMany,
       deleteMany: h.deleteMany,
       update: h.update,
@@ -73,7 +75,10 @@ beforeEach(() => {
   h.upsert.mockResolvedValue({ id: 'override-1' })
   h.updateMany.mockResolvedValue({ count: 1 })
   h.deleteMany.mockResolvedValue({ count: 1 })
-  h.transaction.mockResolvedValue([])
+  // The series branch now writes through a transaction so the anchor move and
+  // the exdate/override shifts land together.
+  h.transaction.mockImplementation(async () => [{ count: 1 }])
+  h.findMany.mockResolvedValue([])
 })
 
 describe('editing one occurrence of a repeating event', () => {
@@ -126,6 +131,7 @@ describe('editing one occurrence of a repeating event', () => {
     expect(data.startsAt.toISOString()).toBe('2026-09-02T09:30:00.000Z')
     expect(data.endsAt.toISOString()).toBe('2026-09-02T09:45:00.000Z')
     expect(h.upsert).not.toHaveBeenCalled()
+    expect(h.transaction).toHaveBeenCalled()
   })
 
   it('refuses a scheduled run, series or occurrence', async () => {

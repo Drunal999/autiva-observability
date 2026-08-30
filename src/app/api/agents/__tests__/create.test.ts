@@ -66,12 +66,20 @@ describe('adding an agent to the fleet', () => {
   })
 
   it('refuses a codename that would not survive a URL or a log line', async () => {
-    for (const bad of ['Nightly Crawler', '-leading', '9lives', 'has_underscore', 'a']) {
+    for (const bad of ['Nightly Crawler', '-leading', '9lives', 'has_underscore', 'trailing space ']) {
       h.create.mockClear()
       const res = await POST(post({ ...VALID, name: bad }))
       expect(res.status, bad).toBe(400)
       expect(h.create).not.toHaveBeenCalled()
     }
+  })
+
+  it('accepts a one-character codename, which the rule allows', async () => {
+    // The pattern said {1,39} after the leading letter, i.e. a minimum of two
+    // characters, while the message described only the character set. A name
+    // that satisfied the stated rule was rejected without saying why.
+    const res = await POST(post({ ...VALID, name: 'x' }))
+    expect(res.status).toBe(201)
   })
 
   it('requires a codename at all', async () => {

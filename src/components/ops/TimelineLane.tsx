@@ -144,9 +144,25 @@ type Edit = {
   grabbedAt: number
 }
 
+/**
+ * A computed occurrence carries a DERIVED id (`seriesId@instant`); an override
+ * row carries a plain cuid. Only the former needs a scope, because only the
+ * former still belongs to the series. An override has already been detached,
+ * so dragging it moves that event and nothing else — asking "all of them"
+ * about a detached occurrence would be a question with no honest answer, and
+ * the plain edit path ignores `scope` anyway, so it silently moved one.
+ */
+function isComputedOccurrence(id: string): boolean {
+  return id.includes('@')
+}
+
 type Undo =
   | { kind: 'create'; id: string; title: string }
   | { kind: 'move'; id: string; title: string; from: number; to: number; allDay: boolean }
+  /** An occurrence was promoted to an override row; the inverse is removing it. */
+  | { kind: 'detach'; overrideId: string; title: string }
+  /** The whole series moved; the inverse is moving it back by the same delta. */
+  | { kind: 'series'; seriesId: string; movedTo: number; from: number; to: number; title: string; allDay: boolean }
 
 /**
  * Applies a pointer position to an in-flight edit.
@@ -277,7 +293,10 @@ export function Lane({
     to: number,
     allDay = false,
     scope?: 'occurrence' | 'series'
-  ): Promise<boolean> {
+    // The created/updated row comes back, because the id that CHANGED is not
+    // always the id that was dragged: promoting an occurrence returns a new
+    // override row, and that is what undo has to address.
+  ): Promise<{ ok: boolean; body?: Record<string, unknown> }> {
     const res = await fetch('/api/calendar/' + id, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -293,25 +312,50 @@ export function Lane({
     if (!res.ok) {
       const payload = await res.json().catch(() => ({}))
       setError(payload.error ?? 'Could not move that event.')
-      return false
+      return { ok: false }
     }
     setError(null)
-    return true
+    const body = (await res.json().catch(() => null)) as Record<string, unknown> | null
+    return { ok: true, body: body ?? undefined }
   }
 
   async function commitEdit(current: Edit, scope?: 'occurrence' | 'series') {
-    // An occurrence of a series needs a scope before anything is written. The
-    // server refuses without one; asking first means the drop does not have to
-    // fail before the question is put.
-    if (current.recurring && !scope) {
+    // Only a COMPUTED occurrence needs a scope. An override row is already
+    // detached from its series, so it edits like any other event.
+    const needsScope = isComputedOccurrence(current.id)
+    if (needsScope && !scope) {
       setAskScope(current)
       return
     }
-    const ok = await patchTimes(current.id, current.from, current.to, current.allDay, scope)
+
+    const res = await patchTimes(
+      current.id, current.from, current.to, current.allDay, needsScope ? scope : undefined
+    )
     // Refresh either way: on failure the server's times are the truth, and the
     // bar must snap back to them rather than sit where the pointer left it.
     onCreated()
-    if (ok) {
+    if (!res.ok) return
+
+    // Each of the three outcomes has a different inverse, and the id that was
+    // dragged is not always the id that changed.
+    if (scope === 'occurrence' && res.body?.id) {
+      // The occurrence became an override row. Undoing it means removing that
+      // row, which restores the computed occurrence exactly where it was —
+      // PATCHing the derived id again would only 409 without a scope.
+      setUndo({ kind: 'detach', overrideId: String(res.body.id), title: current.title })
+    } else if (scope === 'series') {
+      // The anchor moved. The inverse is the same move in reverse, addressed
+      // through the occurrence's NEW instant.
+      setUndo({
+        kind: 'series',
+        seriesId: current.id.slice(0, current.id.indexOf('@')),
+        movedTo: current.from,
+        from: current.origFrom,
+        to: current.origTo,
+        title: current.title,
+        allDay: current.allDay,
+      })
+    } else {
       setUndo({
         kind: 'move',
         id: current.id,
@@ -354,15 +398,22 @@ export function Lane({
       ? { from: item.from, to: Math.max(item.to + step, item.from + minDuration(tier)) }
       : { from: item.from + step, to: item.to + step }
 
-    void (async () => {
-      if (await patchTimes(item.id, next.from, next.to, item.allDay === true)) {
-        setUndo({
-          kind: 'move', id: item.id, title: item.title,
-          from: item.from, to: item.to, allDay: item.allDay === true,
-        })
-      }
-      onCreated()
-    })()
+    // A repeating occurrence needs a scope, and the keyboard path has to ask
+    // for it exactly as the drag does. It used to PATCH the derived id with no
+    // scope, so the server answered 409 every time and alt+arrow simply never
+    // worked on a repeating event — silently.
+    void commitEdit({
+      id: item.id,
+      title: item.title,
+      allDay: item.allDay === true,
+      recurring: item.recurring === true,
+      mode: 'move',
+      from: next.from,
+      to: next.to,
+      origFrom: item.from,
+      origTo: item.to,
+      grabbedAt: item.from,
+    })
   }
 
   async function create() {
@@ -403,6 +454,15 @@ export function Lane({
     if (!undo) return
     if (undo.kind === 'create') {
       await fetch('/api/calendar/' + undo.id, { method: 'DELETE' })
+    } else if (undo.kind === 'detach') {
+      // Removing the override restores the computed occurrence at its original
+      // instant — the exact inverse of promoting it.
+      await fetch('/api/calendar/' + undo.overrideId, { method: 'DELETE' })
+    } else if (undo.kind === 'series') {
+      await patchTimes(
+        `${undo.seriesId}@${new Date(undo.movedTo).toISOString()}`,
+        undo.from, undo.to, undo.allDay, 'series'
+      )
     } else {
       await patchTimes(undo.id, undo.from, undo.to, undo.allDay)
     }

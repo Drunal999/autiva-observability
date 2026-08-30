@@ -24,7 +24,7 @@ export const MAX_AGENT_NAME = 40
  * up in URLs and log lines, so "Nightly Crawler " is refused rather than
  * silently slugified into something the person did not choose.
  */
-export const AGENT_NAME_PATTERN = /^[a-z][a-z0-9-]{1,39}$/
+export const AGENT_NAME_PATTERN = /^[a-z][a-z0-9-]{0,39}$/
 
 export function isValidAgentName(name: string): boolean {
   return AGENT_NAME_PATTERN.test(name)

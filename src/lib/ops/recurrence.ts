@@ -89,3 +89,25 @@ export function describeRRule(rule: string): string | null {
     return null
   }
 }
+
+/**
+ * Whether an instant is genuinely produced by a rule.
+ *
+ * Guards the override path: without it a caller can write an override — or an
+ * EXDATE — for a date the series never falls on, and the result renders as a
+ * phantom member of the series that no expansion and no exclusion can
+ * reconcile. An event that cannot be removed from its own calendar.
+ *
+ * The window is one millisecond either side, so this asks the rule about
+ * exactly the instant in question rather than expanding a range.
+ */
+export function isOccurrenceOf(rule: string, dtstart: Date, instant: Date): boolean {
+  if (Number.isNaN(instant.getTime())) return false
+  const hits = expandInWindow(
+    rule,
+    dtstart,
+    new Date(instant.getTime() - 1),
+    new Date(instant.getTime() + 1)
+  )
+  return hits.some((d) => d.getTime() === instant.getTime())
+}
