@@ -37,9 +37,19 @@ seeded with `scripts/add-teammate.mjs`.
 **2. Set two environment variables** on that person's machine:
 
 ```
-AUTIVA_URL=http://localhost:3000
+AUTIVA_URL=https://autiva-observability.vercel.app
 AUTIVA_INGEST_TOKEN=<the token from step 1>
 ```
+
+On Windows, set them so they survive a restart — a hook inherits Claude Code's
+environment, and a variable exported in one terminal is not in it:
+
+```
+setx AUTIVA_URL "https://autiva-observability.vercel.app"
+setx AUTIVA_INGEST_TOKEN "<your token>"
+```
+
+`setx` only affects newly launched processes, so restart Claude Code afterwards.
 
 **3. Install the hooks:**
 
@@ -85,9 +95,11 @@ no authorization model yet (ADR-002) — and it is fine for three people who
 already trust each other. It would not be fine for strangers. Rotating
 `INGEST_SECRET` revokes everyone's token at once.
 
-**`AUTIVA_URL` must be reachable from each machine.** On `localhost:3000` only
-the person running the dashboard reports anything. For all three of you to
-share one fleet, it has to be hosted somewhere all three can reach.
+**Who can sign in at all.** `ALLOWED_GITHUB_LOGINS` is the guest list, and it
+fails closed — an empty one denies everyone. It is currently drunal999,
+hardikwork05 and adityamondal-ai-spec. Adding somebody means adding them there
+(in `.env` locally, and in the Vercel project for production); nothing else
+grants access.
 
 **Re-reporting is safe.** The run key is the session id, so a session that
 reports twice updates one run rather than creating two. Spans are replaced
