@@ -3,7 +3,7 @@ import { requireSecret, assertSecretsPresent, MIN_SECRET_LENGTH } from '../secre
 import { bearerMatches } from '../bearerAuth'
 
 const GOOD = 'x'.repeat(MIN_SECRET_LENGTH)
-const NAMES = ['CALL_ROOM_SECRET', 'ICS_FEED_SECRET', 'CRON_SECRET'] as const
+const NAMES = ['CALL_ROOM_SECRET', 'ICS_FEED_SECRET', 'CRON_SECRET', 'INGEST_SECRET'] as const
 
 let saved: Record<string, string | undefined>
 
@@ -113,7 +113,7 @@ describe('assertSecretsPresent', () => {
     for (const name of NAMES) expect(message).toContain(name)
   })
 
-  it('passes when all three are configured', () => {
+  it('passes when every secret is configured', () => {
     for (const n of NAMES) process.env[n] = GOOD
     expect(() => assertSecretsPresent()).not.toThrow()
   })

@@ -33,12 +33,17 @@
  * "Module not found: Can't resolve 'crypto'". Constant-time comparison
  * therefore lives in `bearerAuth.ts`, which nothing edge-bound imports.
  */
-export type SecretName = 'CALL_ROOM_SECRET' | 'ICS_FEED_SECRET' | 'CRON_SECRET'
+export type SecretName =
+  | 'CALL_ROOM_SECRET'
+  | 'ICS_FEED_SECRET'
+  | 'CRON_SECRET'
+  | 'INGEST_SECRET'
 
 const PURPOSE: Record<SecretName, string> = {
   CALL_ROOM_SECRET: 'derive unguessable call room names',
   ICS_FEED_SECRET: 'sign calendar feed tokens',
   CRON_SECRET: 'authenticate the scheduled job endpoint',
+  INGEST_SECRET: 'sign the per-person tokens that report work into the dashboard',
 }
 
 /**
