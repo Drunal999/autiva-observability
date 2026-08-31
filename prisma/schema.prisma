@@ -395,6 +395,17 @@ model Comment {
 }
 
 /// A mention waiting to be seen. No email or push — the header badge only.
+/// Why somebody is being told about something.
+///
+/// Without this every alert would be counted under the header's "@" badge and
+/// announced as a mention, which is a lie in the direction that matters: a
+/// mention is a person asking YOU for something, an alert is the system saying
+/// something went wrong. Conflating them makes both easier to ignore.
+enum NotificationKind {
+  MENTION
+  RUN_FAILED
+}
+
 model Notification {
   id        String   @id @default(cuid())
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -405,6 +416,9 @@ model Notification {
   commentId String?
   subjectType SubjectType
   subjectId   String
+  /// Defaults to MENTION so every row that existed before this was added keeps
+  /// the only meaning it ever had.
+  kind      NotificationKind @default(MENTION)
   preview   String
   readAt    DateTime?
   createdAt DateTime @default(now())

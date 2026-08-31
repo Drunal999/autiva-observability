@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import useSWR from 'swr'
@@ -68,13 +68,49 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
 
   // Unread mentions. Refreshed on the shared COMMENTS channel rather than a
   // dedicated poll — a mention should land quickly without another socket.
-  const { data: notifs, mutate: refreshNotifs } = useSWR<{ unread: { id: string }[] }>(
+  const { data: notifs, mutate: refreshNotifs } = useSWR<{ unread: { id: string; kind?: string }[] }>(
     '/api/notifications',
     fetcher,
     { refreshInterval: 60000 }
   )
   useEventListener(() => void refreshNotifs(), ['COMMENTS'])
-  const unread = notifs?.unread?.length ?? 0
+  /**
+   * Does the nav have more to the right than is showing?
+   *
+   * The nav scrolls so the status cluster always fits, which means at narrower
+   * widths the last few destinations sit out of sight. A hard cut mid-word
+   * reads as a rendering fault, not as "there is more" — so the edge fades
+   * only while there is actually something behind it.
+   */
+  const navRef = useRef<HTMLElement>(null)
+  const [navMore, setNavMore] = useState(false)
+  const measureNav = useCallback(() => {
+    const el = navRef.current
+    if (!el) return
+    setNavMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 4)
+  }, [])
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    measureNav()
+    // Width changes come from the window AND from the badges appearing, which
+    // happens after a fetch rather than at first paint — a resize listener
+    // alone would miss that entirely.
+    const ro = new ResizeObserver(measureNav)
+    ro.observe(el)
+    el.addEventListener('scroll', measureNav, { passive: true })
+    return () => {
+      ro.disconnect()
+      el.removeEventListener('scroll', measureNav)
+    }
+  }, [measureNav])
+
+  // Counted apart on purpose. A mention is a person asking YOU for something;
+  // an alert is the system saying something broke. One badge for both trains
+  // people to dismiss it without looking, and the one that mattered goes too.
+  const all = notifs?.unread ?? []
+  const mentions = all.filter((n) => (n.kind ?? 'MENTION') === 'MENTION').length
+  const alerts = all.length - mentions
 
   const failing = agents?.filter((a) => a.status === 'FAILED').length ?? 0
 
@@ -115,7 +151,21 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        <nav className="flex shrink-0 items-center gap-1 overflow-x-auto px-4 pb-2 pt-2 md:ml-3 md:px-0 md:py-0">
+        {/* `min-w-0 flex-1`, NOT `shrink-0`.
+            While this was shrink-0 the nav took its full content width and
+            pushed the status cluster past the right edge: at 1280px, 122px of
+            header — both badges, the roster and the clock — sat off-screen,
+            and `overflow-x-auto` never engaged because the nav was never
+            asked to be smaller than its contents. An alert nobody can see is
+            not an alert. The nav scrolls; the status cluster stays. */}
+        <nav
+          ref={navRef}
+          className={`flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-4 pb-2 pt-2 md:ml-3 md:px-0 md:py-0 ${
+            navMore
+              ? '[mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]'
+              : ''
+          }`}
+        >
           {NAV.map((n) => {
             const active = pathname === n.href
             const badge = n.href === '/approvals' ? pendingApprovals : 0
@@ -145,8 +195,6 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="hidden flex-1 md:block" />
-
         {/* Never responsively hidden. Demoing mocked numbers as real is how
             trust dies, and the client view — the one most likely to be read as
             real — is the narrow one. It shrinks on small screens; it does not
@@ -170,19 +218,34 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             {failing ? `${failing} AGENT FAILING` : 'FLEET HEALTHY'}
           </span>
         )}
-        {unread > 0 && (
+        {alerts > 0 && (
           <button
             type="button"
             onClick={async () => {
               await fetch('/api/notifications', { method: 'POST' })
               void refreshNotifs()
             }}
-            title={`${unread} unread mention${unread === 1 ? '' : 's'} — click to clear`}
-            aria-label={`${unread} unread mentions, click to clear`}
+            title={`${alerts} thing${alerts === 1 ? "" : "s"} need${alerts === 1 ? "s" : ""} attention — click to clear`}
+            aria-label={`${alerts} alerts, click to clear`}
+            className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-amber-400/20 px-2 font-mono text-[12px] font-bold text-amber-300 transition hover:bg-amber-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+          >
+            <span aria-hidden="true">!</span>
+            {alerts}
+          </button>
+        )}
+        {mentions > 0 && (
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch('/api/notifications', { method: 'POST' })
+              void refreshNotifs()
+            }}
+            title={`${mentions} unread mention${mentions === 1 ? '' : 's'} — click to clear`}
+            aria-label={`${mentions} unread mentions, click to clear`}
             className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-cyan-400/20 px-2 font-mono text-[12px] font-bold text-cyan-300 transition hover:bg-cyan-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
           >
             <span aria-hidden="true">@</span>
-            {unread}
+            {mentions}
           </button>
         )}
         <PresenceBar roster={roster} />

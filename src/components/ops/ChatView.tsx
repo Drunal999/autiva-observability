@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import { WARN, BLOCKED, T } from '@/lib/ops/tokens'
 import { relative, absolute } from '@/lib/ops/format'
@@ -125,7 +125,12 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
   const atBottom = useRef(true)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  const messages = data ?? []
+  /**
+   * Memoised because a fresh `[]` on every render is a new identity, and this
+   * array is a dependency of the mark-as-read effect below — without it that
+   * effect re-runs on every render and POSTs a read receipt each time.
+   */
+  const messages = useMemo(() => data ?? [], [data])
 
   useEventListener(() => void mutate(), ['COMMENTS'])
 

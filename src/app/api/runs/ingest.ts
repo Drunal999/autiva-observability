@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { resolveIngestUser } from '@/lib/ops/ingestToken'
+import { notifyTeam } from '@/lib/ops/notify'
 import type { SpanType, SpanStatus } from '@prisma/client'
 
 /**
@@ -216,6 +217,24 @@ export async function ingestSession(
       startedAt: status === 'RUNNING' ? startedAt : null,
     },
   })
+
+  // A teammate's session failing is the one thing worth interrupting people
+  // for. Best-effort: the run is stored, and a missed notification must not
+  // fail the report that carried it.
+  if (status === 'FAILED') {
+    try {
+      await notifyTeam({
+        tenantId,
+        kind: 'RUN_FAILED',
+        subjectType: 'RUN',
+        subjectId: run.id,
+        preview: `${agent.name} failed — ${summary}`,
+        exceptUserId: userId,
+      })
+    } catch {
+      // Nothing here is worth losing the run over.
+    }
+  }
 
   return {
     status: 200,

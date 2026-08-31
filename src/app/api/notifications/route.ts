@@ -19,6 +19,12 @@ export async function GET() {
     where: { ...tenantScope(ctx), userId, readAt: null },
     orderBy: { createdAt: 'desc' },
     take: 30,
+    // `kind` so the header can tell a mention from an alert instead of
+    // announcing everything as a mention.
+    select: {
+      id: true, kind: true, preview: true,
+      subjectType: true, subjectId: true, createdAt: true,
+    },
   })
 
   return NextResponse.json({ unread })
