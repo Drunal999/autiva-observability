@@ -4,6 +4,11 @@ export const config = {
   matcher: [
     '/',
     '/board',
+    // Every page route belongs here. /chat was added to the nav and not to
+    // this list, so it answered 200 to anyone while every other page
+    // redirected — the data was still safe (the APIs refuse without a
+    // session) but the shell rendered for strangers.
+    '/chat',
     '/approvals',
     '/fleet',
     '/trace',
