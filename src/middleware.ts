@@ -26,6 +26,7 @@ export const config = {
     '/api/metrics/:path*',
     '/api/approvals/:path*',
     '/api/comments/:path*',
+    '/api/chat/:path*',
     '/api/presence/:path*',
     '/api/calls/:path*',
     // '/api/calendar/feed' is deliberately excluded: calendar clients fetch it

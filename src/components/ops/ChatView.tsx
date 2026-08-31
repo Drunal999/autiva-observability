@@ -109,6 +109,14 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
   const { data, mutate, isLoading } = useSWR<Message[]>(KEY, fetcher, { refreshInterval: 20000 })
   const { mutate: mutateGlobal } = useSWRConfig()
 
+  // Whether the agent is switched on at all. Asked once, so the button can say
+  // "not configured" up front rather than failing when somebody presses it.
+  const { data: agent } = useSWR<{ configured: boolean; model: string }>(
+    '/api/chat/summary',
+    fetcher
+  )
+  const [summarising, setSummarising] = useState(false)
+
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -158,6 +166,26 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
       .catch(() => {})
   }, [messages, mutateGlobal])
 
+  async function summarise() {
+    if (summarising) return
+    setSummarising(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/chat/summary', { method: 'POST' })
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(payload.error ?? 'Could not summarise.')
+        return
+      }
+      atBottom.current = true
+      void mutate()
+    } catch {
+      setError('Network problem — nothing was summarised.')
+    } finally {
+      setSummarising(false)
+    }
+  }
+
   async function send() {
     const text = draft.trim()
     if (!text || busy) return
@@ -194,6 +222,27 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
         <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
           EVERYONE ON THE DASHBOARD SEES THIS
         </span>
+        <span className="flex-1" />
+        {/* Disabled rather than hidden when unconfigured: a button that is
+            simply absent leaves somebody wondering whether the feature exists,
+            while one that says why can be acted on. */}
+        <button
+          type="button"
+          onClick={() => void summarise()}
+          disabled={summarising || agent?.configured === false}
+          title={
+            agent?.configured === false
+              ? 'Set ANTHROPIC_API_KEY to switch the room agent on. It is billed per use.'
+              : `Summarise today with ${agent?.model ?? 'the room agent'}`
+          }
+          className="h-7 shrink-0 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/60 transition hover:border-cyan-400/40 hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/12 disabled:hover:text-white/60"
+        >
+          {summarising
+            ? 'summarising…'
+            : agent?.configured === false
+              ? 'summary · not configured'
+              : 'summarise today'}
+        </button>
       </div>
 
       <div
