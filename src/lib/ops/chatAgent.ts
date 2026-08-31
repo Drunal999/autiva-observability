@@ -1,12 +1,14 @@
-import Anthropic from '@anthropic-ai/sdk'
-
 /**
  * The room's agent: it reads a day of chat and writes back a summary.
  *
- * INERT UNTIL CONFIGURED. Without `ANTHROPIC_API_KEY` this reports that it is
- * not set up and never calls anything. Every other call in this codebase is
- * free; this one is metered, so the absence of a key must be an obvious,
- * explained state rather than a stack trace or a silent no-op.
+ * Runs through OPENROUTER, not the Anthropic API — the key and model were
+ * chosen by the team, and OpenRouter's endpoint is OpenAI-shaped, so this
+ * speaks plain HTTP rather than pulling in an SDK for one call.
+ *
+ * INERT UNTIL CONFIGURED. Without `OPENROUTER_API_KEY` this reports that it is
+ * not set up and never calls anything. The default model is a free tier, so the
+ * bill is currently zero — but a key is still a credential and an unconfigured
+ * capability should say so rather than fail when pressed.
  *
  * "GROWS AND LEARNS WITH US" — what that actually means here, stated plainly
  * so nobody is misled by the phrase:
@@ -24,16 +26,43 @@ import Anthropic from '@anthropic-ai/sdk'
  * failed to learn.
  */
 
-/** Cheapest model that writes a decent summary. See docs/chat-agent.md. */
-export const CHAT_AGENT_MODEL = 'claude-haiku-4-5'
+const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
 
-/** A summary is a paragraph or two. This caps the cost of a runaway response. */
-const MAX_TOKENS = 1200
+/** Overridable, so swapping models is an env change rather than a deploy. */
+export const CHAT_AGENT_MODEL =
+  process.env.OPENROUTER_MODEL?.trim() || 'nvidia/nemotron-3.5-lightning:free'
+
+/**
+ * Generous ON PURPOSE, and the reason is not obvious.
+ *
+ * This is a reasoning model: its chain of thought is generated first and counts
+ * against the same budget as the answer. At 80 tokens the first real test came
+ * back as "Here's a thinking process: 1. Analyze User Input..." and stopped —
+ * truncated mid-reasoning, having never reached the summary.
+ *
+ * At 2000 it failed differently and more quietly: a four-line conversation
+ * spent 1,949 tokens reasoning and returned an EMPTY answer with a normal stop
+ * reason. Nothing looked broken; there was simply nothing there. Double the
+ * budget so the thinking and the summary both fit, and treat an empty reply as
+ * the failure it is rather than posting silence into the room.
+ */
+const MAX_TOKENS = 4000
+
+/**
+ * Under Vercel's 60s ceiling, deliberately.
+ *
+ * Measured, not guessed: a four-line day takes this model 45-60 seconds,
+ * because it reasons at length before answering. That is close enough to the
+ * platform limit that the request must give up FIRST — a timeout we control
+ * returns a sentence explaining itself, while one imposed by the platform
+ * returns a gateway error with nothing useful in it.
+ */
+const TIMEOUT_MS = 55_000
 
 export const AGENT_NAME = 'Room agent'
 
 export function isChatAgentConfigured(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY?.trim())
+  return Boolean(process.env.OPENROUTER_API_KEY?.trim())
 }
 
 export interface ChatLine {
@@ -47,7 +76,7 @@ export interface SummaryResult {
   text?: string
   error?: string
   /** Reported back so the cost of the feature is visible, not hidden. */
-  usage?: { input: number; output: number }
+  usage?: { input: number; output: number; cost?: number }
 }
 
 const SYSTEM = [
@@ -64,25 +93,20 @@ const SYSTEM = [
   '- Do not repeat what earlier summaries already established; build on them.',
   '- If the day holds nothing worth reporting, say exactly that in one line.',
   '- No preamble, no sign-off, no "here is a summary". Start with the content.',
+  '- Do not show your reasoning. Output only the summary itself.',
   '- Plain prose and short bullets. No headings.',
 ].join('\n')
 
-/**
- * Summarises one day of conversation.
- *
- * `priorSummaries` is the memory: the last few summaries, oldest first, so the
- * agent can build on what it already said instead of restating it.
- */
 export async function summariseChat(
   lines: ChatLine[],
   priorSummaries: string[] = []
 ): Promise<SummaryResult> {
-  if (!isChatAgentConfigured()) {
+  const key = process.env.OPENROUTER_API_KEY?.trim()
+  if (!key) {
     return {
       ok: false,
       error:
-        'The room agent is not configured. Set ANTHROPIC_API_KEY to switch it on — ' +
-        'it is billed per use, separately from any Claude subscription.',
+        'The room agent is not configured. Set OPENROUTER_API_KEY to switch it on.',
     }
   }
   if (lines.length === 0) {
@@ -98,48 +122,96 @@ export async function summariseChat(
     : ''
 
   try {
-    const client = new Anthropic()
-    const response = await client.messages.create({
-      model: CHAT_AGENT_MODEL,
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM,
-      messages: [
-        {
-          role: 'user',
-          content: `${memory}Today's conversation:\n\n${transcript}`,
-        },
-      ],
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        // OpenRouter attributes traffic with these; harmless, and it keeps the
+        // request identifiable in their dashboard rather than anonymous.
+        'HTTP-Referer': process.env.NEXTAUTH_URL ?? 'http://localhost:3000',
+        'X-Title': 'Autiva Mission Control',
+      },
+      body: JSON.stringify({
+        model: CHAT_AGENT_MODEL,
+        max_tokens: MAX_TOKENS,
+        // Keeps the chain of thought out of the reply entirely. Without it the
+        // model's reasoning arrives inside `content` and would be posted into
+        // the room as though it were the summary.
+        reasoning: { exclude: true },
+        messages: [
+          { role: 'system', content: SYSTEM },
+          { role: 'user', content: `${memory}Today's conversation:\n\n${transcript}` },
+        ],
+      }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     })
 
-    // content is a discriminated union; narrow before reading .text.
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('')
-      .trim()
+    const payload = (await res.json().catch(() => null)) as {
+      choices?: {
+        message?: { content?: string; reasoning?: string }
+        finish_reason?: string
+        native_finish_reason?: string
+      }[]
+      usage?: {
+        prompt_tokens?: number
+        completion_tokens?: number
+        cost?: number
+        completion_tokens_details?: { reasoning_tokens?: number }
+      }
+      error?: { message?: string; code?: number }
+    } | null
 
-    if (!text) return { ok: false, error: 'The agent returned nothing.' }
+    if (!res.ok || payload?.error) {
+      const detail = payload?.error?.message ?? `HTTP ${res.status}`
+      if (res.status === 401) return { ok: false, error: 'OPENROUTER_API_KEY was rejected. Check the key.' }
+      if (res.status === 429) {
+        return {
+          ok: false,
+          // The default model is a free tier, and free tiers queue. Saying so
+          // turns a mystery failure into a wait.
+          error: 'Rate limited — free models throttle when busy. Try again shortly.',
+        }
+      }
+      return { ok: false, error: `OpenRouter returned ${res.status}: ${detail}` }
+    }
+
+    const choice = payload?.choices?.[0]
+    const text = (choice?.message?.content ?? '').trim()
+
+    if (choice?.finish_reason === 'length' || !text) {
+      // These two are the same failure wearing different clothes, and the
+      // distinction is invisible without the numbers: the model reasons before
+      // it answers, so when the budget runs out it either stops mid-sentence
+      // OR returns a perfectly normal-looking response with nothing in it.
+      //
+      // The message carries the numbers because guessing at this cost several
+      // rounds: "returned nothing" alone says only that something is wrong,
+      // while "spent 3,980 of 4,000 on reasoning" says exactly what to change.
+      const reasoning = payload?.usage?.completion_tokens_details?.reasoning_tokens ?? 0
+      const out = payload?.usage?.completion_tokens ?? 0
+      const ranOut = out >= MAX_TOKENS * 0.95 || choice?.finish_reason === 'length'
+      return {
+        ok: false,
+        error: ranOut
+          ? `The model used its whole ${MAX_TOKENS}-token budget thinking (${reasoning} reasoning tokens) and never got to the summary. A shorter day, or a model that reasons less, would fix it.`
+          : `The agent returned nothing (stop reason: ${choice?.finish_reason ?? 'unknown'}, ${reasoning} reasoning tokens).`,
+      }
+    }
 
     return {
       ok: true,
       text,
       usage: {
-        input: response.usage.input_tokens,
-        output: response.usage.output_tokens,
+        input: payload?.usage?.prompt_tokens ?? 0,
+        output: payload?.usage?.completion_tokens ?? 0,
+        cost: payload?.usage?.cost,
       },
     }
   } catch (err) {
-    // Typed classes, not string matching — the distinction between "your key is
-    // wrong" and "try again shortly" is the whole value of the message.
-    if (err instanceof Anthropic.AuthenticationError) {
-      return { ok: false, error: 'ANTHROPIC_API_KEY was rejected. Check the key.' }
+    if ((err as Error)?.name === 'TimeoutError') {
+      return { ok: false, error: 'The agent took too long and was given up on.' }
     }
-    if (err instanceof Anthropic.RateLimitError) {
-      return { ok: false, error: 'Rate limited by the API. Try again in a moment.' }
-    }
-    if (err instanceof Anthropic.APIError) {
-      return { ok: false, error: `The API returned ${err.status}: ${err.message}` }
-    }
-    return { ok: false, error: 'Could not reach the API.' }
+    return { ok: false, error: 'Could not reach OpenRouter.' }
   }
 }

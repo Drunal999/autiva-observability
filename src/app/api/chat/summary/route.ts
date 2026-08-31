@@ -14,6 +14,14 @@ import {
 
 const ROOM = { subjectType: 'TENANT' as const, subjectId: 'team' }
 
+/**
+ * The default model reasons for the better part of a minute before answering,
+ * which is far longer than a normal request in this app. Vercel's Hobby plan
+ * allows 60 seconds; without this the function is killed at the default and
+ * the summary never arrives.
+ */
+export const maxDuration = 60
+
 /** How many earlier summaries the agent is given as memory. */
 const MEMORY_DEPTH = 3
 
@@ -57,8 +65,7 @@ export async function POST() {
     return NextResponse.json(
       {
         error:
-          'The room agent is not configured. Set ANTHROPIC_API_KEY to switch it on — ' +
-          'it is billed per use, separately from any Claude subscription.',
+          'The room agent is not configured. Set OPENROUTER_API_KEY to switch it on.',
         configured: false,
       },
       { status: 503 }

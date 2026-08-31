@@ -8,28 +8,36 @@ It is **off until you switch it on**, and switching it on costs money.
 ## Turning it on
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_MODEL=nvidia/nemotron-3.5-lightning:free    # optional
 ```
 
 Locally in `.env`, and in the Vercel project for production. Nothing else
-changes — the button notices and enables itself.
-
-Get a key from `console.anthropic.com`. **A Claude subscription does not
-include API access**; they are separate products with separate billing. This is
-the single most common and most expensive misunderstanding about it.
+changes — the button notices and enables itself. Swapping models is an env
+change, not a deploy.
 
 ## What it costs
 
-`claude-haiku-4-5`, at $1 per million input tokens and $5 per million output.
+Nothing, on the default model. `nvidia/nemotron-3.5-lightning:free` is
+OpenRouter's free tier, and every response so far has reported `cost: 0`.
 
-A day of team chat is roughly 3,000–6,000 tokens in and a few hundred out, so
-**one summary is under a cent** — call it a rupee. Pressed a few times a day by
-three people, it is small change. The response is capped at 1,200 tokens so a
-runaway answer cannot become a runaway bill, and every response reports its own
-token usage so the cost is visible rather than hidden.
+Free has a price, and it is paid in time and reliability rather than money:
 
-The endpoint is rate limited to six summaries a minute per team. That is not
-about capacity; it is about a stuck button not spending your money.
+- **It is slow.** This is a reasoning model — it thinks at length before
+  answering. A four-line day measured **45–60 seconds**. A paid non-reasoning
+  model would answer in two or three.
+- **It queues.** Free tiers throttle when busy, and a 429 there means "wait",
+  not "broken". The error says so.
+- **It is close to the platform ceiling.** Vercel's Hobby plan kills a function
+  at 60 seconds, and this regularly takes 54. The route sets `maxDuration = 60`
+  and the request gives up at 55 so the failure is ours and explains itself
+  rather than arriving as a bare gateway error — but on a long conversation
+  this WILL sometimes run out of road. If it becomes annoying, the fix is a
+  faster model in `OPENROUTER_MODEL`, not more waiting.
+
+The response is capped at 4,000 tokens and the endpoint is rate limited to six
+summaries a minute per team — habits worth keeping even while the bill is zero,
+because the model behind that variable may not always be free.
 
 ## What "grows and learns with us" actually means
 
@@ -60,6 +68,13 @@ to learn.
 - With no key it returns **503** — a capability that is off, not something
   broken — and the button says "summary · not configured" rather than failing
   when pressed.
+- The model's **chain of thought is excluded** from the reply. Without that it
+  arrives inside the message content, and the room would receive "Here's a
+  thinking process: 1. Analyze User Input…" as though it were the summary.
+- A budget that runs out mid-thought is reported with its numbers — how many
+  tokens went on reasoning — because "the agent returned nothing" says only
+  that something is wrong, while "spent 3,980 of 4,000 thinking" says what to
+  change.
 
 ## What it is not
 

@@ -232,7 +232,7 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
           disabled={summarising || agent?.configured === false}
           title={
             agent?.configured === false
-              ? 'Set ANTHROPIC_API_KEY to switch the room agent on. It is billed per use.'
+              ? 'Set OPENROUTER_API_KEY to switch the room agent on.'
               : `Summarise today with ${agent?.model ?? 'the room agent'}`
           }
           className="h-7 shrink-0 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/60 transition hover:border-cyan-400/40 hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/12 disabled:hover:text-white/60"
