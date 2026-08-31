@@ -43,22 +43,22 @@ export class PanelBoundary extends Component<BoundaryProps, BoundaryState> {
 
     return (
       <div className="flex min-h-[140px] flex-col justify-center gap-2 rounded-[18px] border border-red-400/30 border-l-2 border-l-red-400 bg-red-400/[0.06] p-4">
-        <p className="text-[13px] font-semibold text-red-300">{this.props.label} stopped working</p>
-        <p className="font-mono text-[10.5px] leading-[1.5] text-white/45">
+        <p className="text-[15px] font-semibold text-red-300">{this.props.label} stopped working</p>
+        <p className="font-mono text-[12.5px] leading-[1.5] text-white/45">
           The rest of this page is still live. Reloading usually clears it.
         </p>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => this.setState({ error: null })}
-            className="h-7 rounded-[8px] border border-white/12 px-2.5 font-mono text-[10px] text-white/65 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="h-7 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/65 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Try again
           </button>
           <button
             type="button"
             onClick={() => location.reload()}
-            className="h-7 rounded-[8px] border border-white/12 px-2.5 font-mono text-[10px] text-white/65 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="h-7 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/65 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Reload
           </button>
@@ -84,13 +84,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-[18px] border border-dashed border-white/[0.09] px-5 py-12 text-center">
-      <p className="text-[13px] text-white/55">{title}</p>
-      <p className="max-w-[46ch] text-[11.5px] leading-[1.6] text-white/32">{detail}</p>
+      <p className="text-[15px] text-white/55">{title}</p>
+      <p className="max-w-[46ch] text-[13.5px] leading-[1.6] text-white/32">{detail}</p>
       {action && (
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-1 h-8 rounded-[9px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[12px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+          className="mt-1 h-8 rounded-[9px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[14px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
         >
           {action.label}
         </button>

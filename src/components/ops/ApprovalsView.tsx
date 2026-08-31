@@ -35,7 +35,7 @@ function RiskChip({ risk }: { risk: ApprovalRisk }) {
   const r = RISK[risk]
   return (
     <span
-      className="flex items-center gap-1 rounded-[5px] px-1.5 py-[2px] font-mono text-[9px] font-bold uppercase tracking-[0.06em]"
+      className="flex items-center gap-1 rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
       style={{ color: r.tone, background: `${r.tone}1f` }}
     >
       <span aria-hidden="true">{r.glyph}</span>
@@ -78,7 +78,7 @@ function DecideControls({
           type="button"
           disabled={busy}
           onClick={() => setArming('APPROVED')}
-          className="h-8 rounded-[9px] border border-emerald-400/40 bg-emerald-400/10 px-3 text-[12px] font-bold text-emerald-300 transition hover:bg-emerald-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-40"
+          className="h-8 rounded-[9px] border border-emerald-400/40 bg-emerald-400/10 px-3 text-[14px] font-bold text-emerald-300 transition hover:bg-emerald-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-40"
         >
           Approve
         </button>
@@ -86,7 +86,7 @@ function DecideControls({
           type="button"
           disabled={busy}
           onClick={() => setArming('REJECTED')}
-          className="h-8 rounded-[9px] border border-red-400/40 bg-red-400/10 px-3 text-[12px] font-bold text-red-300 transition hover:bg-red-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60 disabled:opacity-40"
+          className="h-8 rounded-[9px] border border-red-400/40 bg-red-400/10 px-3 text-[14px] font-bold text-red-300 transition hover:bg-red-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60 disabled:opacity-40"
         >
           Reject
         </button>
@@ -114,14 +114,14 @@ function DecideControls({
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason for rejecting (required)"
           aria-label="Reason for rejecting"
-          className="h-8 min-w-[220px] flex-1 rounded-[9px] border border-white/10 bg-white/5 px-2.5 text-[12px] text-white/85 outline-none placeholder:text-white/25 focus:border-red-400/50"
+          className="h-8 min-w-[220px] flex-1 rounded-[9px] border border-white/10 bg-white/5 px-2.5 text-[14px] text-white/85 outline-none placeholder:text-white/25 focus:border-red-400/50"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && reason.trim()) onDecide('REJECTED', reason.trim())
           }}
         />
       )}
 
-      <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-white/45">
+      <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-white/45">
         {approving
           ? approval.amountInr
             ? `Confirm — ${inr(approval.amountInr)} will be paid`
@@ -133,7 +133,7 @@ function DecideControls({
         type="button"
         disabled={busy || (!approving && !reason.trim())}
         onClick={() => onDecide(arming, reason.trim())}
-        className={`h-8 rounded-[9px] px-3 text-[12px] font-bold transition focus:outline-none focus-visible:ring-2 disabled:opacity-40 ${
+        className={`h-8 rounded-[9px] px-3 text-[14px] font-bold transition focus:outline-none focus-visible:ring-2 disabled:opacity-40 ${
           approving
             ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300 focus-visible:ring-emerald-400/60'
             : 'bg-red-400 text-red-950 hover:bg-red-300 focus-visible:ring-red-400/60'
@@ -144,7 +144,7 @@ function DecideControls({
       <button
         type="button"
         onClick={disarm}
-        className="h-8 rounded-[9px] border border-white/10 px-3 text-[12px] font-semibold text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+        className="h-8 rounded-[9px] border border-white/10 px-3 text-[14px] font-semibold text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
       >
         Cancel
       </button>
@@ -208,10 +208,10 @@ export function ApprovalsView() {
   return (
     <div className="relative flex h-full flex-col gap-5 overflow-y-auto p-3 md:p-5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+        <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
           Approvals
         </h1>
-        <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
+        <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
           {pending.length} WAITING
           {/* The caveat matters but is not worth a six-line column on a phone. */}
           <span className="hidden sm:inline"> · A DECISION IS RECORDED ONCE AND CANNOT BE EDITED</span>
@@ -219,7 +219,7 @@ export function ApprovalsView() {
         <span className="flex-1" />
         {/* A stale queue that looks live is how the same action gets approved
             twice, so the connection state is stated rather than implied. */}
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/40">
+        <span className="flex items-center gap-1.5 font-mono text-[12px] text-white/40">
           <span
             className={`h-[5px] w-[5px] rounded-full ${
               connection === 'connected'
@@ -251,8 +251,8 @@ export function ApprovalsView() {
 
       {error && (
         <div className="rounded-[16px] border border-red-400/35 border-l-2 border-l-red-400 bg-red-400/[0.06] p-5">
-          <p className="text-[13px] font-semibold text-red-300">Could not load the approvals queue</p>
-          <p className="mt-1 font-mono text-[11px] text-white/45">
+          <p className="text-[15px] font-semibold text-red-300">Could not load the approvals queue</p>
+          <p className="mt-1 font-mono text-[13px] text-white/45">
             /api/approvals did not respond. Nothing has been approved or rejected.
           </p>
         </div>
@@ -287,16 +287,16 @@ export function ApprovalsView() {
             <div className="flex flex-wrap items-center gap-2">
               <RiskChip risk={a.risk} />
               {a.module && (
-                <span className="font-mono text-[10px] text-white/45">{a.module.displayName}</span>
+                <span className="font-mono text-[12px] text-white/45">{a.module.displayName}</span>
               )}
               {a.run && (
-                <span className="font-mono text-[10px] text-white/25">
+                <span className="font-mono text-[12px] text-white/25">
                   {a.run.ref} · {a.run.agent.name}
                 </span>
               )}
               <span className="flex-1" />
               <span
-                className="font-mono text-[10px] tabular-nums"
+                className="font-mono text-[12px] tabular-nums"
                 style={{ color: ageTone(a.requestedAt) }}
                 title={absolute(a.requestedAt)}
               >
@@ -304,16 +304,16 @@ export function ApprovalsView() {
               </span>
             </div>
 
-            <h2 className="mt-2 text-[15px] font-semibold leading-snug text-white/92">{a.action}</h2>
+            <h2 className="mt-2 text-[17px] font-semibold leading-snug text-white/92">{a.action}</h2>
 
             {a.amountInr != null && (
-              <p className="mt-1 font-mono text-[18px] font-bold tabular-nums text-red-300">
+              <p className="mt-1 font-mono text-[20px] font-bold tabular-nums text-red-300">
                 {inr(a.amountInr)}
               </p>
             )}
 
             {a.detail && (
-              <p className="mt-1.5 max-w-[70ch] text-[12.5px] leading-[1.6] text-white/55">
+              <p className="mt-1.5 max-w-[70ch] text-[14.5px] leading-[1.6] text-white/55">
                 {a.detail}
               </p>
             )}
@@ -343,7 +343,7 @@ export function ApprovalsView() {
 
       {decided.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+          <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-white/35">
             Recently decided
           </h2>
           {decided.map((a) => {
@@ -354,7 +354,7 @@ export function ApprovalsView() {
                 className="flex flex-wrap items-center gap-2 rounded-[12px] border border-white/[0.05] bg-white/[0.02] px-3.5 py-2.5"
               >
                 <span
-                  className="flex items-center gap-1 rounded-[5px] px-1.5 py-[2px] font-mono text-[9px] font-bold uppercase"
+                  className="flex items-center gap-1 rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold uppercase"
                   style={{
                     color: approved ? OK : ERR,
                     background: approved ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)',
@@ -363,14 +363,14 @@ export function ApprovalsView() {
                   <span aria-hidden="true">{approved ? '✓' : '✕'}</span>
                   {a.status}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-[12.5px] text-white/65">{a.action}</span>
+                <span className="min-w-0 flex-1 truncate text-[14.5px] text-white/65">{a.action}</span>
                 {a.reason && (
-                  <span className="max-w-[40ch] truncate font-mono text-[10px] text-white/35" title={a.reason}>
+                  <span className="max-w-[40ch] truncate font-mono text-[12px] text-white/35" title={a.reason}>
                     “{a.reason}”
                   </span>
                 )}
                 <span
-                  className="font-mono text-[10px] text-white/28"
+                  className="font-mono text-[12px] text-white/28"
                   title={a.decidedAt ? absolute(a.decidedAt) : undefined}
                 >
                   {a.decidedBy?.name ?? 'unknown'} · {a.decidedAt ? relative(a.decidedAt) : '—'}
@@ -385,7 +385,7 @@ export function ApprovalsView() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-[12px] border px-4 py-2.5 text-[12.5px] backdrop-blur"
+          className="fixed left-1/2 z-50 -translate-x-1/2 rounded-[12px] border px-4 py-2.5 text-[14.5px] backdrop-blur"
           style={{
             // Sits clear of the dock, which is also bottom-centred.
             bottom: 'calc(1.5rem + var(--dock-space))',

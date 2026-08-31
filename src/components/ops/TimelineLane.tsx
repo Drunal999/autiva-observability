@@ -489,7 +489,7 @@ export function Lane({
         title={layer.hint}
       >
         <span className="h-[6px] w-[6px] shrink-0 rounded-sm" style={{ background: layer.tone }} />
-        <span className="truncate font-mono text-[9px] uppercase tracking-[0.08em] text-white/40">
+        <span className="truncate font-mono text-[11px] uppercase tracking-[0.08em] text-white/40">
           {layer.label}
         </span>
       </div>
@@ -589,7 +589,7 @@ export function Lane({
                   </>
                 )}
                 <span
-                  className="pointer-events-none absolute inset-y-0 flex items-center truncate text-[10px] leading-none"
+                  className="pointer-events-none absolute inset-y-0 flex items-center truncate text-[12px] leading-none"
                   style={{ left: '100%', paddingLeft: 4, color: T(0.7) }}
                 >
                   {item.readOnly && <span className="mr-[3px] opacity-60">🔒</span>}
@@ -637,7 +637,7 @@ export function Lane({
 
         {overflow > 0 && (
           <span
-            className="absolute right-1 top-1 rounded-[4px] bg-white/[0.08] px-1 font-mono text-[8.5px] text-white/45"
+            className="absolute right-1 top-1 rounded-[4px] bg-white/[0.08] px-1 font-mono text-[10.5px] text-white/45"
             title="Zoom in to see these"
           >
             +{overflow} more
@@ -647,7 +647,7 @@ export function Lane({
 
       {pending && (
         <div className="absolute inset-x-0 top-full z-40 mt-1 flex items-center gap-2 rounded-[10px] border border-cyan-400/35 bg-[#0b1220] px-2 py-1.5 shadow-lg">
-          <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-cyan-300/70">
+          <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-cyan-300/70">
             new {tier === 'hour' ? 'event' : 'all-day event'}
           </span>
           <input
@@ -661,12 +661,12 @@ export function Lane({
             }}
             placeholder="Name it, then Enter"
             aria-label="New event title"
-            className="min-w-0 flex-1 bg-transparent text-[12px] text-white/85 outline-none placeholder:text-white/25"
+            className="min-w-0 flex-1 bg-transparent text-[14px] text-white/85 outline-none placeholder:text-white/25"
           />
           <button
             type="button"
             onClick={() => { setPending(null); setDraft('') }}
-            className="font-mono text-[9px] text-white/35 hover:text-white/70"
+            className="font-mono text-[11px] text-white/35 hover:text-white/70"
           >
             esc
           </button>
@@ -675,7 +675,7 @@ export function Lane({
 
       {!pending && error && (
         <div className="absolute inset-x-0 top-full z-40 mt-1 rounded-[10px] border border-red-400/35 bg-[#0b1220] px-2 py-1.5">
-          <span className="font-mono text-[10px] text-red-300">{error}</span>
+          <span className="font-mono text-[12px] text-red-300">{error}</span>
         </div>
       )}
 
@@ -685,7 +685,7 @@ export function Lane({
               weekly meeting could mean "just this week" or "it is Wednesdays
               now", and the two produce very different calendars for everyone
               else. Guessing would be wrong half the time, silently. */}
-          <span className="truncate text-[11.5px] text-white/70">
+          <span className="truncate text-[13.5px] text-white/70">
             “{askScope.title}” repeats. Change which?
           </span>
           <span className="flex-1" />
@@ -696,7 +696,7 @@ export function Lane({
               setAskScope(null)
               void commitEdit(current, 'occurrence')
             }}
-            className="h-6 rounded-[7px] border border-cyan-400/40 bg-cyan-400/10 px-2 font-mono text-[10px] text-cyan-300 hover:bg-cyan-400/20"
+            className="h-6 rounded-[7px] border border-cyan-400/40 bg-cyan-400/10 px-2 font-mono text-[12px] text-cyan-300 hover:bg-cyan-400/20"
           >
             This one
           </button>
@@ -707,7 +707,7 @@ export function Lane({
               setAskScope(null)
               void commitEdit(current, 'series')
             }}
-            className="h-6 rounded-[7px] border border-white/15 px-2 font-mono text-[10px] text-white/60 hover:text-white"
+            className="h-6 rounded-[7px] border border-white/15 px-2 font-mono text-[12px] text-white/60 hover:text-white"
           >
             All of them
           </button>
@@ -719,7 +719,7 @@ export function Lane({
               setAskScope(null)
               onCreated()
             }}
-            className="font-mono text-[10px] text-white/35 hover:text-white/70"
+            className="font-mono text-[12px] text-white/35 hover:text-white/70"
           >
             cancel
           </button>
@@ -728,14 +728,14 @@ export function Lane({
 
       {undo && !error && (
         <div className="absolute inset-x-0 top-full z-40 mt-1 flex items-center gap-2 rounded-[10px] border border-white/10 bg-[#0b1220] px-2 py-1.5">
-          <span className="truncate text-[11.5px] text-white/70">
+          <span className="truncate text-[13.5px] text-white/70">
             {undo.kind === 'create' ? 'Added' : 'Moved'} “{undo.title}”
           </span>
           <span className="flex-1" />
           <button
             type="button"
             onClick={() => void runUndo()}
-            className="font-mono text-[10px] text-cyan-300 hover:text-cyan-200"
+            className="font-mono text-[12px] text-cyan-300 hover:text-cyan-200"
           >
             Undo
           </button>
@@ -776,7 +776,7 @@ function DensityLane({
           />
         ))}
       </div>
-      <span className="absolute right-1 top-1 rounded-[4px] bg-black/40 px-1 font-mono text-[8.5px] text-white/45">
+      <span className="absolute right-1 top-1 rounded-[4px] bg-black/40 px-1 font-mono text-[10.5px] text-white/45">
         {items.length} total{failed > 0 ? ' · ' + failed + ' failed' : ''}
       </span>
     </>

@@ -27,10 +27,10 @@ export function ChartPanel({
   return (
     <PanelBoundary label={title}>
       <div className="flex min-w-0 flex-col rounded-[18px] border border-white/5 bg-white/[0.02] p-4">
-        <p className="text-[13px] font-semibold">{title}</p>
-        <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-white/35">{caption}</p>
+        <p className="text-[15px] font-semibold">{title}</p>
+        <p className="mt-0.5 font-mono text-[12px] tracking-[0.06em] text-white/35">{caption}</p>
         <div className="mt-3 min-h-0 flex-1">{children}</div>
-        <div className="mt-1.5 flex justify-between font-mono text-[9px] text-white/25">
+        <div className="mt-1.5 flex justify-between font-mono text-[11px] text-white/25">
           <span>{leftLabel}</span>
           <span>{rightLabel}</span>
         </div>
@@ -152,7 +152,7 @@ export function LatencyLines({
             x={W - 26}
             y={y(s.arr[s.arr.length - 1]) + 3}
             fill={s.stroke}
-            style={{ fontFamily: MONO, fontSize: 9 }}
+            style={{ fontFamily: MONO, fontSize: 11 }}
           >
             {s.key}
           </text>
@@ -184,7 +184,7 @@ export function AreaChart({ values, unit }: { values: number[]; unit: string }) 
       </defs>
       <path d={area} fill="url(#burnFill)" />
       <path d={line} fill="none" stroke={ACCENT} strokeWidth="1.5" strokeLinejoin="round" />
-      <text x={W - 30} y={y(max) + 3} fill={T(0.4)} style={{ fontFamily: MONO, fontSize: 9 }}>
+      <text x={W - 30} y={y(max) + 3} fill={T(0.4)} style={{ fontFamily: MONO, fontSize: 11 }}>
         {unit}
         {max.toFixed(2)}
       </text>
@@ -220,7 +220,7 @@ export function SuccessRate({ values, slo }: { values: number[]; slo: number }) 
         y={y(slo) - 5}
         textAnchor="end"
         fill="#fbbf24"
-        style={{ fontFamily: MONO, fontSize: 9 }}
+        style={{ fontFamily: MONO, fontSize: 11 }}
       >
         {slo}% SLO
       </text>

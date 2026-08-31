@@ -78,7 +78,7 @@ export function AddAgent({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+        className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.08em] text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
       >
         + Agent
       </button>
@@ -107,11 +107,11 @@ export function AddAgent({
           placeholder="codename, e.g. nightly-crawler"
           aria-label="Agent codename"
           aria-invalid={nameProblem}
-          className="h-7 w-[220px] rounded-[8px] border bg-white/5 px-2 font-mono text-[11px] text-white/85 outline-none placeholder:text-white/25"
+          className="h-7 w-[220px] rounded-[8px] border bg-white/5 px-2 font-mono text-[13px] text-white/85 outline-none placeholder:text-white/25"
           style={{ borderColor: nameProblem ? 'rgba(248,113,113,0.6)' : 'rgba(255,255,255,0.12)' }}
         />
         {nameProblem && (
-          <span className="font-mono text-[9px] text-red-300">
+          <span className="font-mono text-[11px] text-red-300">
             lowercase letters, numbers and hyphens, starting with a letter
           </span>
         )}
@@ -121,7 +121,7 @@ export function AddAgent({
         value={model}
         onChange={(e) => setModel(e.target.value)}
         aria-label="Model"
-        className="h-7 rounded-[8px] border border-white/12 bg-[#0b1220] px-2 font-mono text-[11px] text-white/85 outline-none"
+        className="h-7 rounded-[8px] border border-white/12 bg-[#0b1220] px-2 font-mono text-[13px] text-white/85 outline-none"
       >
         {AGENT_MODELS.map((m) => (
           <option key={m} value={m}>
@@ -134,7 +134,7 @@ export function AddAgent({
         value={moduleKey}
         onChange={(e) => setModuleKey(e.target.value)}
         aria-label="Engine"
-        className="h-7 rounded-[8px] border border-white/12 bg-[#0b1220] px-2 font-mono text-[11px] text-white/85 outline-none"
+        className="h-7 rounded-[8px] border border-white/12 bg-[#0b1220] px-2 font-mono text-[13px] text-white/85 outline-none"
       >
         {/* Optional on purpose: an agent can exist before anyone has decided
             which engine it belongs to. Latency is then judged against no
@@ -151,20 +151,20 @@ export function AddAgent({
         type="button"
         disabled={!trimmed || nameProblem || busy}
         onClick={() => void submit()}
-        className="h-7 rounded-[8px] border border-cyan-400/45 bg-cyan-400/12 px-2.5 font-mono text-[10px] font-bold text-cyan-300 transition hover:bg-cyan-400/22 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+        className="h-7 rounded-[8px] border border-cyan-400/45 bg-cyan-400/12 px-2.5 font-mono text-[12px] font-bold text-cyan-300 transition hover:bg-cyan-400/22 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
       >
         {busy ? 'Adding…' : 'Add'}
       </button>
       <button
         type="button"
         onClick={close}
-        className="h-7 px-1 font-mono text-[10px] text-white/35 transition hover:text-white/70"
+        className="h-7 px-1 font-mono text-[12px] text-white/35 transition hover:text-white/70"
       >
         esc
       </button>
 
       {error && (
-        <span className="w-full font-mono text-[10px] text-red-300" role="alert">
+        <span className="w-full font-mono text-[12px] text-red-300" role="alert">
           {error}
         </span>
       )}

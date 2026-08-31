@@ -74,13 +74,13 @@ function NodeCard({
       )}
       <div className="flex items-center gap-1.5">
         <span
-          className="font-mono text-[8.5px] font-bold uppercase tracking-[0.1em]"
+          className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em]"
           style={{ color: tone }}
         >
           {node.kind}
         </span>
         {node.failures > 0 && (
-          <span className="rounded-[4px] bg-red-400/15 px-1 py-[1px] font-mono text-[8.5px] font-bold text-red-400">
+          <span className="rounded-[4px] bg-red-400/15 px-1 py-[1px] font-mono text-[10.5px] font-bold text-red-400">
             {node.failures} FAIL
           </span>
         )}
@@ -92,10 +92,10 @@ function NodeCard({
           />
         )}
       </div>
-      <p className="mt-1 line-clamp-2 text-[11.5px] font-semibold leading-[1.3] text-white/85">
+      <p className="mt-1 line-clamp-2 text-[13.5px] font-semibold leading-[1.3] text-white/85">
         {node.title}
       </p>
-      <div className="mt-1 flex items-center gap-2 font-mono text-[9px] text-white/30">
+      <div className="mt-1 flex items-center gap-2 font-mono text-[11px] text-white/30">
         <span className="truncate">{node.meta}</span>
         <span className="flex-1" />
         <span className="tabular-nums">{node.runs}×</span>
@@ -150,16 +150,16 @@ export function AutomationsView() {
     <div className="flex h-full min-h-0">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
             Automations
           </span>
           {flow && (
             <>
-              <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[10px] text-white/50">
+              <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/50">
                 {flow.name}
               </span>
               <span
-                className="rounded-[5px] px-1.5 py-[2px] font-mono text-[9px] font-bold"
+                className="rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold"
                 style={{
                   color: flow.enabled ? OK : T(0.4),
                   background: flow.enabled ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
@@ -167,7 +167,7 @@ export function AutomationsView() {
               >
                 {flow.enabled ? 'ENABLED' : 'PAUSED'}
               </span>
-              <span className="font-mono text-[10px] text-white/30">
+              <span className="font-mono text-[12px] text-white/30">
                 {flow.runsToday} RUNS TODAY · p95 {fmtDuration(flow.p95Ms)}
               </span>
             </>
@@ -221,7 +221,7 @@ export function AutomationsView() {
       {/* ── flows + history ── */}
       <aside className="flex w-[340px] shrink-0 flex-col border-l border-white/5">
         <div className="flex flex-col gap-1 border-b border-white/5 p-3">
-          <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+          <p className="mb-1 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-white/35">
             Flows
           </p>
           {flows?.map((f) => {
@@ -241,22 +241,22 @@ export function AutomationsView() {
                   className="h-[6px] w-[6px] shrink-0 rounded-full"
                   style={{ background: f.enabled ? OK : T(0.25) }}
                 />
-                <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-white/75">
+                <span className="min-w-0 flex-1 truncate font-mono text-[13.5px] text-white/75">
                   {f.name}
                 </span>
                 {f.failures1h > 0 && (
-                  <span className="rounded-[4px] bg-red-400/15 px-1 font-mono text-[9px] text-red-400">
+                  <span className="rounded-[4px] bg-red-400/15 px-1 font-mono text-[11px] text-red-400">
                     {f.failures1h}
                   </span>
                 )}
-                <span className="font-mono text-[10px] tabular-nums text-white/30">{f.runsToday}×</span>
+                <span className="font-mono text-[12px] tabular-nums text-white/30">{f.runsToday}×</span>
               </button>
             )
           })}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+          <p className="mb-2 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-white/35">
             Run history
           </p>
           <div className="flex flex-col">
@@ -266,8 +266,8 @@ export function AutomationsView() {
                 <div key={r.id} className="flex gap-2.5 border-b border-white/[0.04] py-2 last:border-0">
                   <span className="mt-[6px] h-[5px] w-[5px] shrink-0 rounded-full" style={{ background: tone }} />
                   <div className="min-w-0 flex-1 leading-[1.4]">
-                    <p className="truncate text-[11.5px] text-white/65">{r.summary}</p>
-                    <p className="font-mono text-[9px] text-white/25">
+                    <p className="truncate text-[13.5px] text-white/65">{r.summary}</p>
+                    <p className="font-mono text-[11px] text-white/25">
                       {r.ref} · {fmtDuration(r.durMs)} ·{' '}
                       {new Date(r.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -276,7 +276,7 @@ export function AutomationsView() {
               )
             })}
             {flow && flow.runsLog.length === 0 && (
-              <p className="py-6 text-center font-mono text-[11px] text-white/25">No runs recorded</p>
+              <p className="py-6 text-center font-mono text-[13px] text-white/25">No runs recorded</p>
             )}
           </div>
         </div>

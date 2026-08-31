@@ -386,7 +386,7 @@ export function Timeline({
             />
           ))}
           {visibleLayers.length === 0 && (
-            <p className="px-3 py-6 text-center font-mono text-[10px] text-white/25">
+            <p className="px-3 py-6 text-center font-mono text-[12px] text-white/25">
               Every layer is switched off.
             </p>
           )}
@@ -404,12 +404,12 @@ export function Timeline({
 
         {isLoading && !data && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/25">
-            <span className="font-mono text-[10px] text-white/40">loading timeline…</span>
+            <span className="font-mono text-[12px] text-white/40">loading timeline…</span>
           </div>
         )}
       </div>
 
-      <p className="font-mono text-[9.5px] leading-relaxed text-white/25">
+      <p className="font-mono text-[11.5px] leading-relaxed text-white/25">
         Drag to pan · ⌘/ctrl-scroll or pinch to zoom · drag the Events lane to create · when
         focused: <span className="text-white/40">+ −</span> zoom,{' '}
         <span className="text-white/40">← →</span> pan, <span className="text-white/40">0</span> reset
@@ -437,15 +437,15 @@ function TimelineControls({
         : (span / (30 * DAY)).toFixed(1) + ' months'
 
   const btn =
-    'h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[10px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-30'
+    'h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[12px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-30'
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="font-mono text-[10px] tabular-nums text-white/40" data-testid="window-label">
+      <span className="font-mono text-[12px] tabular-nums text-white/40" data-testid="window-label">
         {stamp(winStart, withTime)} → {stamp(winEnd, withTime)}
       </span>
       <span
-        className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[9px] uppercase tracking-[0.1em] text-white/35"
+        className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[11px] uppercase tracking-[0.1em] text-white/35"
         // The tier is shown because it explains why the axis just relabelled
         // itself. Without it the change reads as a glitch.
         title="Label density changes with zoom; the scale itself is continuous"
@@ -472,7 +472,7 @@ function Axis({ ticks, pct }: { ticks: Tick[]; pct: (t: number) => number }) {
       {ticks.map((t) => (
         <span
           key={t.t}
-          className="absolute top-[7px] whitespace-nowrap pl-1 font-mono text-[9px] tabular-nums"
+          className="absolute top-[7px] whitespace-nowrap pl-1 font-mono text-[11px] tabular-nums"
           style={{
             left: pct(t.t) + '%',
             color: t.major ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.28)',

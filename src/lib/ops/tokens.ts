@@ -52,6 +52,7 @@ export const NAV = [
   // '/' used to have its own dashboard; it now redirects to /board, so a
   // separate "Board" entry pointed at the same place as "Mission".
   { label: 'Mission', href: '/board', glyph: '◈' },
+  { label: 'Chat', href: '/chat', glyph: '◍' },
   { label: 'Approvals', href: '/approvals', glyph: '✓' },
   { label: 'Calendar', href: '/calendar', glyph: '▦' },
   { label: 'Fleet', href: '/fleet', glyph: '◇' },

@@ -143,7 +143,7 @@ function DockTile({
 
       {item.badge != null && item.badge > 0 && (
         <span
-          className="absolute -right-1 -top-1 z-10 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-amber-400 px-1 font-mono text-[10px] font-bold tabular-nums text-amber-950"
+          className="absolute -right-1 -top-1 z-10 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-amber-400 px-1 font-mono text-[12px] font-bold tabular-nums text-amber-950"
           aria-label={`${item.badge} waiting`}
         >
           {item.badge}
@@ -160,7 +160,7 @@ function DockTile({
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: reduced ? 0 : 0.18 }}
             style={{ x: '-50%' }}
-            className="pointer-events-none absolute -top-8 left-1/2 w-fit whitespace-pre rounded-[7px] border border-white/12 bg-[#0b1220] px-2 py-1 font-mono text-[10px] text-white/85 shadow-lg"
+            className="pointer-events-none absolute -top-8 left-1/2 w-fit whitespace-pre rounded-[7px] border border-white/12 bg-[#0b1220] px-2 py-1 font-mono text-[12px] text-white/85 shadow-lg"
           >
             {item.label}
           </motion.span>

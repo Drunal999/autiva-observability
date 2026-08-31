@@ -35,12 +35,12 @@ interface Comment {
 function CommentBody({ body }: { body: string }) {
   const tokens = parseCommentBody(body)
   return (
-    <p className="whitespace-pre-wrap text-[12.5px] leading-[1.6] text-white/72">
+    <p className="whitespace-pre-wrap text-[14.5px] leading-[1.6] text-white/72">
       {tokens.map((t, i) => {
         switch (t.kind) {
           case 'code':
             return (
-              <code key={i} className="rounded-[4px] bg-white/[0.08] px-1 py-[1px] font-mono text-[11.5px] text-cyan-200">
+              <code key={i} className="rounded-[4px] bg-white/[0.08] px-1 py-[1px] font-mono text-[13.5px] text-cyan-200">
                 {t.value}
               </code>
             )
@@ -180,11 +180,11 @@ export function Thread({
         }
       }}
     >
-      {isLoading && <p className="font-mono text-[10px] text-white/25">Loading thread…</p>}
+      {isLoading && <p className="font-mono text-[12px] text-white/25">Loading thread…</p>}
 
       {!isLoading && visible.length === 0 && (
         // An empty thread invites the first comment rather than looking broken.
-        <p className="text-[11.5px] text-white/32">
+        <p className="text-[13.5px] text-white/32">
           No notes yet. Anything you work out here stays attached to this item.
         </p>
       )}
@@ -195,7 +195,7 @@ export function Thread({
 
         if (c.deletedAt) {
           return (
-            <p key={c.id} className="font-mono text-[11px] italic text-white/22">
+            <p key={c.id} className="font-mono text-[13px] italic text-white/22">
               comment deleted · {relative(c.deletedAt)}
             </p>
           )
@@ -204,19 +204,19 @@ export function Thread({
         return (
           <div key={c.id} className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
-              <span className="text-[11.5px] font-semibold" style={{ color: kind.tone }}>
+              <span className="text-[13.5px] font-semibold" style={{ color: kind.tone }}>
                 {c.authorName}
               </span>
               {kind.label && (
                 <span
-                  className="rounded-[4px] px-1 font-mono text-[8.5px] font-bold tracking-[0.08em]"
+                  className="rounded-[4px] px-1 font-mono text-[10.5px] font-bold tracking-[0.08em]"
                   style={{ color: kind.tone, background: `${kind.tone}22` }}
                 >
                   {kind.label}
                 </span>
               )}
               <span
-                className="font-mono text-[9.5px] text-white/25"
+                className="font-mono text-[11.5px] text-white/25"
                 title={absolute(c.createdAt)}
               >
                 {relative(c.createdAt)}
@@ -226,7 +226,7 @@ export function Thread({
                 <button
                   type="button"
                   onClick={() => remove(c.id)}
-                  className="ml-auto font-mono text-[9.5px] text-white/25 transition hover:text-red-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-red-400/60"
+                  className="ml-auto font-mono text-[11.5px] text-white/25 transition hover:text-red-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-red-400/60"
                 >
                   delete
                 </button>
@@ -254,17 +254,17 @@ export function Thread({
           }}
           placeholder="Add a note… @mention to notify someone"
           aria-label="Add a comment"
-          className="w-full resize-y rounded-[9px] border border-white/10 bg-white/5 px-2.5 py-2 text-[12.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+          className="w-full resize-y rounded-[9px] border border-white/10 bg-white/5 px-2.5 py-2 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
         />
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[9.5px] text-white/22">⌘↵ to send</span>
-          {error && <span className="font-mono text-[10px] text-red-300">{error}</span>}
+          <span className="font-mono text-[11.5px] text-white/22">⌘↵ to send</span>
+          {error && <span className="font-mono text-[12px] text-red-300">{error}</span>}
           <span className="flex-1" />
           <button
             type="button"
             disabled={!draft.trim() || busy}
             onClick={() => void send()}
-            className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 text-[11.5px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+            className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 text-[13.5px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
           >
             {busy ? 'Posting…' : 'Comment'}
           </button>
@@ -382,7 +382,7 @@ export function ThreadToggle({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 font-mono text-[10px] text-white/35 transition hover:text-white/65 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
+        className="flex items-center gap-1.5 font-mono text-[12px] text-white/35 transition hover:text-white/65 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
         aria-expanded={open}
       >
         <span aria-hidden="true">{open ? '▾' : '▸'}</span>
@@ -394,7 +394,7 @@ export function ThreadToggle({
             to a screen reader or to anyone who cannot separate these two. */}
         {showUnread && mentions > 0 && (
           <span
-            className="rounded-[4px] border border-cyan-400/45 bg-cyan-400/15 px-1 font-mono text-[9px] font-bold text-cyan-200"
+            className="rounded-[4px] border border-cyan-400/45 bg-cyan-400/15 px-1 font-mono text-[11px] font-bold text-cyan-200"
             title={`${unread} new, ${mentions} mentioning you`}
           >
             @{unread}
@@ -403,7 +403,7 @@ export function ThreadToggle({
         {showUnread && mentions === 0 && (
           <span className="flex items-center gap-1 text-cyan-300/85" title={`${unread} new`}>
             <span aria-hidden="true" className="h-[5px] w-[5px] rounded-full bg-cyan-300/85" />
-            <span className="font-mono text-[9px]">{unread} new</span>
+            <span className="font-mono text-[11px]">{unread} new</span>
           </span>
         )}
         {showUnread && (

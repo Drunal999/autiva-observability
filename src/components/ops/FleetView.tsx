@@ -135,10 +135,10 @@ function AgentCard({
 
       <div className="flex items-center gap-2">
         <StatusDot status={agent.status} />
-        <span className="text-[13px] font-bold">{identity.title}</span>
+        <span className="text-[15px] font-bold">{identity.title}</span>
         {/* Glyph plus label — status never rides on colour alone. */}
         <span
-          className="flex items-center gap-1 rounded-[5px] px-1.5 py-[1px] font-mono text-[9px] font-bold uppercase tracking-[0.06em]"
+          className="flex items-center gap-1 rounded-[5px] px-1.5 py-[1px] font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
           style={{ color, background: `${color}1f` }}
         >
           <span aria-hidden="true">{statusGlyph(agent.status)}</span>
@@ -146,36 +146,36 @@ function AgentCard({
         </span>
         <span className="flex-1" />
         {identity.sub && (
-          <span className="font-mono text-[10px] text-white/30">{identity.sub}</span>
+          <span className="font-mono text-[12px] text-white/30">{identity.sub}</span>
         )}
       </div>
 
-      <p className="line-clamp-2 min-h-[34px] text-[12.5px] leading-[1.35] text-white/70">
+      <p className="line-clamp-2 min-h-[34px] text-[14.5px] leading-[1.35] text-white/70">
         {cardStep(agent, mode)}
       </p>
 
       <div className="flex items-end gap-4">
         <div className="leading-tight">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/25">Elapsed</p>
-          <p className="font-mono text-[12px] tabular-nums text-white/75">{elapsed}</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/25">Elapsed</p>
+          <p className="font-mono text-[14px] tabular-nums text-white/75">{elapsed}</p>
         </div>
         {/* tokens_in and tokens_out are separate columns, so they read as two
             separate figures rather than one slashed string. */}
         <div className="leading-tight">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/25">In</p>
-          <p className="font-mono text-[12px] tabular-nums text-white/75">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/25">In</p>
+          <p className="font-mono text-[14px] tabular-nums text-white/75">
             {agent.tokensIn ? fmtTokens(agent.tokensIn) : '—'}
           </p>
         </div>
         <div className="leading-tight">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/25">Out</p>
-          <p className="font-mono text-[12px] tabular-nums text-white/75">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/25">Out</p>
+          <p className="font-mono text-[14px] tabular-nums text-white/75">
             {agent.tokensOut ? fmtTokens(agent.tokensOut) : '—'}
           </p>
         </div>
         <div className="leading-tight">
-          <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-white/25">Cost</p>
-          <p className="font-mono text-[12px] tabular-nums text-white/75">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-white/25">Cost</p>
+          <p className="font-mono text-[14px] tabular-nums text-white/75">
             {agent.costInr ? inr(agent.costInr) : '—'}
           </p>
         </div>
@@ -268,11 +268,11 @@ export function FleetView({
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-5">
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline gap-3">
-          <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
             Fleet
           </h1>
           {state === 'ready' && (
-            <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
+            <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
               {running} RUNNING · {failed} FAILED · {inrCompact(totalCost)} ACROSS CURRENT RUNS
             </span>
           )}
@@ -295,15 +295,15 @@ export function FleetView({
         {state === 'error' && (
           <div className="flex items-center justify-between gap-5 rounded-[20px] border border-red-400/35 border-l-2 border-l-red-400 bg-red-400/[0.06] p-[22px]">
             <div>
-              <p className="text-[13px] font-semibold text-red-300">Could not reach the fleet</p>
-              <p className="mt-1 font-mono text-[11px] text-white/45">
+              <p className="text-[15px] font-semibold text-red-300">Could not reach the fleet</p>
+              <p className="mt-1 font-mono text-[13px] text-white/45">
                 /api/agents did not respond · trace 7f58bce
               </p>
             </div>
             <button
               type="button"
               onClick={() => location.reload()}
-              className="h-9 rounded-[11px] border border-cyan-400/55 bg-cyan-400/[0.12] px-3.5 text-[12.5px] font-bold text-cyan-400"
+              className="h-9 rounded-[11px] border border-cyan-400/55 bg-cyan-400/[0.12] px-3.5 text-[14.5px] font-bold text-cyan-400"
             >
               Retry
             </button>
@@ -334,10 +334,10 @@ export function FleetView({
 
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline gap-3">
-          <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <h2 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
             Telemetry
           </h2>
-          <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
+          <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
             LAST 24H · 1H BUCKETS
           </span>
           <span className="flex-1" />
@@ -349,7 +349,7 @@ export function FleetView({
             <button
               type="button"
               onClick={() => setEngineKey(null)}
-              className={`h-6 rounded-[7px] px-2 font-mono text-[10px] transition ${
+              className={`h-6 rounded-[7px] px-2 font-mono text-[12px] transition ${
                 engineKey === null
                   ? 'bg-white/10 text-white'
                   : 'text-white/40 hover:text-white/70'
@@ -363,7 +363,7 @@ export function FleetView({
                 type="button"
                 onClick={() => setEngineKey(e.key)}
                 title={`Target ${e.targetMs}ms`}
-                className={`flex h-6 items-center gap-1.5 rounded-[7px] px-2 font-mono text-[10px] transition ${
+                className={`flex h-6 items-center gap-1.5 rounded-[7px] px-2 font-mono text-[12px] transition ${
                   engineKey === e.key
                     ? 'bg-white/10 text-white'
                     : 'text-white/40 hover:text-white/70'

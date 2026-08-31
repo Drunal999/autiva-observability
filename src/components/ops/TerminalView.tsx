@@ -32,12 +32,12 @@ function ts(iso: string) {
 function ToolBlock({ line }: { line: LogLine }) {
   return (
     <div className="my-1 flex items-center gap-2 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5">
-      <span className="rounded-[4px] bg-cyan-400/15 px-1.5 py-[1px] font-mono text-[9px] font-bold uppercase text-cyan-400">
+      <span className="rounded-[4px] bg-cyan-400/15 px-1.5 py-[1px] font-mono text-[11px] font-bold uppercase text-cyan-400">
         {line.text}
       </span>
-      <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/60">{line.args}</span>
+      <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/60">{line.args}</span>
       {line.meta && (
-        <span className="font-mono text-[10px] tabular-nums text-white/30">{line.meta}</span>
+        <span className="font-mono text-[12px] tabular-nums text-white/30">{line.meta}</span>
       )}
     </div>
   )
@@ -47,11 +47,11 @@ function DiffBlock({ line }: { line: LogLine }) {
   return (
     <div className="my-1 overflow-hidden rounded-[8px] border border-white/[0.07]">
       <div className="flex items-center gap-2 bg-white/[0.04] px-2.5 py-1.5">
-        <span className="rounded-[4px] bg-emerald-400/15 px-1.5 py-[1px] font-mono text-[9px] font-bold uppercase text-emerald-400">
+        <span className="rounded-[4px] bg-emerald-400/15 px-1.5 py-[1px] font-mono text-[11px] font-bold uppercase text-emerald-400">
           diff
         </span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/65">{line.text}</span>
-        <span className="font-mono text-[10px] text-white/35">{line.meta}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/65">{line.text}</span>
+        <span className="font-mono text-[12px] text-white/35">{line.meta}</span>
       </div>
       <div className="bg-black/25 py-1">
         {line.lines.map((d, i) => {
@@ -59,7 +59,7 @@ function DiffBlock({ line }: { line: LogLine }) {
           const bg = sign === '+' ? 'rgba(52,211,153,0.10)' : sign === '-' ? 'rgba(248,113,113,0.10)' : 'transparent'
           const fg = sign === '+' ? '#6ee7b7' : sign === '-' ? '#fca5a5' : T(0.45)
           return (
-            <div key={i} className="px-2.5 font-mono text-[11px] leading-[1.55]" style={{ background: bg, color: fg }}>
+            <div key={i} className="px-2.5 font-mono text-[13px] leading-[1.55]" style={{ background: bg, color: fg }}>
               {d}
             </div>
           )
@@ -74,10 +74,10 @@ function StackBlock({ line }: { line: LogLine }) {
   const shown = open ? line.lines : line.lines.slice(0, 3)
   return (
     <div className="my-1 overflow-hidden rounded-[8px] border border-red-400/25 bg-red-400/[0.06]">
-      <div className="px-2.5 py-1.5 font-mono text-[11px] text-red-300">{line.text}</div>
+      <div className="px-2.5 py-1.5 font-mono text-[13px] text-red-300">{line.text}</div>
       <div className="pb-1">
         {shown.map((f, i) => (
-          <div key={i} className="px-2.5 font-mono text-[10.5px] leading-[1.5] text-white/40">
+          <div key={i} className="px-2.5 font-mono text-[12.5px] leading-[1.5] text-white/40">
             {f}
           </div>
         ))}
@@ -86,7 +86,7 @@ function StackBlock({ line }: { line: LogLine }) {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="w-full px-2.5 pb-1.5 text-left font-mono text-[10px] text-white/35 hover:text-white/60"
+          className="w-full px-2.5 pb-1.5 text-left font-mono text-[12px] text-white/35 hover:text-white/60"
         >
           {open ? '▾ collapse' : `▸ ${line.lines.length - 3} more frames`}
         </button>
@@ -146,19 +146,19 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
       {/* ── terminal ── */}
       <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
             Terminal
           </span>
-          <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[10px] text-white/45">
+          <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/45">
             {run?.ref ?? runRef}
           </span>
           {run?.agent && (
-            <span className="font-mono text-[10px] text-white/30">
+            <span className="font-mono text-[12px] text-white/30">
               {run.agent.name} · {run.agent.model}
             </span>
           )}
           <span className="flex-1" />
-          <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/35">
+          <span className="flex items-center gap-1.5 font-mono text-[12px] text-white/35">
             <span
               className="h-[5px] w-[5px] rounded-full"
               style={{
@@ -193,11 +193,11 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
                 <StackBlock line={l} />
               ) : (
                 <div className="flex gap-3">
-                  <span className="shrink-0 select-none font-mono text-[10.5px] leading-[1.55] tabular-nums text-white/25">
+                  <span className="shrink-0 select-none font-mono text-[12.5px] leading-[1.55] tabular-nums text-white/25">
                     {ts(l.ts)}
                   </span>
                   <span
-                    className="whitespace-pre-wrap font-mono text-[12px] leading-[1.55]"
+                    className="whitespace-pre-wrap font-mono text-[14px] leading-[1.55]"
                     style={{ color: lineTone(l) }}
                   >
                     {l.text}
@@ -210,7 +210,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
           {/* stream head */}
           {!isLoading && (
             <div className="flex gap-3">
-              <span className="shrink-0 select-none font-mono text-[10.5px] leading-[1.55] text-white/25">
+              <span className="shrink-0 select-none font-mono text-[12.5px] leading-[1.55] text-white/25">
                 {'        '}
               </span>
               <span
@@ -228,7 +228,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
               setPinned(true)
               if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
             }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-3 py-1.5 font-mono text-[10px] text-cyan-300 backdrop-blur"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-3 py-1.5 font-mono text-[12px] text-cyan-300 backdrop-blur"
           >
             Jump to live ↓
           </button>
@@ -238,7 +238,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
       {/* ── workspace ── */}
       <aside className="flex w-[420px] shrink-0 flex-col border-l border-white/5">
         <div className="border-b border-white/5 px-4 py-3">
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+          <p className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-white/35">
             Workspace
           </p>
         </div>
@@ -270,14 +270,14 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
                       : { background: tone, opacity: 0.5 }
                   }
                 />
-                <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/70">
+                <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/70">
                   {f.path}
                 </span>
-                <span className="font-mono text-[9px] uppercase" style={{ color: tone }}>
+                <span className="font-mono text-[11px] uppercase" style={{ color: tone }}>
                   {f.status}
                 </span>
                 {(f.added > 0 || f.removed > 0) && (
-                  <span className="font-mono text-[10px] tabular-nums">
+                  <span className="font-mono text-[12px] tabular-nums">
                     <span className="text-emerald-400">+{f.added}</span>{' '}
                     <span className="text-red-400">−{f.removed}</span>
                   </span>
@@ -291,10 +291,10 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
           {selected && selected.diff.length > 0 ? (
             <>
               <div className="sticky top-0 flex items-center gap-2 bg-[#0a1020]/95 px-4 py-2 backdrop-blur">
-                <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/55">
+                <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/55">
                   {selected.path}
                 </span>
-                <span className="font-mono text-[10px]">
+                <span className="font-mono text-[12px]">
                   <span className="text-emerald-400">+{selected.added}</span>{' '}
                   <span className="text-red-400">−{selected.removed}</span>
                 </span>
@@ -305,11 +305,11 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
                 const fg = sign === '+' ? '#6ee7b7' : sign === '-' ? '#fca5a5' : T(0.45)
                 return (
                   <div key={i} className="flex">
-                    <span className="w-9 shrink-0 select-none px-2 text-right font-mono text-[10px] leading-[1.6] text-white/20">
+                    <span className="w-9 shrink-0 select-none px-2 text-right font-mono text-[12px] leading-[1.6] text-white/20">
                       {i + 38}
                     </span>
                     <span
-                      className="min-w-0 flex-1 whitespace-pre px-2 font-mono text-[11px] leading-[1.6]"
+                      className="min-w-0 flex-1 whitespace-pre px-2 font-mono text-[13px] leading-[1.6]"
                       style={{ background: bg, color: fg }}
                     >
                       {d}
@@ -319,7 +319,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
               })}
             </>
           ) : (
-            <p className="px-4 py-6 text-center font-mono text-[11px] text-white/25">
+            <p className="px-4 py-6 text-center font-mono text-[13px] text-white/25">
               No diff for this file
             </p>
           )}

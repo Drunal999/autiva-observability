@@ -57,10 +57,10 @@ export function DensityStrip({
   return (
     <div className="flex flex-col gap-1.5 rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-3">
       <div className="flex flex-wrap items-baseline gap-x-3">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">
+        <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-white/40">
           Activity
         </span>
-        <span className="font-mono text-[9.5px] tracking-[0.06em] text-white/28">
+        <span className="font-mono text-[11.5px] tracking-[0.06em] text-white/28">
           {totalRuns} RUNS · {totalFailed} FAILED · {inrCompact(totalCost)} · LAST {buckets.length}H
         </span>
       </div>
@@ -103,7 +103,7 @@ export function DensityStrip({
         )}
       </div>
 
-      <div className="flex justify-between font-mono text-[9px] text-white/22">
+      <div className="flex justify-between font-mono text-[11px] text-white/22">
         <span>{new Date(buckets[0].at).toLocaleTimeString([], { hour: '2-digit' })}</span>
         <span>now</span>
       </div>
@@ -154,15 +154,15 @@ export function CostRibbon({
   return (
     <div className="flex flex-col gap-1.5 rounded-[14px] border border-white/[0.06] bg-white/[0.02] p-3">
       <div className="flex flex-wrap items-baseline gap-x-3">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">
+        <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-white/40">
           Spend
         </span>
-        <span className="font-mono text-[9.5px] text-white/28">
+        <span className="font-mono text-[11.5px] text-white/28">
           {inrCompact(actual.reduce((s, [, v]) => s + v, 0))} SO FAR ·{' '}
           {inrCompact(mean)}/DAY AVERAGE
         </span>
         <span className="flex-1" />
-        <span className="font-mono text-[9px] tracking-[0.06em] text-white/25">
+        <span className="font-mono text-[11px] tracking-[0.06em] text-white/25">
           HATCHED = PROJECTION, NOT ACTUAL
         </span>
       </div>

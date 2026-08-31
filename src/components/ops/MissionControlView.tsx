@@ -111,7 +111,7 @@ export function MissionControlView() {
     <div className="flex h-full min-h-0">
       {/* saved views */}
       <aside className="hidden w-[212px] shrink-0 flex-col gap-1 border-r border-white/5 p-3 lg:flex">
-        <p className="mb-1 px-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+        <p className="mb-1 px-1 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/28">
           Saved views
         </p>
         {views.map((v) => {
@@ -126,12 +126,12 @@ export function MissionControlView() {
             >
               <span className="h-[6px] w-[6px] shrink-0 rounded-full" style={{ background: v.dot }} />
               <span
-                className="flex-1 truncate text-[12.5px]"
+                className="flex-1 truncate text-[14.5px]"
                 style={{ color: on ? '#22d3ee' : T(0.6), fontWeight: on ? 600 : 500 }}
               >
                 {v.label}
               </span>
-              <span className="font-mono text-[10px] tabular-nums text-white/28">{v.count}</span>
+              <span className="font-mono text-[12px] tabular-nums text-white/28">{v.count}</span>
             </button>
           )
         })}
@@ -140,14 +140,14 @@ export function MissionControlView() {
       {/* board */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
             Team Board
           </span>
-          <span className="font-mono text-[10px] text-white/30">
+          <span className="font-mono text-[12px] text-white/30">
             {visible.length} OF {all.length}
           </span>
           <span className="flex-1" />
-          <span className="font-mono text-[9px] tracking-[0.08em] text-white/25">
+          <span className="font-mono text-[11px] tracking-[0.08em] text-white/25">
             SORTED BY PRIORITY, THEN DUE
           </span>
         </div>
@@ -168,10 +168,10 @@ export function MissionControlView() {
               >
                 <div className="flex items-center gap-2 px-3.5 py-3">
                   <span className="h-[7px] w-[7px] rounded-sm" style={{ background: col.dot }} />
-                  <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">
+                  <h2 className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-white/45">
                     {col.label}
                   </h2>
-                  <span className="rounded-full bg-white/[0.06] px-1.5 font-mono text-[10px] text-white/40">
+                  <span className="rounded-full bg-white/[0.06] px-1.5 font-mono text-[12px] text-white/40">
                     {items.length}
                   </span>
                 </div>
@@ -207,25 +207,25 @@ export function MissionControlView() {
                             <span className="absolute inset-y-2.5 left-0 w-[2px] rounded-r-sm bg-red-400" />
                           )}
                           <div className="flex items-start gap-2">
-                            <span className="font-mono text-[9px] text-white/25">{refOf(t)}</span>
+                            <span className="font-mono text-[11px] text-white/25">{refOf(t)}</span>
                             <span className="flex-1" />
                             <span
-                              className="rounded-[4px] px-1.5 font-mono text-[8.5px] font-bold"
+                              className="rounded-[4px] px-1.5 font-mono text-[10.5px] font-bold"
                               style={{ color: p.fg, background: p.bg }}
                             >
                               {t.priority}
                             </span>
                           </div>
-                          <p className="mt-1 text-[12.5px] font-semibold leading-[1.35] text-white/90">
+                          <p className="mt-1 text-[14.5px] font-semibold leading-[1.35] text-white/90">
                             {t.title}
                           </p>
                           <div className="mt-2 flex items-center gap-2">
-                            <span className="truncate text-[11px] text-white/40">
+                            <span className="truncate text-[13px] text-white/40">
                               {t.assignee?.name ?? 'Unassigned'}
                             </span>
                             <span className="flex-1" />
                             <span
-                              className="rounded-[4px] px-1.5 font-mono text-[9.5px]"
+                              className="rounded-[4px] px-1.5 font-mono text-[11.5px]"
                               style={{
                                 color: ds === 'overdue' ? ERR : ds === 'soon' ? WARN : T(0.3),
                                 background:
@@ -240,7 +240,7 @@ export function MissionControlView() {
                             </span>
                           </div>
                           {sd >= 3 && (
-                            <p className="mt-1.5 font-mono text-[9px] text-amber-400/70">
+                            <p className="mt-1.5 font-mono text-[11px] text-amber-400/70">
                               STALE · no change in {sd}d
                             </p>
                           )}
@@ -250,7 +250,7 @@ export function MissionControlView() {
 
                   {!isLoading && items.length === 0 && (
                     <div className="flex flex-col items-center gap-1.5 rounded-[12px] border border-dashed border-white/[0.07] px-3 py-7">
-                      <p className="text-center font-mono text-[10px] text-white/25">
+                      <p className="text-center font-mono text-[12px] text-white/25">
                         Nothing matches this view
                       </p>
                     </div>
@@ -266,7 +266,7 @@ export function MissionControlView() {
       {task && (
         <aside className="flex w-[380px] shrink-0 flex-col border-l border-white/5 bg-[#0e0e12]/85 backdrop-blur">
           <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
-            <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[10px] text-white/45">
+            <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/45">
               {refOf(task)}
             </span>
             <span className="flex-1" />
@@ -279,8 +279,8 @@ export function MissionControlView() {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            <h3 className="text-[16px] font-bold leading-snug">{task.title}</h3>
-            <div className="mt-4 grid grid-cols-[80px_1fr] gap-x-3 gap-y-2 text-[12px]">
+            <h3 className="text-[18px] font-bold leading-snug">{task.title}</h3>
+            <div className="mt-4 grid grid-cols-[80px_1fr] gap-x-3 gap-y-2 text-[14px]">
               <span className="text-white/35">Assignee</span>
               <span className="text-white/80">{task.assignee?.name ?? 'Unassigned'}</span>
               <span className="text-white/35">Priority</span>
@@ -292,10 +292,10 @@ export function MissionControlView() {
             </div>
             {task.description && (
               <>
-                <p className="mt-4 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-white/30">
+                <p className="mt-4 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-white/30">
                   Description
                 </p>
-                <p className="mt-1.5 text-[12.5px] leading-[1.6] text-white/60">{task.description}</p>
+                <p className="mt-1.5 text-[14.5px] leading-[1.6] text-white/60">{task.description}</p>
               </>
             )}
           </div>

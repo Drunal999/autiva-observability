@@ -165,10 +165,10 @@ export function CalendarView() {
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-3 md:p-5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-2">
-        <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+        <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
           Calendar
         </h1>
-        <span className="font-mono text-[10px] tracking-[0.06em] text-white/30">
+        <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
           {/* The claim this calendar makes over a normal one. */}
           PAST IS WHAT HAPPENED · FUTURE IS WHAT IS SCHEDULED
         </span>
@@ -184,7 +184,7 @@ export function CalendarView() {
               type="button"
               onClick={() => chooseView(v)}
               aria-pressed={view === v}
-              className="h-6 rounded-[7px] px-2 font-mono text-[10px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="h-6 rounded-[7px] px-2 font-mono text-[12px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               style={{
                 background: view === v ? 'rgba(34,211,238,0.14)' : 'transparent',
                 color: view === v ? '#67e8f9' : 'rgba(255,255,255,0.4)',
@@ -199,21 +199,21 @@ export function CalendarView() {
           <button
             type="button"
             onClick={() => setOffsetDays((d) => d - 7)}
-            className="h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[10px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[12px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             ← week
           </button>
           <button
             type="button"
             onClick={() => setOffsetDays(0)}
-            className="h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[10px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[12px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             today
           </button>
           <button
             type="button"
             onClick={() => setOffsetDays((d) => d + 7)}
-            className="h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[10px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="h-7 rounded-[8px] border border-white/10 px-2 font-mono text-[12px] text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             week →
           </button>
@@ -230,7 +230,7 @@ export function CalendarView() {
               type="button"
               title={l.hint}
               onClick={() => setEnabled((e) => ({ ...e, [l.key]: !e[l.key] }))}
-              className="flex h-7 items-center gap-1.5 rounded-[8px] border px-2.5 font-mono text-[10px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="flex h-7 items-center gap-1.5 rounded-[8px] border px-2.5 font-mono text-[12px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
               style={{
                 borderColor: on ? `${l.tone}66` : 'rgba(255,255,255,0.08)',
                 background: on ? `${l.tone}14` : 'transparent',
@@ -246,7 +246,7 @@ export function CalendarView() {
           )
         })}
         <span className="flex-1" />
-        <span className="font-mono text-[9.5px] text-white/25">
+        <span className="font-mono text-[11.5px] text-white/25">
           times shown in your timezone
         </span>
       </div>
@@ -312,16 +312,16 @@ export function CalendarView() {
               >
                 <div className="flex items-baseline gap-1.5">
                   <span
-                    className="font-mono text-[11px] font-bold tabular-nums"
+                    className="font-mono text-[13px] font-bold tabular-nums"
                     style={{ color: isToday ? '#22d3ee' : T(0.5) }}
                   >
                     {d.getDate()}
                   </span>
-                  <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-white/25">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-white/25">
                     {d.toLocaleDateString(undefined, { weekday: 'short' })}
                   </span>
                   {isToday && (
-                    <span className="ml-auto font-mono text-[8.5px] tracking-[0.1em] text-cyan-300/70">
+                    <span className="ml-auto font-mono text-[10.5px] tracking-[0.1em] text-cyan-300/70">
                       TODAY
                     </span>
                   )}
@@ -342,10 +342,10 @@ export function CalendarView() {
                         style={{ background: tone }}
                       />
                       <span className="min-w-0 flex-1 leading-[1.35]">
-                        <span className="block truncate text-[11px] text-white/78">
+                        <span className="block truncate text-[13px] text-white/78">
                           {item.title}
                         </span>
-                        <span className="font-mono text-[9px] text-white/28">
+                        <span className="font-mono text-[11px] text-white/28">
                           {/* Visible before someone tries to edit, not only
                               after the attempt fails. */}
                           {item.readOnly && (
@@ -377,7 +377,7 @@ export function CalendarView() {
                 })}
 
                 {dayItems.length > 6 && (
-                  <span className="mt-auto font-mono text-[9px] text-white/25">
+                  <span className="mt-auto font-mono text-[11px] text-white/25">
                     +{dayItems.length - 6} more
                   </span>
                 )}
@@ -392,7 +392,7 @@ export function CalendarView() {
           rather than throwing a dialog over the grid you just selected on. */}
       {pending && (
         <div className="sticky bottom-3 z-20 flex flex-wrap items-center gap-2 rounded-[12px] border border-cyan-400/40 bg-[#0a1020]/95 p-2.5 backdrop-blur">
-          <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-cyan-300">
+          <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-cyan-300">
             {pending.from === pending.to
               ? new Date(pending.from).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
               : `${new Date(pending.from).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} – ${new Date(pending.to).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`}
@@ -408,20 +408,20 @@ export function CalendarView() {
             }}
             placeholder="Name it, then press Enter"
             aria-label="New event title"
-            className="h-8 min-w-[220px] flex-1 rounded-[8px] border border-white/10 bg-white/5 px-2.5 text-[12.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+            className="h-8 min-w-[220px] flex-1 rounded-[8px] border border-white/10 bg-white/5 px-2.5 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
           />
           <button
             type="button"
             disabled={!draftTitle.trim()}
             onClick={() => void createFromSelection()}
-            className="h-8 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[12px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 disabled:opacity-35"
+            className="h-8 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[14px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 disabled:opacity-35"
           >
             Add
           </button>
           <button
             type="button"
             onClick={cancelPending}
-            className="h-8 rounded-[8px] border border-white/10 px-3 text-[12px] text-white/55 transition hover:text-white"
+            className="h-8 rounded-[8px] border border-white/10 px-3 text-[14px] text-white/55 transition hover:text-white"
           >
             Cancel
           </button>
@@ -431,7 +431,7 @@ export function CalendarView() {
       {undo && (
         <div
           role="status"
-          className="fixed left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-[12px] border border-emerald-400/40 bg-emerald-400/15 px-4 py-2.5 text-[12.5px] text-emerald-200 backdrop-blur"
+          className="fixed left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-[12px] border border-emerald-400/40 bg-emerald-400/15 px-4 py-2.5 text-[14.5px] text-emerald-200 backdrop-blur"
           style={{
             // Sits clear of the dock, which is also bottom-centred.
             bottom: 'calc(1.5rem + var(--dock-space))',
@@ -461,7 +461,7 @@ export function RRulePreview({ rule }: { rule: string }) {
   const text = describeRRule(rule)
   if (!rule.trim()) return null
   return (
-    <span className="font-mono text-[10px] text-white/40">
+    <span className="font-mono text-[12px] text-white/40">
       {text ? `repeats ${text}` : 'that repeat rule is not valid'}
     </span>
   )

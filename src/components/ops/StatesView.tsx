@@ -60,7 +60,7 @@ const PANELS: Panel[] = [
 ]
 
 function PanelBody({ panel, state }: { panel: Panel; state: StateKey }) {
-  const font = panel.mono ? { fontFamily: MONO, fontSize: 10.5 } : { fontSize: 11.5 }
+  const font = panel.mono ? { fontFamily: MONO, fontSize: 12.5 } : { fontSize: 13.5 }
 
   if (state === 'loading') {
     // Skeletons sit at the real content's geometry — a layout that shifts
@@ -81,10 +81,10 @@ function PanelBody({ panel, state }: { panel: Panel; state: StateKey }) {
   if (state === 'empty') {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-3 text-center">
-        <p className="text-[11.5px] text-white/40">{panel.emptyCause}</p>
+        <p className="text-[13.5px] text-white/40">{panel.emptyCause}</p>
         <button
           type="button"
-          className="rounded-[8px] border border-white/10 px-2.5 py-1 font-mono text-[10px] text-white/60 transition hover:border-cyan-400/40 hover:text-cyan-300"
+          className="rounded-[8px] border border-white/10 px-2.5 py-1 font-mono text-[12px] text-white/60 transition hover:border-cyan-400/40 hover:text-cyan-300"
         >
           {panel.emptyAction}
         </button>
@@ -95,18 +95,18 @@ function PanelBody({ panel, state }: { panel: Panel; state: StateKey }) {
   if (state === 'error') {
     return (
       <div className="flex flex-col gap-1.5 p-3">
-        <p className="text-[11.5px] font-semibold text-red-300">{panel.errorWhat}</p>
-        <p className="font-mono text-[9.5px] leading-[1.5] text-white/40">{panel.errorWhen}</p>
+        <p className="text-[13.5px] font-semibold text-red-300">{panel.errorWhat}</p>
+        <p className="font-mono text-[11.5px] leading-[1.5] text-white/40">{panel.errorWhen}</p>
         <div className="mt-1 flex gap-1.5">
           <button
             type="button"
-            className="rounded-[7px] border border-red-400/35 bg-red-400/10 px-2 py-[3px] font-mono text-[9.5px] text-red-300"
+            className="rounded-[7px] border border-red-400/35 bg-red-400/10 px-2 py-[3px] font-mono text-[11.5px] text-red-300"
           >
             Retry
           </button>
           <button
             type="button"
-            className="rounded-[7px] border border-white/10 px-2 py-[3px] font-mono text-[9.5px] text-white/50"
+            className="rounded-[7px] border border-white/10 px-2 py-[3px] font-mono text-[11.5px] text-white/50"
           >
             Copy trace
           </button>
@@ -140,10 +140,10 @@ export function StatesView() {
   return (
     <div className="flex h-full flex-col overflow-auto p-5">
       <div className="mb-4 flex items-center gap-3">
-        <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+        <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
           States
         </h1>
-        <span className="font-mono text-[10px] text-white/30">
+        <span className="font-mono text-[12px] text-white/30">
           EVERY PANEL · ALL FIVE · A LAYOUT THAT SHIFTS BETWEEN LOADING AND READY IS A DEFECT
         </span>
         <span className="flex-1" />
@@ -151,7 +151,7 @@ export function StatesView() {
           <button
             type="button"
             onClick={() => setOnly(null)}
-            className={`rounded-[7px] px-2.5 py-1 font-mono text-[10px] transition ${
+            className={`rounded-[7px] px-2.5 py-1 font-mono text-[12px] transition ${
               only === null ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
             }`}
           >
@@ -162,7 +162,7 @@ export function StatesView() {
               key={s.key}
               type="button"
               onClick={() => setOnly(s.key)}
-              className={`rounded-[7px] px-2.5 py-1 font-mono text-[10px] uppercase transition ${
+              className={`rounded-[7px] px-2.5 py-1 font-mono text-[12px] uppercase transition ${
                 only === s.key ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'
               }`}
             >
@@ -180,10 +180,10 @@ export function StatesView() {
         <span />
         {shown.map((s) => (
           <div key={s.key} className="leading-tight">
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white/55">
+            <p className="font-mono text-[12px] font-bold uppercase tracking-[0.12em] text-white/55">
               {s.label}
             </p>
-            <p className="font-mono text-[9px] text-white/28">{s.rule}</p>
+            <p className="font-mono text-[11px] text-white/28">{s.rule}</p>
           </div>
         ))}
       </div>
@@ -196,8 +196,8 @@ export function StatesView() {
             style={{ gridTemplateColumns: `120px repeat(${shown.length}, minmax(0, 1fr))` }}
           >
             <div className="flex flex-col justify-center leading-tight">
-              <p className="text-[12px] font-semibold text-white/80">{p.title}</p>
-              <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-white/28">{p.sub}</p>
+              <p className="text-[14px] font-semibold text-white/80">{p.title}</p>
+              <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-white/28">{p.sub}</p>
             </div>
 
             {shown.map((s) => (
@@ -220,7 +220,7 @@ export function StatesView() {
                       animation: s.key === 'streaming' ? 'breathe 2.4s ease-in-out infinite' : undefined,
                     }}
                   />
-                  <span className="truncate font-mono text-[9px] tracking-[0.06em] text-white/35">
+                  <span className="truncate font-mono text-[11px] tracking-[0.06em] text-white/35">
                     {p.head}
                   </span>
                 </div>
@@ -231,7 +231,7 @@ export function StatesView() {
 
                 {(s.key === 'ready' || s.key === 'streaming') && (
                   <div className="border-t border-white/[0.05] px-3 py-1">
-                    <span className="font-mono text-[9px] text-white/28">
+                    <span className="font-mono text-[11px] text-white/28">
                       {s.key === 'streaming' ? '› streaming' : p.foot}
                     </span>
                   </div>
@@ -251,7 +251,7 @@ export function StatesView() {
         ].map((r) => (
           <span key={r.t} className="flex items-center gap-2">
             <span className="h-[6px] w-[6px] rounded-full" style={{ background: r.c }} />
-            <span className="text-[11px] text-white/50">{r.t}</span>
+            <span className="text-[13px] text-white/50">{r.t}</span>
           </span>
         ))}
       </div>

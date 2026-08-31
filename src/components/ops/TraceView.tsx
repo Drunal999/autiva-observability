@@ -99,8 +99,8 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
     return (
       <div className="p-5">
         <div className="rounded-[20px] border border-red-400/35 border-l-2 border-l-red-400 bg-red-400/[0.06] p-[22px]">
-          <p className="text-[13px] font-semibold text-red-300">Could not load run {runRef}</p>
-          <p className="mt-1 font-mono text-[11px] text-white/45">/api/runs/{runRef} did not respond</p>
+          <p className="text-[15px] font-semibold text-red-300">Could not load run {runRef}</p>
+          <p className="mt-1 font-mono text-[13px] text-white/45">/api/runs/{runRef} did not respond</p>
         </div>
       </div>
     )
@@ -113,14 +113,14 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
       {/* ── waterfall ── */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
             Trace
           </span>
-          <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[10px] text-white/45">
+          <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/45">
             {run.ref}
           </span>
           <span
-            className="rounded-[5px] px-1.5 py-[2px] font-mono text-[9px] font-bold"
+            className="rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold"
             style={{
               color: run.status === 'FAILED' ? ERR : '#34d399',
               background: run.status === 'FAILED' ? 'rgba(248,113,113,0.12)' : 'rgba(52,211,153,0.12)',
@@ -128,11 +128,11 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
           >
             {run.status}
           </span>
-          <span className="font-mono text-[10px] text-white/30">
+          <span className="font-mono text-[12px] text-white/30">
             {run.agent?.name} · {run.agent?.model} · {fmtDuration(total)} · {fmtTokens(run.tokens)} tok
           </span>
           <span className="flex-1" />
-          <span className="font-mono text-[10px] text-white/25">{spans.length} SPANS</span>
+          <span className="font-mono text-[12px] text-white/25">{spans.length} SPANS</span>
         </div>
 
         {/* time axis */}
@@ -140,7 +140,7 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
           {ticks.map((f) => (
             <span
               key={f}
-              className="absolute top-1 font-mono text-[9px] text-white/25"
+              className="absolute top-1 font-mono text-[11px] text-white/25"
               style={{ left: `${f * 100}%`, transform: f === 1 ? 'translateX(-100%)' : undefined }}
             >
               {fmtDuration(Math.round(total * f))}
@@ -179,7 +179,7 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
                         e.stopPropagation()
                         toggle(s.id)
                       }}
-                      className="w-3 shrink-0 cursor-pointer text-center font-mono text-[9px] text-white/35 hover:text-white/70"
+                      className="w-3 shrink-0 cursor-pointer text-center font-mono text-[11px] text-white/35 hover:text-white/70"
                     >
                       {collapsed.has(s.id) ? '▸' : '▾'}
                     </span>
@@ -187,13 +187,13 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
                     <span className="w-3 shrink-0" />
                   )}
                   <span
-                    className="w-3 shrink-0 text-center font-mono text-[10px]"
+                    className="w-3 shrink-0 text-center font-mono text-[12px]"
                     style={{ color: s.type === 'SUBAGENT' ? '#a78bfa' : T(0.4) }}
                   >
                     {type.glyph}
                   </span>
                   <span
-                    className="truncate text-[12px]"
+                    className="truncate text-[14px]"
                     style={{ color: isErr ? '#fca5a5' : T(0.75) }}
                   >
                     {s.name}
@@ -218,7 +218,7 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
                   />
                 </span>
 
-                <span className="w-[62px] shrink-0 pl-2 text-right font-mono text-[10px] tabular-nums text-white/35">
+                <span className="w-[62px] shrink-0 pl-2 text-right font-mono text-[12px] tabular-nums text-white/35">
                   {fmtDuration(s.durMs)}
                 </span>
               </button>
@@ -229,7 +229,7 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
 
       {/* ── inspector ── */}
       <aside className="flex w-[360px] shrink-0 flex-col gap-4 overflow-y-auto border-l border-white/5 p-5">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+        <p className="font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-white/35">
           Span Inspector
         </p>
 
@@ -238,13 +238,13 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
             <div>
               <div className="flex items-center gap-2">
                 <span
-                  className="rounded-[5px] px-1.5 py-[2px] font-mono text-[9px] font-bold"
+                  className="rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold"
                   style={{ color: T(0.6), background: 'rgba(255,255,255,0.06)' }}
                 >
                   {TYPE[selected.type].label}
                 </span>
                 <span
-                  className="rounded-[5px] px-1.5 py-[2px] font-mono text-[9px] font-bold"
+                  className="rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold"
                   style={{
                     color: selected.status === 'ERROR' ? ERR : selected.status === 'RUNNING' ? '#22d3ee' : '#34d399',
                     background:
@@ -258,15 +258,15 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
                   {selected.status}
                 </span>
                 {selected.critical && (
-                  <span className="font-mono text-[9px] tracking-[0.08em] text-amber-400">
+                  <span className="font-mono text-[11px] tracking-[0.08em] text-amber-400">
                     CRITICAL PATH
                   </span>
                 )}
               </div>
-              <p className="mt-2 text-[14px] font-semibold leading-snug">{selected.name}</p>
+              <p className="mt-2 text-[16px] font-semibold leading-snug">{selected.name}</p>
             </div>
 
-            <div className="grid grid-cols-[88px_1fr] gap-x-3 gap-y-2 text-[12px]">
+            <div className="grid grid-cols-[88px_1fr] gap-x-3 gap-y-2 text-[14px]">
               <span className="text-white/35">Duration</span>
               <span className="font-mono tabular-nums text-white/80">{fmtDuration(selected.durMs)}</span>
               <span className="text-white/35">Started</span>
@@ -286,14 +286,14 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-white/30">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-white/30">
                 Self vs children
               </p>
               <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
                 <span className="bg-cyan-400" style={{ width: `${selfPct}%` }} />
                 <span className="bg-violet-400/60" style={{ width: `${100 - selfPct}%` }} />
               </div>
-              <div className="flex justify-between font-mono text-[9px] text-white/35">
+              <div className="flex justify-between font-mono text-[11px] text-white/35">
                 <span>self {fmtDuration(selfMs)}</span>
                 <span>children {fmtDuration(childMs)}</span>
               </div>
@@ -310,10 +310,10 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
 
             {selected.error && (
               <div className="flex flex-col gap-1.5">
-                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-red-400">
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-red-400">
                   Error
                 </p>
-                <pre className="overflow-x-auto whitespace-pre-wrap rounded-[10px] border border-red-400/25 bg-red-400/[0.06] p-3 font-mono text-[11px] leading-[1.5] text-red-200">
+                <pre className="overflow-x-auto whitespace-pre-wrap rounded-[10px] border border-red-400/25 bg-red-400/[0.06] p-3 font-mono text-[13px] leading-[1.5] text-red-200">
                   {selected.error}
                 </pre>
               </div>

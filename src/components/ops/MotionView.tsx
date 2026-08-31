@@ -50,7 +50,7 @@ function RollingNumber({ value }: { value: number }) {
     }
   }, [value])
 
-  return <span className="font-mono text-[22px] font-bold tabular-nums text-white/90">{shown}</span>
+  return <span className="font-mono text-[26px] font-bold tabular-nums text-white/90">{shown}</span>
 }
 
 function DemoCard({
@@ -67,18 +67,18 @@ function DemoCard({
   return (
     <div className="flex flex-col rounded-[13px] border border-white/[0.06] bg-white/[0.02] p-3">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-[11.5px] font-semibold text-white/80">{title}</span>
+        <span className="text-[13.5px] font-semibold text-white/80">{title}</span>
         <span className="flex-1" />
         <button
           type="button"
           onClick={onReplay}
-          className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[9px] text-white/45 transition hover:border-cyan-400/40 hover:text-cyan-300"
+          className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[11px] text-white/45 transition hover:border-cyan-400/40 hover:text-cyan-300"
         >
           replay
         </button>
       </div>
       <div className="flex min-h-[68px] flex-1 items-center">{children}</div>
-      <p className="mt-2 font-mono text-[9px] text-white/28">{spec}</p>
+      <p className="mt-2 font-mono text-[11px] text-white/28">{spec}</p>
     </div>
   )
 }
@@ -93,10 +93,10 @@ export function MotionView() {
   return (
     <div className="flex h-full flex-col gap-5 overflow-auto p-5">
       <div className="flex items-center gap-3">
-        <h1 className="font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
+        <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
           Motion
         </h1>
-        <span className="font-mono text-[10px] text-white/30">
+        <span className="font-mono text-[12px] text-white/30">
           DURATIONS · EASINGS · SEMANTIC BINDINGS
         </span>
         <span className="flex-1" />
@@ -106,7 +106,7 @@ export function MotionView() {
             ;['enter', 'state', 'expand', 'exit', 'stagger'].forEach(bump)
             setCount((c) => (c === 312 ? 348 : 312))
           }}
-          className="rounded-[10px] border border-cyan-400/45 bg-cyan-400/[0.12] px-3 py-1.5 font-mono text-[11px] font-bold text-cyan-300"
+          className="rounded-[10px] border border-cyan-400/45 bg-cyan-400/[0.12] px-3 py-1.5 font-mono text-[13px] font-bold text-cyan-300"
         >
           Play all
         </button>
@@ -114,7 +114,7 @@ export function MotionView() {
 
       {/* token table */}
       <div className="overflow-hidden rounded-[16px] border border-white/[0.06]">
-        <div className="grid grid-cols-[160px_100px_1fr] gap-3 border-b border-white/[0.06] bg-white/[0.03] px-4 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-white/30">
+        <div className="grid grid-cols-[160px_100px_1fr] gap-3 border-b border-white/[0.06] bg-white/[0.03] px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-white/30">
           <span>Token</span>
           <span>Duration</span>
           <span>Easing</span>
@@ -124,9 +124,9 @@ export function MotionView() {
             key={r.token}
             className="grid grid-cols-[160px_100px_1fr] gap-3 border-b border-white/[0.04] px-4 py-2 last:border-0"
           >
-            <span className="text-[11.5px] text-white/75">{r.token}</span>
-            <span className="font-mono text-[11px] tabular-nums text-cyan-300">{r.duration}</span>
-            <span className="font-mono text-[10.5px] text-white/40">{r.easing}</span>
+            <span className="text-[13.5px] text-white/75">{r.token}</span>
+            <span className="font-mono text-[13px] tabular-nums text-cyan-300">{r.duration}</span>
+            <span className="font-mono text-[12.5px] text-white/40">{r.easing}</span>
           </div>
         ))}
       </div>
@@ -172,7 +172,7 @@ export function MotionView() {
         <DemoCard title="Number roll" spec="320ms · tabular-nums" onReplay={() => setCount((c) => (c === 312 ? 348 : 312))}>
           <div className="flex w-full items-baseline gap-2">
             <RollingNumber value={count} />
-            <span className="font-mono text-[10px] text-white/30">RUNS</span>
+            <span className="font-mono text-[12px] text-white/30">RUNS</span>
           </div>
         </DemoCard>
       </div>
@@ -180,13 +180,13 @@ export function MotionView() {
       {/* stagger */}
       <div className="rounded-[16px] border border-white/[0.06] bg-white/[0.02] p-4">
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-[11.5px] font-semibold text-white/80">Stagger</span>
-          <span className="font-mono text-[9px] text-white/28">12–24ms per item, capped at 8</span>
+          <span className="text-[13.5px] font-semibold text-white/80">Stagger</span>
+          <span className="font-mono text-[11px] text-white/28">12–24ms per item, capped at 8</span>
           <span className="flex-1" />
           <button
             type="button"
             onClick={() => bump('stagger')}
-            className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[9px] text-white/45 hover:text-cyan-300"
+            className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[11px] text-white/45 hover:text-cyan-300"
           >
             replay
           </button>
@@ -241,12 +241,12 @@ export function MotionView() {
                   style={{ animation: 'caret 1.06s step-end infinite' }}
                 />
               )}
-              <span className="text-[11.5px] font-semibold text-white/80">{l.name}</span>
+              <span className="text-[13.5px] font-semibold text-white/80">{l.name}</span>
             </div>
-            <p className="mt-1.5 text-[11px] leading-[1.4] text-white/45">
+            <p className="mt-1.5 text-[13px] leading-[1.4] text-white/45">
               loops because <span className="text-white/70">{l.binding}</span>
             </p>
-            <p className="mt-1 font-mono text-[9px] text-cyan-300/70">{l.spec}</p>
+            <p className="mt-1 font-mono text-[11px] text-cyan-300/70">{l.spec}</p>
           </div>
         ))}
       </div>
@@ -259,7 +259,7 @@ export function MotionView() {
             className="flex gap-2.5 rounded-[11px] border border-white/[0.05] bg-white/[0.02] px-3.5 py-2.5"
             style={{ borderLeft: `2px solid ${r.tone}` }}
           >
-            <p className="text-[11.5px] leading-[1.5] text-white/60">{r.text}</p>
+            <p className="text-[13.5px] leading-[1.5] text-white/60">{r.text}</p>
           </div>
         ))}
       </div>

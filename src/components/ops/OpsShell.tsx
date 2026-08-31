@@ -9,6 +9,7 @@ import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
 import { usePresence, PresenceBar } from './Presence'
 import { Dock } from './Dock'
+import { FactBubble } from './FactBubble'
 import { useEventListener } from '@/lib/realtime/client'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -32,7 +33,7 @@ function Clock() {
     return () => clearInterval(t)
   }, [])
   return (
-    <span className="font-mono text-[11px] tabular-nums text-white/45">
+    <span className="font-mono text-[13px] tabular-nums text-white/45">
       {now ? fmtClock(now) : '--:--:--'}
     </span>
   )
@@ -88,8 +89,8 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-cyan-400/55">
             <span className="h-2 w-2 rounded-sm bg-cyan-400" />
           </span>
-          <span className="text-[15px] font-extrabold tracking-tight">AUTIVA</span>
-          <span className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-white/35 lg:inline">
+          <span className="text-[17px] font-extrabold tracking-tight">AUTIVA</span>
+          <span className="hidden font-mono text-[12px] uppercase tracking-[0.16em] text-white/35 lg:inline">
             Mission Control
           </span>
 
@@ -97,7 +98,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
 
           {IS_SAMPLE_DATA && (
             <span
-              className="shrink-0 rounded-[5px] bg-amber-400/15 px-1.5 py-[3px] font-mono text-[9px] font-bold tracking-[0.08em] text-amber-300 md:hidden"
+              className="shrink-0 rounded-[5px] bg-amber-400/15 px-1.5 py-[3px] font-mono text-[11px] font-bold tracking-[0.08em] text-amber-300 md:hidden"
               title="Figures on this dashboard come from seeded sample data, not production activity."
             >
               SAMPLE
@@ -105,7 +106,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           )}
           {agents && (
             <span
-              className={`shrink-0 rounded-[5px] px-1.5 py-[3px] font-mono text-[9px] tracking-[0.08em] md:hidden ${
+              className={`shrink-0 rounded-[5px] px-1.5 py-[3px] font-mono text-[11px] tracking-[0.08em] md:hidden ${
                 failing ? 'bg-red-400/12 text-red-400' : 'bg-emerald-400/12 text-emerald-400'
               }`}
             >
@@ -122,7 +123,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={n.href}
                 href={n.href}
-                className={`flex h-8 items-center gap-1.5 rounded-[11px] px-3 text-[12.5px] transition ${
+                className={`flex h-8 items-center gap-1.5 rounded-[11px] px-3 text-[14.5px] transition ${
                   active
                     ? 'bg-cyan-400/10 font-bold text-cyan-400'
                     : 'font-medium text-white/60 hover:text-white/85'
@@ -133,7 +134,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
                     attention, so the count rides the nav on every screen. */}
                 {badge > 0 && (
                   <span
-                    className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-amber-400 px-1 font-mono text-[10px] font-bold tabular-nums text-amber-950"
+                    className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-amber-400 px-1 font-mono text-[12px] font-bold tabular-nums text-amber-950"
                     aria-label={`${badge} approvals waiting`}
                   >
                     {badge}
@@ -152,7 +153,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             disappear. */}
         {IS_SAMPLE_DATA && (
           <span
-            className="hidden shrink-0 rounded-[5px] bg-amber-400/15 px-2 py-[5px] font-mono text-[10px] font-bold tracking-[0.08em] text-amber-300 md:inline"
+            className="hidden shrink-0 rounded-[5px] bg-amber-400/15 px-2 py-[5px] font-mono text-[12px] font-bold tracking-[0.08em] text-amber-300 md:inline"
             title="Figures on this dashboard come from seeded sample data, not production activity."
           >
             SAMPLE DATA
@@ -160,7 +161,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         )}
         {agents && (
           <span
-            className={`hidden shrink-0 rounded-[5px] px-2 py-[5px] font-mono text-[10px] tracking-[0.08em] md:inline ${
+            className={`hidden shrink-0 rounded-[5px] px-2 py-[5px] font-mono text-[12px] tracking-[0.08em] md:inline ${
               failing
                 ? 'bg-red-400/12 text-red-400'
                 : 'bg-emerald-400/12 text-emerald-400'
@@ -178,7 +179,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             }}
             title={`${unread} unread mention${unread === 1 ? '' : 's'} — click to clear`}
             aria-label={`${unread} unread mentions, click to clear`}
-            className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-cyan-400/20 px-2 font-mono text-[10px] font-bold text-cyan-300 transition hover:bg-cyan-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+            className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-cyan-400/20 px-2 font-mono text-[12px] font-bold text-cyan-300 transition hover:bg-cyan-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
           >
             <span aria-hidden="true">@</span>
             {unread}
@@ -188,7 +189,15 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         <span className="hidden md:inline"><Clock /></span>
       </header>
 
-      <main className="min-h-0 flex-1">{children}</main>
+      {/*
+        A flex COLUMN, not a plain block. The shell root is `min-h-screen`, so
+        it has no definite height, and a child asking for `h-full` inside it
+        collapses to its own content — which is why the chat composer floated
+        under the messages at the top of the page instead of sitting at the
+        bottom of the viewport. As a column flex parent, `flex-1` here gives the
+        region a real height for its children to fill.
+      */}
+      <main className="flex min-h-0 flex-1 flex-col">{children}</main>
 
       {/*
         Pointer-only, by design. Magnification reacts to a cursor and says
@@ -197,6 +206,8 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         badge — remains the whole story. `pointer-events-none` on the wrapper
         keeps the strip from swallowing clicks meant for the content beneath.
       */}
+      <FactBubble />
+
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 hidden justify-center [@media(hover:hover)_and_(pointer:fine)]:flex">
         <Dock
           className="pointer-events-auto"

@@ -111,7 +111,7 @@ export function PresenceBar({
         <span
           key={r.userId}
           title={`${r.name} — viewing ${r.viewing}`}
-          className="flex h-[22px] w-[22px] items-center justify-center rounded-full border border-white/[0.14] font-mono text-[9px] font-bold"
+          className="flex h-[22px] w-[22px] items-center justify-center rounded-full border border-white/[0.14] font-mono text-[11px] font-bold"
           style={{
             color: tintFor(r.userId),
             background: 'rgba(255,255,255,0.06)',
@@ -123,7 +123,7 @@ export function PresenceBar({
         </span>
       ))}
       {others.length > 5 && (
-        <span className="ml-1.5 font-mono text-[10px] text-white/35">+{others.length - 5}</span>
+        <span className="ml-1.5 font-mono text-[12px] text-white/35">+{others.length - 5}</span>
       )}
     </div>
   )
@@ -148,7 +148,7 @@ export function ViewingHere({
       : `${here.slice(0, -1).map((h) => h.name).join(', ')} and ${here[here.length - 1].name}`
 
   return (
-    <span className="font-mono text-[9.5px] text-cyan-300/60">
+    <span className="font-mono text-[11.5px] text-cyan-300/60">
       {names} {here.length === 1 ? 'is' : 'are'} here too
     </span>
   )
