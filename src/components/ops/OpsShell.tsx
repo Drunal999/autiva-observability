@@ -58,6 +58,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
     '/approvals': 'the approvals queue',
     '/calendar': 'the calendar',
     '/fleet': 'the fleet',
+    '/city': 'the city',
     '/trace': 'a trace',
     '/terminal': 'a terminal',
     '/automations': 'automations',
