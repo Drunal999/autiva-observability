@@ -11,6 +11,7 @@ export const config = {
     '/chat',
     '/approvals',
     '/fleet',
+    '/city',
     '/trace',
     '/terminal',
     '/automations',
