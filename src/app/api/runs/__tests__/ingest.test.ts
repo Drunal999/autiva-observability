@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const h = vi.hoisted(() => ({
   userFindMany: vi.fn(),
+  moduleUpsert: vi.fn(),
   agentUpsert: vi.fn(),
   agentUpdate: vi.fn(),
   runUpsert: vi.fn(),
@@ -14,6 +15,7 @@ const h = vi.hoisted(() => ({
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     user: { findMany: h.userFindMany },
+    module: { upsert: h.moduleUpsert },
     agent: { upsert: h.agentUpsert, update: h.agentUpdate },
     run: { upsert: h.runUpsert },
     span: { deleteMany: h.spanDeleteMany, createMany: h.spanCreateMany },
@@ -21,7 +23,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { ingestSession, spanTypeForTool, MAX_STEPS } from '../ingest'
+import { ingestSession, spanTypeForTool, MAX_STEPS, displayNameForKey } from '../ingest'
 import { ingestToken } from '@/lib/ops/ingestToken'
 
 const TENANT = 'tnt_internal'
@@ -36,6 +38,7 @@ beforeEach(() => {
   saved = process.env.INGEST_SECRET
   process.env.INGEST_SECRET = 'x'.repeat(40)
   h.userFindMany.mockResolvedValue(USERS)
+  h.moduleUpsert.mockResolvedValue({ id: 'mod-1', key: 'marketing.seo_audit' })
   h.agentUpsert.mockResolvedValue({ id: 'agent-1', name: 'drunal999' })
   h.runUpsert.mockResolvedValue({ id: 'run-1', ref: 'cc-s1' })
   // Run the interactive callback for real, with a tx that records what the
@@ -205,5 +208,109 @@ describe('reporting a Claude Code session', () => {
     })
     expect(h.runUpsert.mock.calls[0][0].create.tenantId).toBe(TENANT)
     expect(h.agentUpsert.mock.calls[0][0].create.tenantId).toBe(TENANT)
+  })
+})
+
+/**
+ * An engine's run belongs to what it RAN, not to whoever's token carried it.
+ *
+ * These exist because the failure they guard against is invisible: a run filed
+ * under a person still returns 200, still shows in the fleet, and still leaves
+ * the building dark forever. /api/city drops any run whose agent has no module.
+ */
+describe('reporting an engine run', () => {
+  const SEO = 'marketing.seo_audit'
+
+  it('files the run under the module, not under the token holder', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'agent-seo', name: SEO })
+    const res = await ingestSession(TENANT, tokenFor('user-2'), {
+      sessionId: 'abc-123',
+      module: SEO,
+      endedAt: new Date().toISOString(),
+    })
+    expect(res.status).toBe(200)
+    const call = h.agentUpsert.mock.calls[0][0]
+    // Named for the module, because CityView resolves a live event through a
+    // lowercased agent NAME and the FLEET payload carries nothing else.
+    expect(call.where.tenantId_name.name).toBe(SEO)
+    expect(call.create.name).toBe(SEO)
+    expect(call.create.moduleId).toBe('mod-1')
+    // Aditya's token was used, and Aditya is NOT what lights up.
+    expect(call.create.name).not.toBe('adityamondal-ai-spec')
+    expect(res.body.module).toBe(SEO)
+  })
+
+  it('adopts an agent that predates this route and carries no module', async () => {
+    // Otherwise a second, unplaceable agent appears beside the first and the
+    // building stays dark for reasons nobody can see.
+    h.agentUpsert.mockResolvedValue({ id: 'agent-seo', name: SEO })
+    await ingestSession(TENANT, tokenFor('user-1'), { sessionId: 'abc-1', module: SEO })
+    expect(h.agentUpsert.mock.calls[0][0].update.moduleId).toBe('mod-1')
+  })
+
+  it('creates the module when the catalog has never seen it', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'a', name: 'people.onboarding' })
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'abc-2',
+      module: 'people.onboarding',
+    })
+    const call = h.moduleUpsert.mock.calls[0][0]
+    expect(call.where.tenantId_key).toEqual({ tenantId: TENANT, key: 'people.onboarding' })
+    expect(call.create.displayName).toBe('Onboarding')
+    // An existing module keeps the display name it was given.
+    expect(call.update).toEqual({})
+  })
+
+  it('gives an engine run its own ref prefix', async () => {
+    // `cc-` means a Claude Code session and has to keep meaning that.
+    h.agentUpsert.mockResolvedValue({ id: 'a', name: SEO })
+    await ingestSession(TENANT, tokenFor('user-1'), { sessionId: 'abc-3', module: SEO })
+    expect(h.runUpsert.mock.calls[0][0].where.ref).toBe('run-abc-3')
+  })
+
+  it('leaves a person\u2019s session exactly as it was', async () => {
+    const res = await ingestSession(TENANT, tokenFor('user-2'), {
+      sessionId: 's-person',
+      endedAt: new Date().toISOString(),
+    })
+    expect(res.status).toBe(200)
+    expect(h.moduleUpsert).not.toHaveBeenCalled()
+    expect(h.agentUpsert.mock.calls[0][0].create.name).toBe('adityamondal-ai-spec')
+    expect(h.agentUpsert.mock.calls[0][0].create.moduleId).toBeUndefined()
+    expect(h.runUpsert.mock.calls[0][0].where.ref).toBe('cc-s-person')
+    expect(res.body.module).toBeNull()
+  })
+
+  it('treats a blank module as no module rather than creating an empty one', async () => {
+    const res = await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 's-blank',
+      module: '   ',
+    })
+    expect(res.status).toBe(200)
+    expect(h.moduleUpsert).not.toHaveBeenCalled()
+    expect(res.body.module).toBeNull()
+  })
+
+  it('normalises the key so one module cannot become two', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'a', name: SEO })
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'abc-4',
+      module: '  Marketing.SEO_Audit  ',
+    })
+    expect(h.moduleUpsert.mock.calls[0][0].where.tenantId_key.key).toBe(SEO)
+  })
+})
+
+describe('naming a module nobody has catalogued', () => {
+  it('reads as words, not as a key', () => {
+    expect(displayNameForKey('marketing.seo_audit')).toBe('Seo Audit')
+    expect(displayNameForKey('sales.follow_up_agent')).toBe('Follow Up Agent')
+    expect(displayNameForKey('seo-audit')).toBe('Seo Audit')
+  })
+
+  it('never returns an empty label', () => {
+    // A blank label would render as an invisible building.
+    expect(displayNameForKey('marketing.')).toBe('marketing.')
+    expect(displayNameForKey('___')).toBe('___')
   })
 })
