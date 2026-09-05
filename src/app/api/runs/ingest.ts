@@ -18,6 +18,11 @@ import type { SpanType, SpanStatus } from '@prisma/client'
  *   a session          -> a Run   (ref, summary, tokens, started/ended, status)
  *   each tool call     -> a Span  (type, name, offset, duration, status)
  *   the person         -> an Agent, one per teammate, created on first report
+ *
+ * A report may instead name the MODULE it ran (`module: "marketing.seo_audit"`),
+ * which an automation engine does and a person's session does not. That run is
+ * then attributed to the module rather than to whoever holds the token — see
+ * the comment above the agent upsert for why the city depends on it.
  */
 
 /** Claude Code's tool names, mapped onto the span vocabulary already in use. */
@@ -40,6 +45,29 @@ export function spanTypeForTool(tool: string): SpanType {
   return SPAN_TYPE_BY_TOOL[tool] ?? 'TOOL'
 }
 
+/**
+ * How long a module key may be. `Agent.name` is the join the city resolves
+ * live events through, so the two must not diverge — a longer key would
+ * truncate one and not the other. The real catalog's longest key is 31.
+ */
+const MAX_MODULE_KEY = 40
+
+/**
+ * "marketing.seo_audit" -> "Seo Audit".
+ *
+ * Only reached when a run names a module the catalog has never seen. A seeded
+ * module keeps the display name it was given; this is the fallback that stops
+ * an unknown module from appearing as a raw key.
+ */
+export function displayNameForKey(key: string): string {
+  const tail = key.includes('.') ? key.slice(key.indexOf('.') + 1) : key
+  const words = tail
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+  return words.length > 0 ? words.join(' ') : key
+}
+
 export interface ReportedStep {
   tool: string
   name?: string
@@ -52,6 +80,12 @@ export interface ReportedStep {
 export interface SessionReport {
   /** Stable id for the session, so re-reporting updates instead of duplicating. */
   sessionId: string
+  /**
+   * Catalog key of the module this run belongs to, e.g. "marketing.seo_audit".
+   * Present for an automation engine, absent for a person's session. When
+   * present the run is attributed to the module instead of to the token holder.
+   */
+  module?: string
   summary?: string
   project?: string
   startedAt?: string
@@ -89,15 +123,49 @@ export async function ingestSession(
   if (!userId) return { status: 401, body: { error: 'unrecognised ingest token' } }
   const user = users.find((u) => u.id === userId)!
 
-  // One agent per teammate, created on first report. The fleet is then a list
-  // of PEOPLE working rather than a list of fictional processes — which is the
-  // whole point of pooling three people's sessions into one dashboard.
-  const agentName = (user.handle ?? user.name ?? 'teammate').toLowerCase().slice(0, 40)
-  const agent = await prisma.agent.upsert({
-    where: { tenantId_name: { tenantId, name: agentName } },
-    update: {},
-    create: { tenantId, name: agentName, model: 'claude-code', status: 'IDLE' },
-  })
+  const moduleKey =
+    typeof report.module === 'string' && report.module.trim()
+      ? report.module.trim().toLowerCase().slice(0, MAX_MODULE_KEY)
+      : null
+
+  // WHO THE RUN BELONGS TO — the one decision the city depends on.
+  //
+  // A teammate's Claude Code session belongs to the PERSON. The fleet is then a
+  // list of people working rather than a list of fictional processes, which is
+  // the whole point of pooling three teammates' sessions into one dashboard.
+  //
+  // An automation engine's run does not. /api/city buckets runs by
+  // `run.agent.moduleId` and drops any run whose agent has none, so a run filed
+  // under "aditya" is a run the city cannot place — the work happened and the
+  // building stayed dark. Naming the agent for the module fixes both halves at
+  // once: the bucket resolves, and CityView's live path resolves too, because
+  // it maps a lowercased agent NAME to a module and the FLEET payload carries
+  // nothing else.
+  //
+  // The token still says which human is accountable. It just no longer decides
+  // which building lights up.
+  let agent
+  if (moduleKey) {
+    const mod = await prisma.module.upsert({
+      where: { tenantId_key: { tenantId, key: moduleKey } },
+      update: {},
+      create: { tenantId, key: moduleKey, displayName: displayNameForKey(moduleKey) },
+    })
+    agent = await prisma.agent.upsert({
+      where: { tenantId_name: { tenantId, name: moduleKey } },
+      // An agent with this name may predate this route and carry no module.
+      // Adopt it rather than leaving a second, unplaceable one beside it.
+      update: { moduleId: mod.id },
+      create: { tenantId, name: moduleKey, model: 'engine', status: 'IDLE', moduleId: mod.id },
+    })
+  } else {
+    const agentName = (user.handle ?? user.name ?? 'teammate').toLowerCase().slice(0, 40)
+    agent = await prisma.agent.upsert({
+      where: { tenantId_name: { tenantId, name: agentName } },
+      update: {},
+      create: { tenantId, name: agentName, model: 'claude-code', status: 'IDLE' },
+    })
+  }
 
   const startedAt = report.startedAt ? new Date(report.startedAt) : new Date()
   if (Number.isNaN(startedAt.getTime())) {
@@ -124,7 +192,7 @@ export async function ingestSession(
   // `ref` is unique, so re-reporting the same session UPDATES it. A session
   // that reports at start and again at end therefore becomes one run that goes
   // from RUNNING to SUCCESS — not two runs telling different halves of a story.
-  const ref = `cc-${report.sessionId}`.slice(0, 64)
+  const ref = `${moduleKey ? 'run' : 'cc'}-${report.sessionId}`.slice(0, 64)
 
   const run = await prisma.run.upsert({
     where: { ref },
@@ -240,6 +308,10 @@ export async function ingestSession(
     status: 200,
     body: {
       ref: run.ref, runId: run.id, agent: agent.name,
+      // Echoed so a caller can see it was filed under a module and not under a
+      // person — a silently mis-attributed run is the failure this route exists
+      // to prevent, and it looks identical to success without this.
+      module: moduleKey,
       status, project,
       // What was actually stored, so a caller is never told steps landed when
       // they did not.
