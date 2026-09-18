@@ -1,12 +1,12 @@
 'use client'
 
 import { OpsShell } from '@/components/ops/OpsShell'
-import { CityView } from '@/components/ops/CityView'
+import { ImmersiveCityView } from '@/components/ops/ImmersiveCityView'
 
 export default function CityPage() {
   return (
     <OpsShell>
-      <CityView />
+      <ImmersiveCityView />
     </OpsShell>
   )
 }
