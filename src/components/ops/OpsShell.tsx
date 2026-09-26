@@ -96,8 +96,8 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         {/* Status row. On a phone this is its own line so nothing here can be
             scrolled out of reach; on desktop it dissolves into the single bar. */}
         <div className="flex shrink-0 items-center gap-2.5 px-4 pt-2.5 md:contents md:px-0 md:pt-0">
-          <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-cyan-400/55">
-            <span className="h-2 w-2 rounded-sm bg-cyan-400" />
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg border border-brand-400/55">
+            <span className="h-2 w-2 rounded-sm bg-brand-400" />
           </span>
           <span className="text-[17px] font-extrabold tracking-tight">AUTIVA</span>
           <span className="hidden font-mono text-[12px] uppercase tracking-[0.16em] text-white/35 lg:inline">
@@ -149,7 +149,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
                 aria-current={active ? 'page' : undefined}
                 className={`flex min-h-10 shrink-0 items-center gap-1.5 rounded-[11px] px-3 text-[14.5px] transition ${
                   active
-                    ? 'bg-cyan-400/10 font-bold text-cyan-400'
+                    ? 'bg-brand-400/10 font-bold text-brand-400'
                     : 'font-medium text-white/60 hover:text-white/85'
                 }`}
               >
@@ -216,7 +216,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             }}
             title={`${mentions} unread mention${mentions === 1 ? '' : 's'} — click to clear`}
             aria-label={`${mentions} unread mentions, click to clear`}
-            className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-cyan-400/20 px-2 font-mono text-[12px] font-bold text-cyan-300 transition hover:bg-cyan-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+            className="flex h-[22px] shrink-0 items-center gap-1 rounded-full bg-brand-400/20 px-2 font-mono text-[12px] font-bold text-brand-300 transition hover:bg-brand-400/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
           >
             <span aria-hidden="true">@</span>
             {mentions}

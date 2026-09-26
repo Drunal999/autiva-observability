@@ -53,6 +53,17 @@ module.exports = {
         muted: { DEFAULT: 'var(--muted)', foreground: 'var(--muted-foreground)' },
         accent: { DEFAULT: 'var(--accent)', foreground: 'var(--accent-foreground)' },
         destructive: { DEFAULT: 'var(--destructive)', foreground: 'var(--destructive-foreground)' },
+        // A muted teal-slate, in place of the bright cyan the ops surfaces
+        // used directly (`text-cyan-400` etc.) — same lightness ordering as
+        // Tailwind's cyan scale (200 lightest, 500 darkest) so existing
+        // opacity modifiers (`/10`, `/40`, `/60`) still read the same way,
+        // just desaturated enough to stop reading as a hacker-console accent.
+        brand: {
+          200: '#AECBC6',
+          300: '#82B0A8',
+          400: '#579B8F',
+          500: '#3D8377',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
