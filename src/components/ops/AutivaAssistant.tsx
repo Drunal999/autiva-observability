@@ -77,7 +77,7 @@ export function AutivaAssistant() {
       onPointerCancel={() => {swiped.current=true}}
       onKeyDown={event => {if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();changeFace(event.key==='ArrowRight'?1:-1)}}}
       onClick={() => {if(swiped.current){swiped.current=false;return}toggle()}}
-      className={`flex h-[76px] w-[76px] touch-pan-y items-center justify-center rounded-full border bg-slate-950 shadow-xl focus-visible:ring-2 focus-visible:ring-cyan-200 disabled:opacity-50 ${active ? 'border-cyan-200 shadow-cyan-400/30' : 'border-white/20'}`}>
+      className={`flex h-[76px] w-[76px] touch-pan-y items-center justify-center rounded-full border bg-slate-950 shadow-xl focus-visible:ring-2 focus-visible:ring-brand-200 disabled:opacity-50 ${active ? 'border-brand-200 shadow-brand-400/30' : 'border-white/20'}`}>
       {face==='orb' ? <ThinkingOrb state={['Listening','Hearing you'].includes(status)?'listening':['Thinking','Understanding'].includes(status)?'working':status==='Speaking'?'composing':'breathing'} size={64} theme="dark" /> : <AssistantFace face={face} />}
     </button>
     <iframe ref={frame} title="AUTIVA audio connection" src={`http://${location.hostname}:8090/?compact=1&voiceBridge=1`} allow="microphone; autoplay" aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute h-px w-px opacity-0" />

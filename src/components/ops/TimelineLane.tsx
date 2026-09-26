@@ -513,7 +513,7 @@ export function Lane({
       >
         {selection && (
           <span
-            className="pointer-events-none absolute inset-y-[3px] rounded-[4px] border border-cyan-400/60 bg-cyan-400/15"
+            className="pointer-events-none absolute inset-y-[3px] rounded-[4px] border border-brand-400/60 bg-brand-400/15"
             style={{
               left: pct(selection.from) + '%',
               width: 'max(' + (pct(selection.to) - pct(selection.from)) + '%, 2px)',
@@ -606,7 +606,7 @@ export function Lane({
                   href={item.href}
                   title={title}
                   onMouseDown={(e) => e.stopPropagation()}
-                  className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70"
+                  className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400/70"
                   style={style}
                 >
                   {bar}
@@ -626,7 +626,7 @@ export function Lane({
                   e.stopPropagation()
                   if (can) beginEdit(e, raw, 'move')
                 }}
-                className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/70"
+                className="absolute focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400/70"
                 style={style}
               >
                 {bar}
@@ -646,8 +646,8 @@ export function Lane({
       </div>
 
       {pending && (
-        <div className="absolute inset-x-0 top-full z-40 mt-1 flex items-center gap-2 rounded-[10px] border border-cyan-400/35 bg-[#0b1220] px-2 py-1.5 shadow-lg">
-          <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-cyan-300/70">
+        <div className="absolute inset-x-0 top-full z-40 mt-1 flex items-center gap-2 rounded-[10px] border border-brand-400/35 bg-[#0b1220] px-2 py-1.5 shadow-lg">
+          <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-brand-300/70">
             new {tier === 'hour' ? 'event' : 'all-day event'}
           </span>
           <input
@@ -680,7 +680,7 @@ export function Lane({
       )}
 
       {askScope && (
-        <div className="absolute inset-x-0 top-full z-50 mt-1 flex flex-wrap items-center gap-2 rounded-[10px] border border-cyan-400/35 bg-[#0b1220] px-2 py-1.5 shadow-lg">
+        <div className="absolute inset-x-0 top-full z-50 mt-1 flex flex-wrap items-center gap-2 rounded-[10px] border border-brand-400/35 bg-[#0b1220] px-2 py-1.5 shadow-lg">
           {/* A disambiguation, not a confirmation. Dragging one instance of a
               weekly meeting could mean "just this week" or "it is Wednesdays
               now", and the two produce very different calendars for everyone
@@ -696,7 +696,7 @@ export function Lane({
               setAskScope(null)
               void commitEdit(current, 'occurrence')
             }}
-            className="h-6 rounded-[7px] border border-cyan-400/40 bg-cyan-400/10 px-2 font-mono text-[12px] text-cyan-300 hover:bg-cyan-400/20"
+            className="h-6 rounded-[7px] border border-brand-400/40 bg-brand-400/10 px-2 font-mono text-[12px] text-brand-300 hover:bg-brand-400/20"
           >
             This one
           </button>
@@ -735,7 +735,7 @@ export function Lane({
           <button
             type="button"
             onClick={() => void runUndo()}
-            className="font-mono text-[12px] text-cyan-300 hover:text-cyan-200"
+            className="font-mono text-[12px] text-brand-300 hover:text-brand-200"
           >
             Undo
           </button>

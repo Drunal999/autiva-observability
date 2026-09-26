@@ -90,7 +90,7 @@ export function EmptyState({
         <button
           type="button"
           onClick={action.onClick}
-          className="mt-1 h-8 rounded-[9px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[14px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+          className="mt-1 h-8 rounded-[9px] border border-brand-400/40 bg-brand-400/10 px-3 text-[14px] font-semibold text-brand-300 transition hover:bg-brand-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
         >
           {action.label}
         </button>

@@ -196,7 +196,7 @@ export function MissionControlView() {
                           key={t.id}
                           type="button"
                           onClick={() => setSelected(t.id)}
-                          className="relative overflow-hidden rounded-[12px] border bg-white/[0.035] p-3 text-left transition hover:border-cyan-400/30"
+                          className="relative overflow-hidden rounded-[12px] border bg-white/[0.035] p-3 text-left transition hover:border-brand-400/30"
                           style={{
                             borderColor: ds === 'overdue' ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.06)',
                             opacity: t.status === 'DONE' ? 0.66 : 1,

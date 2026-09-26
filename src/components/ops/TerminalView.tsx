@@ -32,7 +32,7 @@ function ts(iso: string) {
 function ToolBlock({ line }: { line: LogLine }) {
   return (
     <div className="my-1 flex items-center gap-2 rounded-[8px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5">
-      <span className="rounded-[4px] bg-cyan-400/15 px-1.5 py-[1px] font-mono text-[11px] font-bold uppercase text-cyan-400">
+      <span className="rounded-[4px] bg-brand-400/15 px-1.5 py-[1px] font-mono text-[11px] font-bold uppercase text-brand-400">
         {line.text}
       </span>
       <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/60">{line.args}</span>
@@ -214,7 +214,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
                 {'        '}
               </span>
               <span
-                className="inline-block h-[15px] w-[7px] bg-cyan-400"
+                className="inline-block h-[15px] w-[7px] bg-brand-400"
                 style={{ animation: 'caret 1.06s step-end infinite' }}
               />
             </div>
@@ -228,7 +228,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
               setPinned(true)
               if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight
             }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-cyan-400/40 bg-cyan-400/15 px-3 py-1.5 font-mono text-[12px] text-cyan-300 backdrop-blur"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-brand-400/40 bg-brand-400/15 px-3 py-1.5 font-mono text-[12px] text-brand-300 backdrop-blur"
           >
             Jump to live ↓
           </button>

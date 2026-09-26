@@ -82,13 +82,13 @@ export function QuickAdd({ onCreated }: { onCreated?: () => void }) {
           }}
           placeholder='Add an event — try "standup every weekday 9:30"'
           aria-label="Add an event"
-          className="h-8 min-w-[240px] flex-1 rounded-[8px] border border-white/10 bg-white/5 px-2.5 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+          className="h-8 min-w-[240px] flex-1 rounded-[8px] border border-white/10 bg-white/5 px-2.5 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-brand-400/45"
         />
         <button
           type="button"
           disabled={!canSave}
           onClick={() => void save()}
-          className="h-8 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[14px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+          className="h-8 rounded-[8px] border border-brand-400/40 bg-brand-400/10 px-3 text-[14px] font-semibold text-brand-300 transition hover:bg-brand-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:opacity-35"
         >
           {busy ? 'Saving…' : 'Add'}
         </button>

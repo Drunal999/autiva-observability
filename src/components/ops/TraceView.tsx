@@ -290,7 +290,7 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
                 Self vs children
               </p>
               <div className="flex h-2 overflow-hidden rounded-full bg-white/[0.06]">
-                <span className="bg-cyan-400" style={{ width: `${selfPct}%` }} />
+                <span className="bg-brand-400" style={{ width: `${selfPct}%` }} />
                 <span className="bg-violet-400/60" style={{ width: `${100 - selfPct}%` }} />
               </div>
               <div className="flex justify-between font-mono text-[11px] text-white/35">

@@ -95,7 +95,7 @@ export function FactBubble() {
           style={{ animation: 'riseIn 180ms cubic-bezier(0.16,1,0.3,1) both' }}
         >
           <div className="mb-1.5 flex items-center gap-2">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-300/70">
+            <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-brand-300/70">
               Did you know
             </span>
             {fact.year && (
@@ -108,7 +108,7 @@ export function FactBubble() {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close"
-              className="font-mono text-[12px] text-white/35 transition hover:text-white/75 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
+              className="font-mono text-[12px] text-white/35 transition hover:text-white/75 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400/60"
             >
               esc
             </button>
@@ -123,7 +123,7 @@ export function FactBubble() {
           <button
             type="button"
             onClick={next}
-            className="mt-2.5 h-7 rounded-[8px] border border-cyan-400/35 bg-cyan-400/10 px-2.5 font-mono text-[12px] text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+            className="mt-2.5 h-7 rounded-[8px] border border-brand-400/35 bg-brand-400/10 px-2.5 font-mono text-[12px] text-brand-300 transition hover:bg-brand-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
           >
             another one
           </button>
@@ -137,7 +137,7 @@ export function FactBubble() {
         aria-expanded={open}
         aria-label="Show a fact about computers and AI"
         title="A fact about computers and AI"
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-[#0b1220]/85 text-[18px] shadow-2xl backdrop-blur-md transition hover:border-cyan-400/45 hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/12 bg-[#0b1220]/85 text-[18px] shadow-2xl backdrop-blur-md transition hover:border-brand-400/45 hover:text-brand-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
       >
         <span aria-hidden="true">?</span>
       </button>

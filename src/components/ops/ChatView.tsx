@@ -60,7 +60,7 @@ function MessageBody({ body }: { body: string }) {
         switch (t.kind) {
           case 'code':
             return (
-              <code key={i} className="rounded-[4px] bg-white/[0.09] px-1 py-[1px] font-mono text-[13px] text-cyan-200">
+              <code key={i} className="rounded-[4px] bg-white/[0.09] px-1 py-[1px] font-mono text-[13px] text-brand-200">
                 {t.value}
               </code>
             )
@@ -70,7 +70,7 @@ function MessageBody({ body }: { body: string }) {
             return <em key={i} className="italic">{t.value}</em>
           case 'mention':
             return (
-              <span key={i} className="rounded-[4px] bg-cyan-400/15 px-1 font-medium text-cyan-300">
+              <span key={i} className="rounded-[4px] bg-brand-400/15 px-1 font-medium text-brand-300">
                 @{t.value}
               </span>
             )
@@ -81,7 +81,7 @@ function MessageBody({ body }: { body: string }) {
                 href={t.href}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="text-cyan-300 underline decoration-cyan-300/40 underline-offset-2"
+                className="text-brand-300 underline decoration-brand-300/40 underline-offset-2"
               >
                 {t.value}
               </a>
@@ -240,7 +240,7 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
               ? 'Set OPENROUTER_API_KEY to switch the room agent on.'
               : `Summarise today with ${agent?.model ?? 'the room agent'}`
           }
-          className="h-7 shrink-0 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/60 transition hover:border-cyan-400/40 hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/12 disabled:hover:text-white/60"
+          className="h-7 shrink-0 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/60 transition hover:border-brand-400/40 hover:text-brand-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/12 disabled:hover:text-white/60"
         >
           {summarising
             ? 'summarising…'
@@ -362,13 +362,13 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
             }}
             placeholder="Message the team…  @handle to notify someone"
             aria-label="Message"
-            className="max-h-[160px] min-h-[38px] flex-1 resize-y rounded-[10px] border border-white/10 bg-white/5 px-3 py-2 text-[14px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+            className="max-h-[160px] min-h-[38px] flex-1 resize-y rounded-[10px] border border-white/10 bg-white/5 px-3 py-2 text-[14px] text-white/85 outline-none placeholder:text-white/25 focus:border-brand-400/45"
           />
           <button
             type="button"
             disabled={!draft.trim() || busy}
             onClick={() => void send()}
-            className="h-[38px] rounded-[10px] border border-cyan-400/40 bg-cyan-400/10 px-3.5 text-[13px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+            className="h-[38px] rounded-[10px] border border-brand-400/40 bg-brand-400/10 px-3.5 text-[13px] font-semibold text-brand-300 transition hover:bg-brand-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:opacity-35"
           >
             {busy ? 'Sending…' : 'Send'}
           </button>

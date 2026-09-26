@@ -184,7 +184,7 @@ export function CalendarView() {
               type="button"
               onClick={() => chooseView(v)}
               aria-pressed={view === v}
-              className="h-6 rounded-[7px] px-2 font-mono text-[12px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="h-6 rounded-[7px] px-2 font-mono text-[12px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50"
               style={{
                 background: view === v ? 'rgba(34,211,238,0.14)' : 'transparent',
                 color: view === v ? '#67e8f9' : 'rgba(255,255,255,0.4)',
@@ -230,7 +230,7 @@ export function CalendarView() {
               type="button"
               title={l.hint}
               onClick={() => setEnabled((e) => ({ ...e, [l.key]: !e[l.key] }))}
-              className="flex h-7 items-center gap-1.5 rounded-[8px] border px-2.5 font-mono text-[12px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="flex h-7 items-center gap-1.5 rounded-[8px] border px-2.5 font-mono text-[12px] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/50"
               style={{
                 borderColor: on ? `${l.tone}66` : 'rgba(255,255,255,0.08)',
                 background: on ? `${l.tone}14` : 'transparent',
@@ -321,7 +321,7 @@ export function CalendarView() {
                     {d.toLocaleDateString(undefined, { weekday: 'short' })}
                   </span>
                   {isToday && (
-                    <span className="ml-auto font-mono text-[10.5px] tracking-[0.1em] text-cyan-300/70">
+                    <span className="ml-auto font-mono text-[10.5px] tracking-[0.1em] text-brand-300/70">
                       TODAY
                     </span>
                   )}
@@ -365,7 +365,7 @@ export function CalendarView() {
                     <a
                       key={item.id}
                       href={item.href}
-                      className="flex gap-1.5 rounded-[7px] px-1 py-0.5 transition hover:bg-white/[0.05] focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
+                      className="flex gap-1.5 rounded-[7px] px-1 py-0.5 transition hover:bg-white/[0.05] focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400/60"
                     >
                       {inner}
                     </a>
@@ -391,8 +391,8 @@ export function CalendarView() {
       {/* Inline naming for a dragged range. Appears where the eye already is,
           rather than throwing a dialog over the grid you just selected on. */}
       {pending && (
-        <div className="sticky bottom-3 z-20 flex flex-wrap items-center gap-2 rounded-[12px] border border-cyan-400/40 bg-[#0a1020]/95 p-2.5 backdrop-blur">
-          <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-cyan-300">
+        <div className="sticky bottom-3 z-20 flex flex-wrap items-center gap-2 rounded-[12px] border border-brand-400/40 bg-[#0a1020]/95 p-2.5 backdrop-blur">
+          <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-brand-300">
             {pending.from === pending.to
               ? new Date(pending.from).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
               : `${new Date(pending.from).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} – ${new Date(pending.to).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`}
@@ -408,13 +408,13 @@ export function CalendarView() {
             }}
             placeholder="Name it, then press Enter"
             aria-label="New event title"
-            className="h-8 min-w-[220px] flex-1 rounded-[8px] border border-white/10 bg-white/5 px-2.5 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+            className="h-8 min-w-[220px] flex-1 rounded-[8px] border border-white/10 bg-white/5 px-2.5 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-brand-400/45"
           />
           <button
             type="button"
             disabled={!draftTitle.trim()}
             onClick={() => void createFromSelection()}
-            className="h-8 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-3 text-[14px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 disabled:opacity-35"
+            className="h-8 rounded-[8px] border border-brand-400/40 bg-brand-400/10 px-3 text-[14px] font-semibold text-brand-300 transition hover:bg-brand-400/20 disabled:opacity-35"
           >
             Add
           </button>

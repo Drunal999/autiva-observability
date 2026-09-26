@@ -40,7 +40,7 @@ function CommentBody({ body }: { body: string }) {
         switch (t.kind) {
           case 'code':
             return (
-              <code key={i} className="rounded-[4px] bg-white/[0.08] px-1 py-[1px] font-mono text-[13.5px] text-cyan-200">
+              <code key={i} className="rounded-[4px] bg-white/[0.08] px-1 py-[1px] font-mono text-[13.5px] text-brand-200">
                 {t.value}
               </code>
             )
@@ -50,7 +50,7 @@ function CommentBody({ body }: { body: string }) {
             return <em key={i} className="italic">{t.value}</em>
           case 'mention':
             return (
-              <span key={i} className="rounded-[4px] bg-cyan-400/15 px-1 font-medium text-cyan-300">
+              <span key={i} className="rounded-[4px] bg-brand-400/15 px-1 font-medium text-brand-300">
                 @{t.value}
               </span>
             )
@@ -61,7 +61,7 @@ function CommentBody({ body }: { body: string }) {
                 href={t.href}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                className="text-cyan-300 underline decoration-cyan-300/40 underline-offset-2"
+                className="text-brand-300 underline decoration-brand-300/40 underline-offset-2"
               >
                 {t.value}
               </a>
@@ -254,7 +254,7 @@ export function Thread({
           }}
           placeholder="Add a note… @mention to notify someone"
           aria-label="Add a comment"
-          className="w-full resize-y rounded-[9px] border border-white/10 bg-white/5 px-2.5 py-2 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-cyan-400/45"
+          className="w-full resize-y rounded-[9px] border border-white/10 bg-white/5 px-2.5 py-2 text-[14.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-brand-400/45"
         />
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11.5px] text-white/22">⌘↵ to send</span>
@@ -264,7 +264,7 @@ export function Thread({
             type="button"
             disabled={!draft.trim() || busy}
             onClick={() => void send()}
-            className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 text-[13.5px] font-semibold text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+            className="h-7 rounded-[8px] border border-brand-400/40 bg-brand-400/10 px-2.5 text-[13.5px] font-semibold text-brand-300 transition hover:bg-brand-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:opacity-35"
           >
             {busy ? 'Posting…' : 'Comment'}
           </button>
@@ -382,7 +382,7 @@ export function ThreadToggle({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 font-mono text-[12px] text-white/35 transition hover:text-white/65 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
+        className="flex items-center gap-1.5 font-mono text-[12px] text-white/35 transition hover:text-white/65 focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400/60"
         aria-expanded={open}
       >
         <span aria-hidden="true">{open ? '▾' : '▸'}</span>
@@ -394,15 +394,15 @@ export function ThreadToggle({
             to a screen reader or to anyone who cannot separate these two. */}
         {showUnread && mentions > 0 && (
           <span
-            className="rounded-[4px] border border-cyan-400/45 bg-cyan-400/15 px-1 font-mono text-[11px] font-bold text-cyan-200"
+            className="rounded-[4px] border border-brand-400/45 bg-brand-400/15 px-1 font-mono text-[11px] font-bold text-brand-200"
             title={`${unread} new, ${mentions} mentioning you`}
           >
             @{unread}
           </span>
         )}
         {showUnread && mentions === 0 && (
-          <span className="flex items-center gap-1 text-cyan-300/85" title={`${unread} new`}>
-            <span aria-hidden="true" className="h-[5px] w-[5px] rounded-full bg-cyan-300/85" />
+          <span className="flex items-center gap-1 text-brand-300/85" title={`${unread} new`}>
+            <span aria-hidden="true" className="h-[5px] w-[5px] rounded-full bg-brand-300/85" />
             <span className="font-mono text-[11px]">{unread} new</span>
           </span>
         )}

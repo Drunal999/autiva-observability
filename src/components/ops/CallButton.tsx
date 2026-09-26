@@ -60,7 +60,7 @@ export function CallButton({
         type="button"
         onClick={() => void start()}
         disabled={busy}
-        className="flex h-7 items-center gap-1.5 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/55 transition hover:border-cyan-400/40 hover:text-cyan-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-40"
+        className="flex h-7 items-center gap-1.5 rounded-[8px] border border-white/12 px-2.5 font-mono text-[12px] text-white/55 transition hover:border-brand-400/40 hover:text-brand-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:opacity-40"
       >
         <span aria-hidden="true">☎</span>
         {busy ? 'Starting…' : label}

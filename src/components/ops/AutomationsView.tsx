@@ -70,7 +70,7 @@ function NodeCard({
       }}
     >
       {node.kind === 'TRIGGER' && (
-        <span className="absolute inset-y-2 left-0 w-[2px] rounded-r-sm bg-cyan-400" />
+        <span className="absolute inset-y-2 left-0 w-[2px] rounded-r-sm bg-brand-400" />
       )}
       <div className="flex items-center gap-1.5">
         <span
@@ -87,7 +87,7 @@ function NodeCard({
         <span className="flex-1" />
         {active && (
           <span
-            className="h-[5px] w-[5px] rounded-full bg-cyan-400"
+            className="h-[5px] w-[5px] rounded-full bg-brand-400"
             style={{ animation: 'breathe 2.4s ease-in-out infinite' }}
           />
         )}

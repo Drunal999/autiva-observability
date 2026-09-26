@@ -78,7 +78,7 @@ export function AddAgent({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="h-7 rounded-[8px] border border-cyan-400/40 bg-cyan-400/10 px-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.08em] text-cyan-300 transition hover:bg-cyan-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60"
+        className="h-7 rounded-[8px] border border-brand-400/40 bg-brand-400/10 px-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.08em] text-brand-300 transition hover:bg-brand-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
       >
         + Agent
       </button>
@@ -87,7 +87,7 @@ export function AddAgent({
 
   return (
     <div
-      className="flex flex-wrap items-start gap-2 rounded-[12px] border border-cyan-400/30 bg-white/[0.03] p-2.5"
+      className="flex flex-wrap items-start gap-2 rounded-[12px] border border-brand-400/30 bg-white/[0.03] p-2.5"
       onKeyDown={(e) => {
         if (e.key === 'Escape') close()
       }}
@@ -151,7 +151,7 @@ export function AddAgent({
         type="button"
         disabled={!trimmed || nameProblem || busy}
         onClick={() => void submit()}
-        className="h-7 rounded-[8px] border border-cyan-400/45 bg-cyan-400/12 px-2.5 font-mono text-[12px] font-bold text-cyan-300 transition hover:bg-cyan-400/22 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 disabled:opacity-35"
+        className="h-7 rounded-[8px] border border-brand-400/45 bg-brand-400/12 px-2.5 font-mono text-[12px] font-bold text-brand-300 transition hover:bg-brand-400/22 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:opacity-35"
       >
         {busy ? 'Adding…' : 'Add'}
       </button>

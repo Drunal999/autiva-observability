@@ -76,7 +76,7 @@ export function DensityStrip({
               type="button"
               onClick={() => onScrub?.(b.at)}
               title={`${hour} — ${b.runs} runs, ${b.failed} failed`}
-              className="group relative flex-1 rounded-t-[2px] focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan-400/60"
+              className="group relative flex-1 rounded-t-[2px] focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-400/60"
               style={{ height: `${Math.max(h, 3)}%`, background: T(0.1) }}
             >
               {failH > 0 && (

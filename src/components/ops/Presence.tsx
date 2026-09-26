@@ -148,7 +148,7 @@ export function ViewingHere({
       : `${here.slice(0, -1).map((h) => h.name).join(', ')} and ${here[here.length - 1].name}`
 
   return (
-    <span className="font-mono text-[11.5px] text-cyan-300/60">
+    <span className="font-mono text-[11.5px] text-brand-300/60">
       {names} {here.length === 1 ? 'is' : 'are'} here too
     </span>
   )

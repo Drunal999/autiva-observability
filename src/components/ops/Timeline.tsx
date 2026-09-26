@@ -345,7 +345,7 @@ export function Timeline({
           else if (e.key === 'ArrowRight') { e.preventDefault(); panBy(0.25) }
           else if (e.key === '0') { e.preventDefault(); reset() }
         }}
-        className="relative select-none overflow-hidden rounded-[14px] border border-white/[0.07] bg-white/[0.015] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+        className="relative select-none overflow-hidden rounded-[14px] border border-white/[0.07] bg-white/[0.015] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/40"
         style={{ cursor: panning ? 'grabbing' : undefined }}
       >
         <Axis ticks={ticks} pct={pct} />
@@ -398,7 +398,7 @@ export function Timeline({
             style={{ left: pct(now) + '%', background: 'rgba(34,211,238,0.85)' }}
             data-testid="now-line"
           >
-            <span className="absolute -left-[3px] top-[19px] h-[7px] w-[7px] rounded-full bg-cyan-400" />
+            <span className="absolute -left-[3px] top-[19px] h-[7px] w-[7px] rounded-full bg-brand-400" />
           </div>
         )}
 

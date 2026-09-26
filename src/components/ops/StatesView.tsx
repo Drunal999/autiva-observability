@@ -84,7 +84,7 @@ function PanelBody({ panel, state }: { panel: Panel; state: StateKey }) {
         <p className="text-[13.5px] text-white/40">{panel.emptyCause}</p>
         <button
           type="button"
-          className="rounded-[8px] border border-white/10 px-2.5 py-1 font-mono text-[12px] text-white/60 transition hover:border-cyan-400/40 hover:text-cyan-300"
+          className="rounded-[8px] border border-white/10 px-2.5 py-1 font-mono text-[12px] text-white/60 transition hover:border-brand-400/40 hover:text-brand-300"
         >
           {panel.emptyAction}
         </button>
@@ -125,7 +125,7 @@ function PanelBody({ panel, state }: { panel: Panel; state: StateKey }) {
       ))}
       {state === 'streaming' && (
         <span
-          className="mt-0.5 inline-block h-[12px] w-[6px] bg-cyan-400"
+          className="mt-0.5 inline-block h-[12px] w-[6px] bg-brand-400"
           style={{ animation: 'caret 1.06s step-end infinite' }}
         />
       )}

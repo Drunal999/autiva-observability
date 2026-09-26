@@ -72,7 +72,7 @@ function DemoCard({
         <button
           type="button"
           onClick={onReplay}
-          className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[11px] text-white/45 transition hover:border-cyan-400/40 hover:text-cyan-300"
+          className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[11px] text-white/45 transition hover:border-brand-400/40 hover:text-brand-300"
         >
           replay
         </button>
@@ -106,7 +106,7 @@ export function MotionView() {
             ;['enter', 'state', 'expand', 'exit', 'stagger'].forEach(bump)
             setCount((c) => (c === 312 ? 348 : 312))
           }}
-          className="rounded-[10px] border border-cyan-400/45 bg-cyan-400/[0.12] px-3 py-1.5 font-mono text-[13px] font-bold text-cyan-300"
+          className="rounded-[10px] border border-brand-400/45 bg-brand-400/[0.12] px-3 py-1.5 font-mono text-[13px] font-bold text-brand-300"
         >
           Play all
         </button>
@@ -125,7 +125,7 @@ export function MotionView() {
             className="grid grid-cols-[160px_100px_1fr] gap-3 border-b border-white/[0.04] px-4 py-2 last:border-0"
           >
             <span className="text-[13.5px] text-white/75">{r.token}</span>
-            <span className="font-mono text-[13px] tabular-nums text-cyan-300">{r.duration}</span>
+            <span className="font-mono text-[13px] tabular-nums text-brand-300">{r.duration}</span>
             <span className="font-mono text-[12.5px] text-white/40">{r.easing}</span>
           </div>
         ))}
@@ -186,7 +186,7 @@ export function MotionView() {
           <button
             type="button"
             onClick={() => bump('stagger')}
-            className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[11px] text-white/45 hover:text-cyan-300"
+            className="rounded-[6px] border border-white/10 px-1.5 py-[2px] font-mono text-[11px] text-white/45 hover:text-brand-300"
           >
             replay
           </button>
@@ -211,7 +211,7 @@ export function MotionView() {
             <div className="flex items-center gap-2">
               {i === 0 && (
                 <span
-                  className="h-[7px] w-[7px] rounded-full bg-cyan-400"
+                  className="h-[7px] w-[7px] rounded-full bg-brand-400"
                   style={{ animation: 'breathe 2.4s ease-in-out infinite' }}
                 />
               )}
@@ -237,7 +237,7 @@ export function MotionView() {
               )}
               {i === 3 && (
                 <span
-                  className="inline-block h-[12px] w-[6px] bg-cyan-400"
+                  className="inline-block h-[12px] w-[6px] bg-brand-400"
                   style={{ animation: 'caret 1.06s step-end infinite' }}
                 />
               )}
@@ -246,7 +246,7 @@ export function MotionView() {
             <p className="mt-1.5 text-[13px] leading-[1.4] text-white/45">
               loops because <span className="text-white/70">{l.binding}</span>
             </p>
-            <p className="mt-1 font-mono text-[11px] text-cyan-300/70">{l.spec}</p>
+            <p className="mt-1 font-mono text-[11px] text-brand-300/70">{l.spec}</p>
           </div>
         ))}
       </div>

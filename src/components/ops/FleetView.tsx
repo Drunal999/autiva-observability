@@ -303,7 +303,7 @@ export function FleetView({
             <button
               type="button"
               onClick={() => location.reload()}
-              className="h-9 rounded-[11px] border border-cyan-400/55 bg-cyan-400/[0.12] px-3.5 text-[14.5px] font-bold text-cyan-400"
+              className="h-9 rounded-[11px] border border-brand-400/55 bg-brand-400/[0.12] px-3.5 text-[14.5px] font-bold text-brand-400"
             >
               Retry
             </button>
