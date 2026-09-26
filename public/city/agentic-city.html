@@ -1,4 +1,14 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style><style>
+html[data-dashboard="true"] .brand,
+html[data-dashboard="true"] .metrics,
+html[data-dashboard="true"] .rail,
+html[data-dashboard="true"] .fps,
+html[data-dashboard="true"] .log {display:none!important}
+html[data-dashboard="true"] .dlab .m,
+html[data-dashboard="true"] .dlab .b {display:none!important}
+</style>
+<script>if(new URLSearchParams(location.search).get('dashboard')==='1')document.documentElement.dataset.dashboard='true';</script>
+</head><body>
 <title>Agentic City Simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -737,6 +747,13 @@ var CRUISE = 74;
    a city at work. */
 var DAY = 300, DAY_START = 0.375;
 
+/* Local wall-clock lighting: independent of animation speed. */
+function cityTime(date) {
+  var hour = date.getHours() + date.getMinutes()/60 + date.getSeconds()/3600;
+  var daylight = Math.max(0, Math.sin((hour-6)*Math.PI/12));
+  daylight = daylight*daylight*(3-2*daylight);
+  return { hour: hour, fraction: hour/24, night: 1-daylight };
+}
 function Simulation(sites, cfg) {
   var rnd = mulberry32(cfg.seed);
   var N = cfg.agents;
@@ -1115,8 +1132,9 @@ function Simulation(sites, cfg) {
 
   function integrate(dt) {
     s.time += dt; s.tick++;
-    s.dayFrac = ((s.time / DAY) + DAY_START) % 1;
-    s.night = 0.5 + 0.5 * Math.cos(s.dayFrac * 6.2831853);
+    var localTime = cityTime(new Date());
+    s.dayFrac = localTime.fraction;
+    s.night = localTime.night;
     weatherStep(dt);
     s.counts.fill(0);
     s.occupancy.fill(0);
@@ -1325,7 +1343,14 @@ SH.buildingFrag = [
   'varying vec3 vTint; varying vec3 vScale; varying float vDepth; varying float vOpen;',
   'float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }',
   'void main(){',
-  '  vec3 col = vec3(0.014,0.024,0.045);',
+  '  float material = hash(vec2(vSeed, 41.7));',
+  '  vec3 stone = vec3(0.43,0.39,0.32);',
+  '  vec3 brick = vec3(0.42,0.23,0.17);',
+  '  vec3 teal = vec3(0.19,0.34,0.33);',
+  '  vec3 slate = vec3(0.27,0.32,0.39);',
+  '  vec3 facade = material < 0.25 ? stone : material < 0.50 ? brick : material < 0.75 ? teal : slate;',
+  '  float shade = 0.72 + 0.28 * max(0.0, dot(normalize(vN), normalize(vec3(0.6,0.8,0.4))));',
+  '  vec3 col = facade * shade * mix(1.0, 0.28, uNight);',
   '  float up = abs(vN.y);',
   '  if (vOpen > 0.004) {',
   '    if (up > 0.5) { if (vOpen > 0.12) discard; }',
@@ -1348,18 +1373,18 @@ SH.buildingFrag = [
      instead of the sky. Two thirds of them are dark at midday and most are lit
      after dark — the same trick a real skyline uses to tell you the time. */
   '    float lit = step(mix(0.80, 0.34, uNight), onA);',
-  '    float pulse = 0.5 + 0.5 * sin(uTime * (0.7 + vBusy * 5.5) + ph * 44.0);',
+  '    float pulse = 0.65;',
   '    lit = max(lit, step(0.72 - vBusy * 0.42, ph) * step(0.55, pulse));',
   '    float pane = step(0.16, f.x) * step(f.x, 0.84) * step(0.18, f.y) * step(f.y, 0.70);',
   '    float win = mix(0.30 * lit, lit * pane, sharp);',
-  '    col += vTint * win * (0.42 + 1.05 * vBusy) * (0.55 + 0.65 * pulse) * (0.5 + 0.5 * uNight);',
+  '    col += vec3(0.72,0.53,0.29) * win * (0.12 + 0.42 * uNight);',
   '    float base = smoothstep(0.06, 0.0, vUv.y);',
-  '    col += vTint * base * (0.10 + 0.5 * vBusy);',
+  '    col += vTint * base * 0.025;',
   '  } else {',
   '    col *= 0.72;',
   '    vec2 c = vUv - 0.5;',
   '    float bl = 0.5 + 0.5 * sin(uTime * 2.1 + vSeed * 30.0);',
-  '    col += vTint * smoothstep(0.10, 0.0, length(c)) * (0.35 + 0.85 * bl);',
+  '    col += vTint * smoothstep(0.10, 0.0, length(c)) * 0.025;',
   '  }',
   '  col += vTint * vOpen * 0.22;',
   '  float fog = 1.0 - exp(-pow(vDepth * uFogK, 2.0));',
@@ -1539,11 +1564,11 @@ SH.groundFrag = [
      the rain brightens what is there instead of adding a second surface. */
   /* Street lighting, in the only surface that has any: the grid dims by day
      and comes up after dark. */
-  '  col += vec3(0.10,0.42,0.62) * (g1 + g2) * near * (1.0 + uWet * 1.9) * (0.62 + 0.55 * uNight);',
+  '  col += vec3(0.10,0.42,0.62) * 0.12 * (g1 + g2) * near * (1.0 + uWet * 1.9) * (0.62 + 0.55 * uNight);',
   '  col += vec3(0.04,0.20,0.34) * uWet * near * 0.22 * (0.5 + 0.5 * sin(vW.x * 0.55 + uTime * 1.4));',
-  '  col = mix(col, vec3(0.019,0.025,0.039), road * 0.92);',
+  '  col = mix(col, mix(vec3(0.19,0.21,0.21),vec3(0.035,0.045,0.055),uNight), road * 0.92);',
   /* kerbs: brightest exactly at the road edge, and they come up after dark */
-  '  col += vec3(0.06,0.34,0.52) * (road * (1.0 - road) * 4.0) * (0.5 + 0.55 * uNight);',
+  '  col += vec3(0.06,0.34,0.52) * (road * (1.0 - road) * 0.5) * (0.5 + 0.55 * uNight);',
   /* centre lines, dashed, and never through a junction */
   '  float dashX = roadX * (1.0 - junction) * (1.0 - smoothstep(0.26, 0.5, lx)) * step(0.55, fract(vW.z / 8.0));',
   '  float dashZ = roadZ * (1.0 - junction) * (1.0 - smoothstep(0.26, 0.5, lz)) * step(0.55, fract(vW.x / 8.0));',
@@ -1552,7 +1577,7 @@ SH.groundFrag = [
   '  col += vec3(0.05,0.26,0.42) * road * uWet * 0.4 * (0.5 + 0.5 * sin(vW.z * 0.85 + uTime * 2.1));',
   '  col += vec3(0.05,0.30,0.50) * smoothstep(400.0, 0.0, rr) * 0.10;',
   '  float ring = abs(sin(rr * 0.02 - uTime * 0.35));',
-  '  col += vec3(0.06,0.34,0.52) * pow(ring, 42.0) * 0.45 * smoothstep(430.0, 60.0, rr);',
+  '  col += vec3(0.06,0.34,0.52) * pow(ring, 42.0) * 0.0 * smoothstep(430.0, 60.0, rr);',
   '  float fog = 1.0 - exp(-pow(vDepth * uFogK, 2.0));',
   '  col = mix(col, uFog, clamp(fog, 0.0, 1.0));',
   '  gl_FragColor = vec4(col, 1.0);',
@@ -2795,7 +2820,7 @@ function CameraRig(camera, dom) {
    ===================================================================== */
 var stage = document.getElementById('stage');
 var renderer = new T.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', stencil: false });
-var DPR_CAP = MOBILE ? 1.25 : 1.75;
+var DPR_CAP = MOBILE ? 1 : 1.25;
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, DPR_CAP));
 renderer.setSize(innerWidth, innerHeight);
 renderer.autoClear = false;
@@ -2877,6 +2902,10 @@ scene.add(traffic.drones); scene.add(traffic.vehicles);
 var SIM = Simulation(cityData.sites, CFG);
 var fleet = makeAgents(CFG.agents, CFG.trailLen);
 scene.add(fleet.mesh); scene.add(fleet.trails); scene.add(fleet.heads);
+// Calm business district: retain roads and bodies, remove decorative VFX.
+flows.visible = false; motes.visible = false; flyers.mesh.visible = false;
+traffic.drones.visible = false; fleet.trails.visible = false; markers.rings.visible = false;
+landmarks.forEach(function(group) { group.visible = false; });
 var rides = makeRides(CFG.agents);
 scene.add(rides);
 var gates = makeEntrances(cityData.boxes, fleet.mesh.material);
@@ -3250,18 +3279,21 @@ function syncUserBodies(dt, time) {
   }
 }
 
-var _sky = new T.Color(), _skyNight = new T.Color(0x03060d), _skyDay = new T.Color(0x0d1c33);
+var _sky = new T.Color(), _skyNight = new T.Color(0x182431), _skyDay = new T.Color(0x87afc6);
 var _fogC = new T.Color();
 /* One place decides what the weather and the hour look like, and every shader
    that fogs reads the same two values. Three materials drifting apart is how a
    sky ends up a different colour from the haze in front of it. */
 function syncSky(dt, time) {
   var W = SIM.weather, night = SIM.night;
-  var lift = (1 - night) * 0.85 + W.fog * 0.3;
+  var lift = 1 - night;
   _sky.copy(_skyNight).lerp(_skyDay, Math.min(1, lift));
+  var twilight = Math.max(0, 1 - Math.abs(lift - 0.15) / 0.15) * 0.28;
+  _sky.lerp(new T.Color(0xc28e72), twilight);
+  _sky.lerp(new T.Color(0x657883), Math.min(0.35, W.rain * 0.25 + W.fog * 0.15));
   scene.background.copy(_sky);
-  _fogC.copy(_sky).multiplyScalar(1.35);
-  var k = 0.0031 * (1 + 1.7 * W.fog + 0.5 * W.rain) * (0.86 + 0.28 * night);
+  _fogC.copy(_sky);
+  var k = 0.00065 * (1 + 0.65 * W.fog + 0.25 * W.rain);
   ground.material.uniforms.uFog.value.copy(_fogC);
   ground.material.uniforms.uFogK.value = k;
   ground.material.uniforms.uWet.value = W.rain;
@@ -3449,10 +3481,10 @@ function districtUtil(i) {
 }
 
 /* ---- adaptive quality ---- */
-var quality = { scale: 1, bloom: 1.05, samples: [], level: 'full' };
+var quality = { scale: 1, bloom: 0.12, samples: [], level: 'full' };
 function tuneQuality(fps) {
   quality.samples.push(fps);
-  if (quality.samples.length < 90) return;
+  if (quality.samples.length < 6) return;
   var avg = quality.samples.reduce(function (a, b) { return a + b; }, 0) / quality.samples.length;
   quality.samples.length = 0;
   if (avg < 42 && quality.scale > 0.6) {
@@ -3496,6 +3528,7 @@ var clock = new T.Clock();
 var frames = 0, fpsT = 0, fps = 60, uiT = 0;
 function frame() {
   requestAnimationFrame(frame);
+  if (document.hidden) { clock.getDelta(); return; }
   var dt = Math.min(clock.getDelta(), 0.1);
   var time = clock.elapsedTime;
 

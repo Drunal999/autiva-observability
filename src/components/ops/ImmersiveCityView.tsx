@@ -1,9 +1,22 @@
- 'use client'
+'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import useSWR from 'swr'
+import Link from 'next/link'
 import { useEventListener } from '@/lib/realtime/client'
 import { CityView } from './CityView'
+import styles from './CityWorkspace.module.css'
+import { DEPARTMENTS, DEPARTMENT_PURPOSE, type Department } from '@/lib/ops/districts'
+
+interface ModuleActivity {
+  id: string
+  displayName: string
+  district: string
+  department: Department
+  pendingApprovals: number
+  runs: { id: string; ref: string; status: string; summary: string | null; project: string | null; startedAt: string }[]
+}
+interface CityData { districts: ModuleActivity[]; sample: boolean }
 
 const fetchCity = async (url: string) => {
   const response = await fetch(url)
@@ -13,14 +26,19 @@ const fetchCity = async (url: string) => {
 
 export function ImmersiveCityView() {
   const frame = useRef<HTMLIFrameElement>(null)
-  const [view, setView] = useState<'city' | 'runs'>('city')
-  const [jarvis, setJarvis] = useState(false)
-  const [local, setLocal] = useState(false)
-  const { data, error, mutate } = useSWR('/api/city', fetchCity, { refreshInterval: 15000 })
-  useEventListener(() => { void mutate() }, ['RUNS', 'FLEET'])
+  const [localClock, setLocalClock] = useState('')
   useEffect(() => {
-    setLocal(['localhost', '127.0.0.1'].includes(location.hostname))
+    const update = () => setLocalClock(new Intl.DateTimeFormat(undefined, {
+      hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+    }).format(new Date()))
+    update()
+    const timer = setInterval(update, 30000)
+    return () => clearInterval(timer)
   }, [])
+  const [view, setView] = useState<'city' | 'runs'>('city')
+  const [selected, setSelected] = useState<string | null>(null)
+  const { data, error, mutate } = useSWR<CityData>('/api/city', fetchCity, { refreshInterval: 15000 })
+  useEventListener(() => { void mutate() }, ['RUNS', 'FLEET'])
   useEffect(() => {
     const send = () => frame.current?.contentWindow?.postMessage(
       { type: 'autiva:city', payload: error ? { districts: [] } : data }, location.origin)
@@ -32,22 +50,58 @@ export function ImmersiveCityView() {
     send()
     return () => window.removeEventListener('message', ready)
   }, [data, error, view])
-  return <section className="space-y-3">
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-slate-950 p-3 text-sm">
-      <strong className="text-cyan-300">AUTIVA / Agentic City</strong>
-      <button onClick={() => setView('city')} aria-pressed={view === 'city'} className="rounded border border-white/20 px-3 py-2">3D City</button>
-      <button onClick={() => setView('runs')} aria-pressed={view === 'runs'} className="rounded border border-white/20 px-3 py-2">Actual runs</button>
-      {local && <button onClick={() => setJarvis(!jarvis)} aria-expanded={jarvis} className="rounded border border-cyan-400/40 px-3 py-2">{jarvis ? 'Close Jarvis' : 'Open Jarvis'}</button>}
+  const active = error ? undefined : data?.districts.find(module => module.id === selected)
+  return <section className={styles.workspace}>
+    <header className={styles.header}><div><h1>Your business, at a glance.</h1><p>A place for your work, your agents and your next decision.</p></div><div className={styles.controls}>
+
+      <button onClick={() => setView('city')} aria-pressed={view === 'city'} className="rounded border border-white/20 px-3 py-2">City</button>
+      <button onClick={() => setView('runs')} aria-pressed={view === 'runs'} className="rounded border border-white/20 px-3 py-2">Recorded activity</button>
       <span role="status" className={error ? 'text-red-300' : 'text-slate-300'}>
-        {error ? error.message : !data ? 'Connecting to activity…' : data.sample ? 'Local / sample dataset connected' : 'Tenant activity connected'}
+        {error ? error.message : !data ? 'Connecting to activity…' : data.sample ? 'Sample workspace' : 'Workspace connected'}
       </span>
+    </div></header>
+    <p className="text-xs text-slate-400">{localClock && `Device time: ${localClock}. `}Lighting follows your device clock. Weather and city movement are illustrative; recorded activity comes from your workspace.</p>
+    {view === 'city' ? <iframe ref={frame} title="Agentic City 3D simulation with recorded activity" src="/city/agentic-city.html?dashboard=1" className={styles.city} /> : <div className={styles.recorded}><CityView /></div>}
+    <div className={styles.details}>
+      <section className={styles.panel} aria-label="Business work">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-4"><div><h2 className="text-lg font-semibold text-slate-100">Your team at work</h2><p className="mt-1 text-sm text-slate-400">Choose a module to inspect its recorded activity.</p></div><Link href="/approvals" className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950">Review approvals</Link></div>
+        {error ? <div role="alert" className="text-sm text-red-300">Activity could not be loaded. <button onClick={() => void mutate()} className="underline">Retry</button></div> : !data ? <p role="status" className="text-sm text-slate-400">Loading work...</p> : (
+          <div className="space-y-5">
+            {DEPARTMENTS.map(dept => {
+              const modules = data.districts.filter(m => m.department === dept)
+              return (
+                <div key={dept}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{dept}</h3>
+                  {modules.length === 0 ? (
+                    <p className="mt-2 rounded-lg border border-dashed border-white/10 px-3 py-2 text-xs text-slate-500">
+                      {DEPARTMENT_PURPOSE[dept]} No workflow connected yet — Set up.
+                    </p>
+                  ) : (
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                      {modules.map(module => (
+                        <button key={module.id} onClick={() => setSelected(module.id)} aria-pressed={selected === module.id} className={styles.module}>
+                          <span className="block text-xs text-slate-400">{module.district}</span>
+                          <span className="mt-1 block font-medium text-slate-100">{module.displayName}</span>
+                          <span className="mt-3 block text-xs text-slate-400">{module.runs.length ? `${module.runs.length} recent recorded runs` : 'No recent recorded runs'}</span>
+                          {module.pendingApprovals > 0 && (
+                            <span className="mt-2 inline-block rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-300">
+                              {module.pendingApprovals} awaiting approval
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
+      <aside className={styles.panel} aria-label="Selected work details" aria-live="polite">
+        <h2 className="text-lg font-semibold text-slate-100">{active?.displayName ?? 'Work details'}</h2>
+        {!active ? <p className="mt-3 text-sm leading-6 text-slate-400">Select a module to see recorded outcomes. City movement is simulated; these records come from your workspace.</p> : <><p className="mt-1 text-xs text-slate-400">{data?.sample ? 'Sample workspace records' : 'Workspace records'}</p>{active.pendingApprovals > 0 && <p className="mt-2 rounded-lg bg-amber-400/10 px-3 py-2 text-xs text-amber-200">{active.pendingApprovals} decision{active.pendingApprovals === 1 ? '' : 's'} waiting on the owner. <Link href="/approvals" className="underline">Review in Approvals</Link></p>}<div className="mt-4 max-h-80 space-y-3 overflow-y-auto">{active.runs.length === 0 ? <p className="text-sm text-slate-400">No recent runs returned. This does not mean the module has never run.</p> : active.runs.map(run => <article key={run.id} className={styles.run}><div className="flex justify-between gap-3 text-xs"><span className="text-cyan-200">{run.ref}</span><span className={run.status === 'FAILED' ? 'text-red-300' : 'text-slate-300'}>{run.status}</span></div><p className="mt-2 text-sm text-slate-200">{run.summary || 'No summary recorded.'}</p><p className="mt-2 text-xs text-slate-400">{run.project || 'No project recorded'}</p><time className="text-xs text-slate-400" dateTime={run.startedAt}>{run.startedAt}</time></article>)}</div><Link href="/trace" className="mt-4 inline-block text-sm text-cyan-200 underline">Explore activity traces</Link></>}
+      </aside>
     </div>
-    <p className="text-xs text-slate-400">City population, jobs and movement are simulation. District signal dots show recent recorded runs. Open Actual runs for verified details.</p>
-    {jarvis && <div className="rounded-xl border border-cyan-400/20 p-3">
-      <p className="mb-2 text-sm text-slate-300">Personal local Jarvis console. Its connection and agent availability are reported by the console itself.</p>
-      <a href="http://127.0.0.1:8090/" target="_blank" rel="noreferrer" className="text-cyan-300 underline">Open voice console in its own tab</a>
-      <iframe title="Local Jarvis console" src="http://127.0.0.1:8090/" allow="microphone" className="mt-3 h-[650px] w-full rounded-lg border-0" />
-    </div>}
-    {view === 'city' ? <iframe ref={frame} title="Agentic City 3D simulation with recorded activity" src="/city/agentic-city.html" className="h-[80vh] min-h-[640px] w-full rounded-xl border border-cyan-400/20" /> : <CityView />}
   </section>
 }

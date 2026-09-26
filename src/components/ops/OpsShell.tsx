@@ -1,14 +1,14 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import useSWR from 'swr'
 import { NAV, fmtClock } from '@/lib/ops/tokens'
 import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
 import { usePresence, PresenceBar } from './Presence'
-import { Dock } from './Dock'
+import { AutivaAssistant } from './AutivaAssistant'
 import { FactBubble } from './FactBubble'
 import { useEventListener } from '@/lib/realtime/client'
 
@@ -41,7 +41,6 @@ function Clock() {
 
 export function OpsShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
   // /api/agents returns { mode, agents } — the mode is decided server-side, so
   // the payload is an object, not a bare array.
   const { data } = useSWR<FleetResponse>('/api/agents', fetcher, { refreshInterval: 20000 })
@@ -75,36 +74,10 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
     { refreshInterval: 60000 }
   )
   useEventListener(() => void refreshNotifs(), ['COMMENTS'])
-  /**
-   * Does the nav have more to the right than is showing?
-   *
-   * The nav scrolls so the status cluster always fits, which means at narrower
-   * widths the last few destinations sit out of sight. A hard cut mid-word
-   * reads as a rendering fault, not as "there is more" — so the edge fades
-   * only while there is actually something behind it.
-   */
+  // The nav is a fixed vertical rail with its own internal scroll now, not
+  // the horizontal scroller the mask-fade measurement below used to serve —
+  // kept only as a ref target for the rail element.
   const navRef = useRef<HTMLElement>(null)
-  const [navMore, setNavMore] = useState(false)
-  const measureNav = useCallback(() => {
-    const el = navRef.current
-    if (!el) return
-    setNavMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 4)
-  }, [])
-  useEffect(() => {
-    const el = navRef.current
-    if (!el) return
-    measureNav()
-    // Width changes come from the window AND from the badges appearing, which
-    // happens after a fetch rather than at first paint — a resize listener
-    // alone would miss that entirely.
-    const ro = new ResizeObserver(measureNav)
-    ro.observe(el)
-    el.addEventListener('scroll', measureNav, { passive: true })
-    return () => {
-      ro.disconnect()
-      el.removeEventListener('scroll', measureNav)
-    }
-  }, [measureNav])
 
   // Counted apart on purpose. A mention is a person asking YOU for something;
   // an alert is the system saying something broke. One badge for both trains
@@ -128,7 +101,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
           </span>
           <span className="text-[17px] font-extrabold tracking-tight">AUTIVA</span>
           <span className="hidden font-mono text-[12px] uppercase tracking-[0.16em] text-white/35 lg:inline">
-            Mission Control
+            Workspace
           </span>
 
           <span className="flex-1 md:hidden" />
@@ -161,11 +134,8 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
             not an alert. The nav scrolls; the status cluster stays. */}
         <nav
           ref={navRef}
-          className={`flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-4 pb-2 pt-2 md:ml-3 md:px-0 md:py-0 ${
-            navMore
-              ? '[mask-image:linear-gradient(to_right,#000_calc(100%-28px),transparent)]'
-              : ''
-          }`}
+          aria-label="Main navigation"
+          className="fixed bottom-3 left-2 top-16 z-40 flex w-16 flex-col gap-1 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 p-2 md:w-40"
         >
           {NAV.map((n) => {
             const active = pathname === n.href
@@ -174,13 +144,16 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={n.href}
                 href={n.href}
-                className={`flex h-8 items-center gap-1.5 rounded-[11px] px-3 text-[14.5px] transition ${
+                title={n.label}
+                aria-label={n.label}
+                aria-current={active ? 'page' : undefined}
+                className={`flex min-h-10 shrink-0 items-center gap-1.5 rounded-[11px] px-3 text-[14.5px] transition ${
                   active
                     ? 'bg-cyan-400/10 font-bold text-cyan-400'
                     : 'font-medium text-white/60 hover:text-white/85'
                 }`}
               >
-                {n.label}
+                <span aria-hidden="true">{n.glyph}</span><span className="hidden md:inline">{n.label}</span>
                 {/* Pending approvals are the one thing that always needs
                     attention, so the count rides the nav on every screen. */}
                 {badge > 0 && (
@@ -261,7 +234,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         bottom of the viewport. As a column flex parent, `flex-1` here gives the
         region a real height for its children to fill.
       */}
-      <main className="flex min-h-0 flex-1 flex-col">{children}</main>
+      <main className="ml-20 flex min-h-0 flex-1 flex-col md:ml-44">{children}</main>
 
       {/*
         Pointer-only, by design. Magnification reacts to a cursor and says
@@ -271,20 +244,9 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         keeps the strip from swallowing clicks meant for the content beneath.
       */}
       <FactBubble />
+      <AutivaAssistant />
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 hidden justify-center [@media(hover:hover)_and_(pointer:fine)]:flex">
-        <Dock
-          className="pointer-events-auto"
-          onNavigate={(href) => router.push(href)}
-          items={NAV.map((n) => ({
-            href: n.href,
-            label: n.label,
-            glyph: n.glyph,
-            active: pathname === n.href,
-            badge: n.href === '/approvals' ? pendingApprovals : undefined,
-          }))}
-        />
-      </div>
+
     </div>
   )
 }

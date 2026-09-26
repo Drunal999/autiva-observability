@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getTenantContext, tenantScope } from '@/lib/ops/tenant'
-import { districtFor } from '@/lib/ops/districts'
+import { districtFor, departmentFor } from '@/lib/ops/districts'
 
 /**
  * The city's opening state: every module this tenant can see, plus whatever
@@ -58,16 +58,34 @@ export async function GET() {
     byModule.set(id, list)
   }
 
+  // A module's own PENDING approvals — "tasks and approvals where supported
+  // by existing data" reuses this same table rather than inventing a second
+  // notion of "work waiting on a human".
+  const pending = await prisma.approval.findMany({
+    where: { ...tenantScope(ctx), status: 'PENDING', moduleId: { not: null } },
+    select: { moduleId: true },
+  })
+  const pendingByModule = new Map<string, number>()
+  for (const p of pending) {
+    if (!p.moduleId) continue
+    pendingByModule.set(p.moduleId, (pendingByModule.get(p.moduleId) ?? 0) + 1)
+  }
+
   return NextResponse.json({
-    districts: modules.map((m) => ({
-      id: m.id,
-      key: m.key,
-      displayName: m.displayName,
-      targetMs: m.targetMs,
-      district: districtFor(m.key),
-      agents: m.agents,
-      runs: byModule.get(m.id) ?? [],
-    })),
+    districts: modules.map((m) => {
+      const district = districtFor(m.key)
+      return {
+        id: m.id,
+        key: m.key,
+        displayName: m.displayName,
+        targetMs: m.targetMs,
+        district,
+        department: departmentFor(district),
+        agents: m.agents,
+        runs: byModule.get(m.id) ?? [],
+        pendingApprovals: pendingByModule.get(m.id) ?? 0,
+      }
+    }),
     /** Mirrors the shell's own sample-data warning: never claim seeded rows are real. */
     sample: process.env.NEXT_PUBLIC_SAMPLE_DATA !== 'false',
   })

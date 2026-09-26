@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { resolveIngestUser } from '@/lib/ops/ingestToken'
 import { notifyTeam } from '@/lib/ops/notify'
-import type { SpanType, SpanStatus } from '@prisma/client'
+import type { SpanType, SpanStatus, ApprovalRisk } from '@prisma/client'
 
 /**
  * Turning a Claude Code session into a Run.
@@ -77,6 +77,20 @@ export interface ReportedStep {
   error?: string
 }
 
+/**
+ * An engine asking a human to sign off before it goes further — e.g. "found
+ * 41 leads, approve outreach?". Only meaningful alongside `module`: this is
+ * how an automation run requests approval, not a free-standing endpoint,
+ * because the existing decide route (`/api/approvals/[id]/decide`) already
+ * covers everything after the row exists.
+ */
+export interface ReportedApproval {
+  action: string
+  detail?: string
+  risk?: string
+  amountInr?: number
+}
+
 export interface SessionReport {
   /** Stable id for the session, so re-reporting updates instead of duplicating. */
   sessionId: string
@@ -94,9 +108,13 @@ export interface SessionReport {
   costInr?: number
   ok?: boolean
   steps?: ReportedStep[]
+  approval?: ReportedApproval
 }
 
 const MAX_PROJECT = 80
+const MAX_ACTION = 200
+const MAX_DETAIL = 500
+const APPROVAL_RISKS: ApprovalRisk[] = ['MONEY', 'PUBLISH', 'BULK_MESSAGE', 'DATA_DELETE', 'OTHER']
 
 /** A run carrying more steps than this is almost certainly a runaway loop. */
 export const MAX_STEPS = 500
@@ -218,6 +236,31 @@ export async function ingestSession(
       costInr: Math.max(0, report.costInr ?? 0),
     },
   })
+
+  // An engine run may ask a human to sign off before anything further happens
+  // — e.g. "found 41 leads, approve outreach?". Only an engine run can (a
+  // person's own session has no `moduleId` to hang the row on), and only once
+  // per run: a re-report of the same session (RUNNING -> SUCCESS) must not
+  // duplicate the request it already made.
+  if (report.approval && agent.moduleId && typeof report.approval.action === 'string' && report.approval.action.trim()) {
+    const existing = await prisma.approval.findFirst({ where: { runId: run.id } })
+    if (!existing) {
+      const risk = APPROVAL_RISKS.includes(report.approval.risk as ApprovalRisk)
+        ? (report.approval.risk as ApprovalRisk)
+        : 'OTHER'
+      await prisma.approval.create({
+        data: {
+          tenantId,
+          runId: run.id,
+          moduleId: agent.moduleId,
+          action: report.approval.action.trim().slice(0, MAX_ACTION),
+          detail: report.approval.detail?.trim().slice(0, MAX_DETAIL) || null,
+          risk,
+          amountInr: typeof report.approval.amountInr === 'number' ? report.approval.amountInr : null,
+        },
+      })
+    }
+  }
 
   // Spans are replaced wholesale rather than appended: a re-report carries the
   // whole session, so appending would double every step already recorded.

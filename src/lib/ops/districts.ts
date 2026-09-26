@@ -55,3 +55,61 @@ export function districtFor(key: string): District {
   const hit = DISTRICTS.find((d) => k.includes(d))
   return hit ?? 'operations'
 }
+
+/**
+ * Which business department a district groups under, for the city's left
+ * navigation (product brief: Marketing, Sales & Clients, Finance, Operations,
+ * Security, Legal & Compliance, Knowledge). Departments, not districts, are
+ * what an owner recognises — "Sales & Clients" reads as a business function,
+ * "sales" reads as an internal key.
+ *
+ * The mapping is not 1:1 and says so rather than hiding the judgment call:
+ * `support` (inbox triage) joins Sales & Clients because it is the same
+ * client-facing correspondence, not a separate helpdesk function; `people`
+ * joins Operations because nothing in the current catalog has grown into an
+ * HR-shaped module yet; `intelligence` (market trends) joins Knowledge
+ * because it is business memory, not a campaign. Reasonable people could
+ * place `intelligence` under Marketing instead — this is a judgment call,
+ * not a measured fact, and can move without ceremony if it stops fitting.
+ *
+ * `Legal & Compliance` has no district behind it at all. That is deliberate:
+ * it exists so the department can render as a discoverable "Set up" building
+ * rather than not exist in the nav — AUTIVA has no legal engine yet.
+ */
+export const DEPARTMENTS = [
+  'Marketing',
+  'Sales & Clients',
+  'Finance',
+  'Operations',
+  'Security',
+  'Legal & Compliance',
+  'Knowledge',
+] as const
+
+export type Department = (typeof DEPARTMENTS)[number]
+
+const DEPARTMENT_BY_DISTRICT: Record<District, Department> = {
+  marketing: 'Marketing',
+  sales: 'Sales & Clients',
+  support: 'Sales & Clients',
+  finance: 'Finance',
+  operations: 'Operations',
+  people: 'Operations',
+  security: 'Security',
+  intelligence: 'Knowledge',
+}
+
+export function departmentFor(district: District): Department {
+  return DEPARTMENT_BY_DISTRICT[district]
+}
+
+/** One line each — shown when a department has no connected modules yet. */
+export const DEPARTMENT_PURPOSE: Record<Department, string> = {
+  Marketing: 'Campaigns, content and lead generation.',
+  'Sales & Clients': 'CRM, follow-up drafts and onboarding.',
+  Finance: 'Invoices, payment tracking and expense reports.',
+  Operations: 'Tasks, calendars and workflow monitoring.',
+  Security: 'Access reviews, audit logs and authorised checks.',
+  'Legal & Compliance': 'Contract drafts, document review and renewal reminders.',
+  Knowledge: 'Business memory, SOPs and project documents.',
+}

@@ -10,6 +10,8 @@ const h = vi.hoisted(() => ({
   spanCreateMany: vi.fn(),
   lockQuery: vi.fn(),
   transaction: vi.fn(),
+  approvalFindFirst: vi.fn(),
+  approvalCreate: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -19,6 +21,7 @@ vi.mock('@/lib/prisma', () => ({
     agent: { upsert: h.agentUpsert, update: h.agentUpdate },
     run: { upsert: h.runUpsert },
     span: { deleteMany: h.spanDeleteMany, createMany: h.spanCreateMany },
+    approval: { findFirst: h.approvalFindFirst, create: h.approvalCreate },
     $transaction: h.transaction,
   },
 }))
@@ -53,6 +56,8 @@ beforeEach(() => {
     return []
   })
   h.agentUpdate.mockResolvedValue({})
+  h.approvalFindFirst.mockResolvedValue(null)
+  h.approvalCreate.mockResolvedValue({})
 })
 afterEach(() => {
   if (saved === undefined) delete process.env.INGEST_SECRET
@@ -298,6 +303,72 @@ describe('reporting an engine run', () => {
       module: '  Marketing.SEO_Audit  ',
     })
     expect(h.moduleUpsert.mock.calls[0][0].where.tenantId_key.key).toBe(SEO)
+  })
+})
+
+/**
+ * An engine run may ask a human to sign off before anything further happens —
+ * e.g. "found 41 leads, approve outreach?". This is the ONE way an Approval
+ * row is ever created outside the seed script, so it earns its own coverage.
+ */
+describe('an engine run requesting approval', () => {
+  const LEADS = 'sales.lead_scraper'
+
+  it('creates a pending approval tied to the run and module', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'agent-leads', name: LEADS, moduleId: 'mod-1' })
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'scan-1',
+      module: LEADS,
+      endedAt: new Date().toISOString(),
+      approval: { action: 'Approve outreach to 41 leads', detail: 'Found in Bengaluru', risk: 'BULK_MESSAGE' },
+    })
+    expect(h.approvalCreate).toHaveBeenCalledTimes(1)
+    const call = h.approvalCreate.mock.calls[0][0]
+    expect(call.data.runId).toBe('run-1')
+    expect(call.data.moduleId).toBe('mod-1')
+    expect(call.data.tenantId).toBe(TENANT)
+    expect(call.data.action).toBe('Approve outreach to 41 leads')
+    expect(call.data.risk).toBe('BULK_MESSAGE')
+  })
+
+  it('does not duplicate a request when the run is re-reported', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'agent-leads', name: LEADS, moduleId: 'mod-1' })
+    h.approvalFindFirst.mockResolvedValue({ id: 'existing-approval' })
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'scan-1',
+      module: LEADS,
+      endedAt: new Date().toISOString(),
+      approval: { action: 'Approve outreach to 41 leads' },
+    })
+    expect(h.approvalCreate).not.toHaveBeenCalled()
+  })
+
+  it('falls back to OTHER for an unrecognised risk rather than storing it verbatim', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'agent-leads', name: LEADS, moduleId: 'mod-1' })
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'scan-2',
+      module: LEADS,
+      approval: { action: 'Approve something', risk: 'NOT_A_REAL_RISK' },
+    })
+    expect(h.approvalCreate.mock.calls[0][0].data.risk).toBe('OTHER')
+  })
+
+  it('ignores an approval request on a person’s own session, which has no module to hang it on', async () => {
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'cc-1',
+      approval: { action: 'Approve outreach' },
+    })
+    expect(h.approvalCreate).not.toHaveBeenCalled()
+  })
+
+  it('ignores a blank action rather than creating an unreadable approval', async () => {
+    h.agentUpsert.mockResolvedValue({ id: 'agent-leads', name: LEADS, moduleId: 'mod-1' })
+    await ingestSession(TENANT, tokenFor('user-1'), {
+      sessionId: 'scan-3',
+      module: LEADS,
+      approval: { action: '   ' },
+    })
+    expect(h.approvalCreate).not.toHaveBeenCalled()
   })
 })
 
