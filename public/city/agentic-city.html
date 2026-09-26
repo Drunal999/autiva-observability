@@ -382,6 +382,18 @@ window.addEventListener('message', function (event) {
   });
   REAL.byDistrict = next;
 });
+// The dashboard asks the camera to visit a module's district (the voice assistant pointed at it).
+// Same framing as the guided tour; any touch takes the camera back, as with the tour.
+window.addEventListener('message', function (event) {
+  if (event.origin !== location.origin || event.source !== parent) return;
+  if (!event.data || event.data.type !== 'autiva:city-focus') return;
+  var key = REAL_MAP[event.data.district] || 'core';
+  var D = DISTRICTS.filter(function (d) { return d.key === key; })[0];
+  if (!D || typeof rig === 'undefined') return;
+  dispatchEvent(new Event('autiva:city-focus')); // the UI below closes the intro card
+  rig.frame(D.x, D.z, 110, 0.40, Math.atan2(D.x, D.z) + 2.4);
+  rig.autoSpin = true;
+});
 parent.postMessage({type:'autiva:city-ready'}, location.origin);
 
 var TASKS = {
@@ -3826,6 +3838,12 @@ function App() {
   function startTour() { setGate(false); seen(true); setSelected(null); pickState.site = -1; pickState.box = -1; setTour(0); }
   function explore() { setGate(false); seen(true); rig.god(); }
   function openMaker() { setGate(false); seen(true); stopTour(); setMaker(true); }
+  /* The voice assistant is showing a district: the intro steps aside and any tour stops. */
+  React.useEffect(function () {
+    function onFocus() { setGate(false); seen(true); setTour(-1); }
+    addEventListener('autiva:city-focus', onFocus);
+    return function () { removeEventListener('autiva:city-focus', onFocus); };
+  }, []);
 
   function changeAvatar(index, key) {
     var rec = SIM.setAvatar(index, key);

@@ -57,9 +57,9 @@ export const NAV = [
   { label: 'Calendar', href: '/calendar', glyph: '▦' },
   { label: 'Fleet', href: '/fleet', glyph: '◇' },
   { label: 'City', href: '/city', glyph: '⌂' },
+  { label: 'Brain', href: '/brain', glyph: '✺' },
   { label: 'Trace', href: '/trace', glyph: '⑂' },
   { label: 'Terminal', href: '/terminal', glyph: '$' },
-  { label: 'Automations', href: '/automations', glyph: '↻' },
   { label: 'States', href: '/states', glyph: '◐' },
   { label: 'Motion', href: '/motion', glyph: '∿' },
 ] as const

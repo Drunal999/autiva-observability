@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { ThinkingOrb } from 'thinking-orbs'
+import { requestCityFocus } from '@/lib/ops/cityFocus'
 
 type Face = 'orb' | 'orca' | 'human' | 'robot'
 
@@ -27,6 +29,12 @@ function AssistantFace({ face }: { face: Face }) {
   </svg>
 }
 
+// The ElevenLabs voice, run by AUTIVA's brain/server.mjs. The Brain section mirrors this same session.
+const VOICE = 'http://127.0.0.1:8095'
+
+/** A computer action the assistant wants to take; nothing runs until someone clicks here. */
+interface Approval { id: string; summary: string }
+
 export function AutivaAssistant() {
   const frame = useRef<HTMLIFrameElement>(null)
   const [local, setLocal] = useState(false)
@@ -34,17 +42,48 @@ export function AutivaAssistant() {
   const [active, setActive] = useState(false)
   const [status, setStatus] = useState('Connecting assistant...')
   const [face, setFace] = useState<Face>('orb')
+  const [approvals, setApprovals] = useState<Approval[]>([])
   const down = useRef(0)
   const swiped = useRef(false)
+  // The voice asks the dashboard (which holds the session) for this workspace's automations, and
+  // may then ask to show one in the City. Only ids from the last list it was given are accepted.
+  const router = useRouter(), pathname = usePathname()
+  const nav = useRef({ router, pathname })
+  nav.current = { router, pathname }
+  const known = useRef(new Set<string>())
   useEffect(() => {
     setLocal(['localhost', '127.0.0.1', '[::1]'].includes(location.hostname))
     try { const saved = localStorage.getItem('autiva-assistant-face'); if (['orb','orca','human','robot'].includes(saved || '')) setFace(saved as Face) } catch {}
     const receive = (event: MessageEvent) => {
-      if (event.source !== frame.current?.contentWindow || event.origin !== `http://${location.hostname}:8090`) return
+      if (event.source !== frame.current?.contentWindow || event.origin !== VOICE) return
       if (event.data?.type === 'autiva:voice-ready') { setReady(true); setStatus('Tap to talk') }
       if (event.data?.type === 'autiva:voice-state' && typeof event.data.name === 'string') {
         setStatus(event.data.name === 'Needs attention' ? String(event.data.note || 'Voice unavailable').slice(0,180) : event.data.name)
         if (['Standing by','Needs attention'].includes(event.data.name)) setActive(false)
+      }
+      const a = event.data?.approval
+      if (event.data?.type === 'autiva:approval' && typeof a?.id === 'string' && typeof a?.summary === 'string')
+        setApprovals(list => list.some(x => x.id === a.id) ? list : [...list, { id: a.id, summary: a.summary.slice(0, 400) }])
+      if (event.data?.type === 'autiva:approval-done') setApprovals(list => list.filter(x => x.id !== event.data.id))
+      if (event.data?.type === 'autiva:automations-request') void listAutomations(String(event.data.nonce))
+      if (event.data?.type === 'autiva:show-in-city' && known.current.has(event.data.moduleId)) {
+        requestCityFocus(event.data.moduleId)
+        if (nav.current.pathname !== '/city') nav.current.router.push('/city')
+      }
+    }
+    const reply = (body: object) => frame.current?.contentWindow?.postMessage({ type: 'autiva:automations-result', ...body }, VOICE)
+    async function listAutomations(nonce: string) {
+      try {
+        const r = await fetch('/api/city')
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        const data: { sample: boolean; districts: { id: string; displayName: string; district: string; department?: string; pendingApprovals?: number; runs: { status: string }[] }[] } = await r.json()
+        known.current = new Set(data.districts.map(m => m.id))
+        reply({ nonce, sample: data.sample, modules: data.districts.map(m => ({
+          id: m.id, name: m.displayName, area: m.district, department: m.department ?? null,
+          recentRuns: m.runs.length, lastStatus: m.runs[0]?.status ?? null, pendingApprovals: m.pendingApprovals ?? 0,
+        })) })
+      } catch (e) {
+        reply({ nonce, error: `The workspace automations could not be loaded (${(e as Error).message}).` })
       }
     }
     window.addEventListener('message', receive)
@@ -60,16 +99,27 @@ export function AutivaAssistant() {
     if (!ready) return
     if (active) {
       // Unmounting terminates pending capture/playback as well as active audio.
-      setActive(false); setReady(false); setStatus('Muted')
-      frame.current?.contentWindow?.postMessage({type:'autiva:voice-command',action:'stop'}, `http://${location.hostname}:8090`)
-      if (frame.current) frame.current.src = `http://${location.hostname}:8090/?compact=1&voiceBridge=1`
+      setActive(false); setReady(false); setStatus('Muted'); setApprovals([])
+      frame.current?.contentWindow?.postMessage({type:'autiva:voice-command',action:'stop'}, VOICE)
+      if (frame.current) frame.current.src = `${VOICE}/?voiceBridge=1`
     } else {
       setActive(true); setStatus('Requesting microphone...')
-      frame.current?.contentWindow?.postMessage({type:'autiva:voice-command',action:'start'}, `http://${location.hostname}:8090`)
+      frame.current?.contentWindow?.postMessage({type:'autiva:voice-command',action:'start'}, VOICE)
     }
+  }
+  function decide(id: string, decision: 'once' | 'always' | 'deny') {
+    frame.current?.contentWindow?.postMessage({ type: 'autiva:approval-decision', id, decision }, VOICE)
   }
   if (!local) return null
   return <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+    {approvals.map(a => <div key={a.id} role="alertdialog" aria-label="The assistant asks for permission" className="w-80 rounded-2xl border border-orange-300/50 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-xl">
+      <p className="break-words">Allow the assistant to: {a.summary}?</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button type="button" onClick={() => decide(a.id, 'once')} className="rounded-lg bg-emerald-300 px-3 py-1.5 text-xs font-semibold text-slate-950 focus-visible:ring-2 focus-visible:ring-white">Approve once</button>
+        <button type="button" onClick={() => decide(a.id, 'always')} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Always allow this</button>
+        <button type="button" onClick={() => decide(a.id, 'deny')} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Deny</button>
+      </div>
+    </div>)}
     <p role="status" className="max-w-64 rounded-2xl bg-slate-950/95 px-3 py-2 text-xs text-slate-200">{status}{active ? ' · Tap to mute' : ''}</p>
     <button type="button" disabled={!ready} aria-label={active ? 'Mute AUTIVA microphone and reply' : 'Talk to AUTIVA'} aria-pressed={active} title="Tap to talk. Swipe or use arrow keys to change appearance."
       onPointerDown={event => {down.current=event.clientX; swiped.current=false; event.currentTarget.setPointerCapture(event.pointerId)}}
@@ -80,6 +130,6 @@ export function AutivaAssistant() {
       className={`flex h-[76px] w-[76px] touch-pan-y items-center justify-center rounded-full border bg-slate-950 shadow-xl focus-visible:ring-2 focus-visible:ring-brand-200 disabled:opacity-50 ${active ? 'border-brand-200 shadow-brand-400/30' : 'border-white/20'}`}>
       {face==='orb' ? <ThinkingOrb state={['Listening','Hearing you'].includes(status)?'listening':['Thinking','Understanding'].includes(status)?'working':status==='Speaking'?'composing':'breathing'} size={64} theme="dark" /> : <AssistantFace face={face} />}
     </button>
-    <iframe ref={frame} title="AUTIVA audio connection" src={`http://${location.hostname}:8090/?compact=1&voiceBridge=1`} allow="microphone; autoplay" aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute h-px w-px opacity-0" />
+    <iframe ref={frame} title="AUTIVA audio connection" src={`${VOICE}/?voiceBridge=1`} allow="microphone; autoplay" aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute h-px w-px opacity-0" />
   </div>
 }

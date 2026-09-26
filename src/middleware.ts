@@ -12,6 +12,7 @@ export const config = {
     '/approvals',
     '/fleet',
     '/city',
+    '/brain',
     '/trace',
     '/terminal',
     '/automations',

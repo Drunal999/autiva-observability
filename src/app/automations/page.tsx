@@ -1,12 +1,6 @@
-'use client'
+import { redirect } from 'next/navigation'
 
-import { OpsShell } from '@/components/ops/OpsShell'
-import { AutomationsView } from '@/components/ops/AutomationsView'
-
+/** Automations now live inside the Brain section; old links land on its Workflows tab. */
 export default function AutomationsPage() {
-  return (
-    <OpsShell>
-      <AutomationsView />
-    </OpsShell>
-  )
+  redirect('/brain?view=workflows')
 }

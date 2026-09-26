@@ -7,6 +7,7 @@ import { useEventListener } from '@/lib/realtime/client'
 import { CityView } from './CityView'
 import styles from './CityWorkspace.module.css'
 import { DEPARTMENTS, DEPARTMENT_PURPOSE, type Department } from '@/lib/ops/districts'
+import { CITY_FOCUS_EVENT, takeCityFocus } from '@/lib/ops/cityFocus'
 
 interface ModuleActivity {
   id: string
@@ -39,17 +40,35 @@ export function ImmersiveCityView() {
   const [selected, setSelected] = useState<string | null>(null)
   const { data, error, mutate } = useSWR<CityData>('/api/city', fetchCity, { refreshInterval: 15000 })
   useEventListener(() => { void mutate() }, ['RUNS', 'FLEET'])
+  // The module the voice assistant asked to show (see lib/ops/cityFocus). The camera flies to its
+  // district once per request, not on every data refresh, so it never fights the person's own navigation.
+  const [spotlight, setSpotlight] = useState<string | null>(null)
+  const flownTo = useRef<string | null>(null)
   useEffect(() => {
-    const send = () => frame.current?.contentWindow?.postMessage(
-      { type: 'autiva:city', payload: error ? { districts: [] } : data }, location.origin)
+    const focus = (id: string | null) => { if (id) { setView('city'); setSelected(id); setSpotlight(id); flownTo.current = null } }
+    focus(takeCityFocus())
+    const onFocus = (event: Event) => { takeCityFocus(); focus((event as CustomEvent<string>).detail) }
+    window.addEventListener(CITY_FOCUS_EVENT, onFocus)
+    return () => window.removeEventListener(CITY_FOCUS_EVENT, onFocus)
+  }, [])
+  const lit = error ? undefined : data?.districts.find(module => module.id === spotlight)
+  useEffect(() => {
+    const send = () => {
+      const city = frame.current?.contentWindow
+      city?.postMessage({ type: 'autiva:city', payload: error ? { districts: [] } : data }, location.origin)
+      if (lit && flownTo.current !== lit.id) {
+        city?.postMessage({ type: 'autiva:city-focus', district: lit.district }, location.origin)
+        flownTo.current = lit.id
+      }
+    }
     const ready = (event: MessageEvent) => {
       if (event.origin === location.origin && event.source === frame.current?.contentWindow &&
-          event.data?.type === 'autiva:city-ready') send()
+          event.data?.type === 'autiva:city-ready') { flownTo.current = null; send() }
     }
     window.addEventListener('message', ready)
     send()
     return () => window.removeEventListener('message', ready)
-  }, [data, error, view])
+  }, [data, error, view, lit])
   const active = error ? undefined : data?.districts.find(module => module.id === selected)
   return <section className={styles.workspace}>
     <header className={styles.header}><div><h1>Your business, at a glance.</h1><p>A place for your work, your agents and your next decision.</p></div><div className={styles.controls}>
@@ -61,7 +80,15 @@ export function ImmersiveCityView() {
       </span>
     </div></header>
     <p className="text-xs text-slate-400">{localClock && `Device time: ${localClock}. `}Lighting follows your device clock. Weather and city movement are illustrative; recorded activity comes from your workspace.</p>
-    {view === 'city' ? <iframe ref={frame} title="Agentic City 3D simulation with recorded activity" src="/city/agentic-city.html?dashboard=1" className={styles.city} /> : <div className={styles.recorded}><CityView /></div>}
+    {view === 'city' ? <div className="relative">
+      <iframe ref={frame} title="Agentic City 3D simulation with recorded activity" src="/city/agentic-city.html?dashboard=1" className={styles.city} />
+      {lit && <div role="status" className="absolute left-4 top-4 max-w-xs rounded-2xl border border-white/60 bg-white/95 p-4 text-sm shadow-lg">
+        <p className="text-xs uppercase tracking-wide">Shown by your assistant · {lit.department}</p>
+        <p className="mt-1 text-base font-medium">{lit.displayName}</p>
+        <p className="mt-1 text-xs">{lit.runs.length ? `${lit.runs.length} recorded runs in the last day` : 'No recorded runs in the last day'}{lit.pendingApprovals > 0 ? ` · ${lit.pendingApprovals} awaiting approval` : ''}</p>
+        <button type="button" onClick={() => setSpotlight(null)} className="mt-2 text-xs underline">Dismiss</button>
+      </div>}
+    </div> : <div className={styles.recorded}><CityView /></div>}
     <div className={styles.details}>
       <section className={styles.panel} aria-label="Business work">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-4"><div><h2 className="text-lg font-semibold text-slate-100">Your team at work</h2><p className="mt-1 text-sm text-slate-400">Choose a module to inspect its recorded activity.</p></div><Link href="/approvals" className="rounded-full bg-brand-300 px-4 py-2 text-sm font-semibold text-slate-950">Review approvals</Link></div>
