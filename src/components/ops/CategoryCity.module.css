@@ -10,6 +10,7 @@
 .viewport {
   position: relative;
   height: 600px;
+  min-height: 360px;
   overflow: hidden;
   perspective: 1700px;
   perspective-origin: 50% 10%;
@@ -143,3 +144,10 @@
   .scene, .body, .label { animation: none; }
   .tower, .pad { transition: none; }
 }
+
+/* Hero: the city fills the home stage behind the widgets, so it sits a
+   little smaller and lower, centred in the open middle of the stage. */
+.viewport[data-hero='true'] .scene { --s: 0.54; top: 57%; left: 53%; }
+@container (max-width: 1000px) { .viewport[data-hero='true'] .scene { --s: 0.5; } }
+@container (max-width: 760px) { .viewport[data-hero='true'] .scene { --s: 0.46; top: 52%; left: 50%; } }
+@container (max-width: 520px) { .viewport[data-hero='true'] .scene { --s: 0.32; top: 54%; left: 50%; } }

@@ -7,28 +7,52 @@
   padding: 8px clamp(16px, 2.4vw, 32px) 120px;
   min-height: calc(100dvh - 76px);
 }
-.mapScroll, .industries, .catalog, .returnBar, .widget { position: relative; }
+.industries, .catalog, .returnBar, .widget { position: relative; }
 
-.top { padding: clamp(18px, 4vh, 40px) 6px 18px; animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.top { padding: 6px 6px 0; animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .date { font-size: 15px; font-weight: 600; color: var(--label-2); }
 .top h1 { font-size: clamp(34px, 4vw, 48px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }
 
-.bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .widget {
   border-radius: 30px; padding: 18px; min-width: 0; color: var(--label);
   display: flex; flex-direction: column;
   animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.bento > :nth-child(2) { animation-delay: 0.05s; }
-.bento > :nth-child(3) { animation-delay: 0.1s; }
-.bento > :nth-child(4) { animation-delay: 0.15s; }
-.bento > :nth-child(5) { animation-delay: 0.2s; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(12px) scale(0.985); } to { opacity: 1; transform: none; } }
-.wide { grid-column: span 2; }
 a.widget { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
 a.widget:hover { transform: translateY(-2px); }
 .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--label-2); }
 .note { font-size: 13px; color: var(--label-2); margin-top: auto; padding-top: 10px; }
+
+/* City hero stage. The city sits in the grid's full area underneath; the
+   widgets are placed in the corners above it. */
+.stage {
+  position: relative; margin-top: 8px; display: grid; gap: 14px; padding: clamp(14px, 2vw, 22px);
+  min-height: max(660px, calc(100dvh - 110px));
+  grid-template-columns: minmax(150px, 185px) minmax(150px, 185px) 1fr minmax(260px, 300px);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "greet greet . now"
+    "bolo  bolo  . now"
+    ".     .     . brain"
+    "needs autos . cal";
+}
+.stageCity { grid-row: 1 / -1; grid-column: 1 / -1; position: relative; z-index: 0; margin: calc(-1 * clamp(14px, 2vw, 22px)); min-height: 0; }
+.stageCity > [role='group'] { height: 100%; }
+.stage > :not(.stageCity) { position: relative; z-index: 1; }
+.aGreet { grid-area: greet; } .aBolo { grid-area: bolo; } .aNow { grid-area: now; align-self: start; }
+.aBrain { grid-area: brain; align-self: end; }
+.aNeeds { grid-area: needs; } .aAuto { grid-area: autos; } .aCal { grid-area: cal; }
+.aGreet, .aCal { min-width: 0; }
+.aGreet h1 { text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25); }
+@media (max-width: 1100px) {
+  .stage { grid-template-columns: repeat(2, minmax(0, 1fr)) 1fr; grid-template-areas: "greet greet greet" "bolo bolo now" ". . brain" "needs autos cal"; }
+}
+@media (max-width: 850px) {
+  .stage { min-height: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none;
+    grid-template-areas: "greet greet" "city city" "bolo bolo" "now now" "brain brain" "needs autos" "cal cal"; }
+  .stageCity { grid-area: city; margin: 0; height: 380px; }
+}
 
 /* Bolo: the Google-widget pattern. A pill to ask, a row of round actions. */
 .ask {
@@ -63,6 +87,18 @@ a.widget:hover { transform: translateY(-2px); }
 .stat[data-alert='true'] { color: var(--red); }
 .statLabel { font-size: 15px; font-weight: 600; margin-top: 4px; }
 
+/* Brain: its own colour (content, not chrome) and a live status dot. */
+.brainRow { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.brainMark {
+  width: 48px; height: 48px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff;
+  background: radial-gradient(circle at 30% 28%, #c5a3ff, #6d4cff 55%, #2b1c7a);
+  box-shadow: 0 0 22px rgba(124, 92, 255, 0.5);
+}
+.brainState { font-size: 13px; color: var(--label-2); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+.brainState::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--label-2); }
+.brainState[data-state='online']::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.brainState[data-state='offline']::before { background: var(--red); }
+
 /* Calendar: the iOS month widget. Red is reserved for the month and today. */
 .month { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; color: var(--red); }
 .days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px 2px; margin-top: 8px; text-align: center; font-size: 13px; font-weight: 600; }
@@ -70,11 +106,6 @@ a.widget:hover { transform: translateY(-2px); }
 .dow { color: var(--label-2); font-size: 11px; }
 .days > span[data-today='true'] { background: var(--red); border-radius: 50%; width: 22px; margin: 0 auto; }
 
-.cityHeading { display: flex; justify-content: space-between; align-items: flex-end; margin: 28px 4px 12px; gap: 14px; }
-.cityHeading h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
-.cityHeading p { font-size: 15px; color: var(--label-2); margin-top: 2px; }
-.cityHeading > span { font-size: 13px; color: var(--label-2); white-space: nowrap; }
-.mapScroll { overflow-x: auto; border-radius: 30px; }
 .mapFoot { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13px; color: var(--label-2); margin: 10px 4px 0; line-height: 1.5; }
 .mapFoot button { flex-shrink: 0; color: var(--blue); font-weight: 600; }
 .mobileBuildings { display: none; }
@@ -152,6 +183,5 @@ a.widget:hover { transform: translateY(-2px); }
   .industries > div:last-child { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
 }
 @media (max-width: 850px) {
-  .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .top, .widget, .orb { animation: none; } }

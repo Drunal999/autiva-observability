@@ -17,8 +17,8 @@ const LOTS: {x:number;y:number;h:number}[] = [
   {x:70,y:400,h:190},{x:290,y:400,h:265},{x:510,y:400,h:220},{x:730,y:400,h:200},
 ]
 
-export function CategoryCity({selected,onSelect,night,labels}:{selected:BuildingId|null;onSelect:(id:BuildingId)=>void;night:boolean;labels:Record<string,string>}) {
- return <div className={styles.viewport} data-night={night} role="group" aria-label="Your business city. Choose a category building.">
+export function CategoryCity({selected,onSelect,night,labels,hero=false}:{selected:BuildingId|null;onSelect:(id:BuildingId)=>void;night:boolean;labels:Record<string,string>;hero?:boolean}) {
+ return <div className={styles.viewport} data-night={night} data-hero={hero} role="group" aria-label="Your business city. Choose a category building.">
   <div className={styles.scene}>
    <div className={styles.ground}>
     <div className={styles.roadH}/><div className={styles.roadV} style={{left:260}}/><div className={styles.roadV} style={{left:700}}/>

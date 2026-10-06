@@ -8,6 +8,7 @@ import {useEventListener} from '@/lib/realtime/client'
 import {CITY_FOCUS_EVENT,takeCityFocus} from '@/lib/ops/cityFocus'
 import {useWorkspaceMode} from './OpsShell'
 import {CategoryCity} from './CategoryCity'
+import {useBrainStatus} from '@/lib/ops/brain'
 import styles from './BusinessCity.module.css'
 const LegacyCity=dynamic(()=>import('./ImmersiveCityView').then(m=>m.ImmersiveCityView),{loading:()=> <p className="p-6">Loading 3D city…</p>})
 const greeting=(hour:number)=>hour<5?'Working late':hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
@@ -16,7 +17,7 @@ const Icon=({d}:{d:string})=><svg width="26" height="26" viewBox="0 0 24 24" fil
 function MonthWidget({at}:{at:number}){
  const now=new Date(at),y=now.getFullYear(),m=now.getMonth(),today=now.getDate()
  const cells=[...Array(new Date(y,m,1).getDay()).fill(null),...Array.from({length:new Date(y,m+1,0).getDate()},(_,i)=>i+1)]
- return <Link href="/calendar" className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-label={`Open calendar. Today is ${now.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})}`}>
+ return <Link href="/calendar" className={`liquid-glass ${styles.widget}`} aria-label={`Open calendar. Today is ${now.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})}`}>
   <p className={styles.month}>{now.toLocaleDateString(undefined,{month:'long'}).toUpperCase()}</p>
   <div className={styles.days} aria-hidden="true">{['S','M','T','W','T','F','S'].map((d,i)=><span key={`d${i}`} className={styles.dow}>{d}</span>)}{cells.map((d,i)=><span key={i} data-today={d===today}>{d??''}</span>)}</div>
  </Link>
@@ -26,6 +27,7 @@ export function BusinessCityView(){
  const {data,error,mutate,isValidating}=useSWR<MarketplaceData>('/api/city',fetcher,{refreshInterval:15000})
  useEventListener(()=>void mutate(),['RUNS','FLEET','APPROVALS'])
  const mode=useWorkspaceMode()
+ const brain=useBrainStatus()
  const [selected,setSelected]=useState<BuildingId>('sales')
  const [query,setQuery]=useState('')
  const [industry,setIndustry]=useState<string|null>(null)
@@ -46,10 +48,12 @@ export function BusinessCityView(){
  const choose=(id:BuildingId)=>{setSelected(id);setQuery('');setIndustry(null);setExpanded(null);enter()}
  if(legacy)return <><div className={`liquid-glass ${styles.returnBar}`}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
  return <section className={styles.workspace}>
-  <header className={styles.top}><p className={styles.date}>{clock?.day??'\u00a0'}</p><h1>{clock?greeting(clock.hour):'Welcome back'}</h1></header>
-  {/* Widgets, iOS style. The live count is the hook; every figure is counted from the records. */}
-  <div className={styles.bento} aria-label="Workspace summary">
-   <section className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-label="Bolo">
+  {/* City hero: the 3D city fills the stage and the widgets float over its corners in glass,
+      leaving the middle open so the city shows and its buildings stay clickable. */}
+  <section className={styles.stage} aria-label="Workspace summary">
+   <div className={styles.stageCity}><CategoryCity hero selected={industry?null:selected} onSelect={choose} night={clock?.night??false} labels={Object.fromEntries(BUILDINGS.map(b=>{const group=modules.filter(m=>buildingFor(m.district)===b.id);return [b.id,error?'Activity unavailable':!data?'Loading…':!group.length?'Coming soon':group.some(m=>moduleStatus(m)==='Needs attention')?'Needs attention':group.some(m=>moduleStatus(m)==='Running')?'Running':`${group.length} automation${group.length===1?'':'s'}`]}))}/></div>
+   <header className={`${styles.top} ${styles.aGreet}`}><p className={styles.date}>{clock?.day??'\u00a0'}</p><h1>{clock?greeting(clock.hour):'Welcome back'}</h1></header>
+   <section className={`liquid-glass ${styles.widget} ${styles.aBolo}`} aria-label="Bolo">
     <Link href="/brain" className={styles.ask}><span className={styles.orb} aria-hidden="true"/>Ask Bolo anything</Link>
     <div className={styles.quick}>
      <Link href="/brain" aria-label="Talk to Bolo"><Icon d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></Link>
@@ -58,27 +62,33 @@ export function BusinessCityView(){
      <Link href="/chat" aria-label="Messages"><Icon d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4z"/></Link>
     </div>
    </section>
-   <section className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-label="Right now">
+   <section className={`liquid-glass ${styles.widget} ${styles.aNow}`} aria-label="Right now">
     <p className={styles.kicker}>Right now</p>
     <p className={styles.liveNum}>{error||!data?'—':running}</p>
     <p className={styles.liveText}>{error?'Activity unavailable':!data?'Connecting to your city…':running===0?'Your city is quiet':running===1?'automation working for you':'automations working for you'}</p>
     <p className={styles.note}>{error?'No records were changed.':!data?'':data.sample?'Sample workspace · These are example records.':'Based on recorded workspace activity.'}</p>
    </section>
-   <section className={`liquid-glass ${styles.widget}`} aria-label="Automations">
-    <p className={styles.kicker}>Automations</p>
-    <p className={styles.stat}>{error||!data?'—':modules.length}</p>
-    <p className={styles.statLabel}>in your workspace</p>
-   </section>
-   <Link href="/approvals" className={`liquid-glass ${styles.widget}`} aria-label={`Needs you: ${error||!data?'unknown':attention}`}>
+   {/* Brain: the shared memory every agent reads. Its state is checked, never assumed. */}
+   <Link href="/brain" className={`liquid-glass ${styles.widget} ${styles.aBrain}`} aria-label={`Brain, shared memory: ${brain==='online'?'online':brain==='offline'?'offline':brain==='remote'?'only on your own machine':'checking'}`}>
+    <p className={styles.kicker}>Brain</p>
+    <div className={styles.brainRow}>
+     <span className={styles.brainMark} aria-hidden="true"><Icon d="M9.5 4A2.5 2.5 0 0 0 7 6.5 3 3 0 0 0 4.5 11a3 3 0 0 0 1 5A3 3 0 0 0 9.5 20 1.5 1.5 0 0 0 11 18.5v-13A1.5 1.5 0 0 0 9.5 4zM14.5 4A2.5 2.5 0 0 1 17 6.5a3 3 0 0 1 2.5 4.5 3 3 0 0 1-1 5 3 3 0 0 1-4 4 1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 14.5 4z"/></span>
+     <div><p className={styles.statLabel}>Shared memory</p><p className={styles.brainState} data-state={brain??'checking'}>{brain==='online'?'Online':brain==='offline'?'Not running':brain==='remote'?'On your own machine only':'Checking…'}</p></div>
+    </div>
+   </Link>
+   <Link href="/approvals" className={`liquid-glass ${styles.widget} ${styles.aNeeds}`} aria-label={`Needs you: ${error||!data?'unknown':attention}`}>
     <p className={styles.kicker}>Needs you</p>
     <p className={styles.stat} data-alert={!error&&!!data&&attention>0}>{error||!data?'—':attention}</p>
     <p className={styles.statLabel}>{!error&&data&&attention>0?'Review decisions':'Nothing waiting'}</p>
    </Link>
-   {clock?<MonthWidget at={clock.at}/>:<div className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-hidden="true"/>}
-  </div>
-  <div className={styles.cityHeading}><div><h2>Your city</h2><p>Each building is one part of your business. Tap one to see what’s inside.</p></div></div>
-  <div className={`liquid-glass ${styles.mapScroll}`}><CategoryCity selected={industry?null:selected} onSelect={choose} night={clock?.night??false} labels={Object.fromEntries(BUILDINGS.map(b=>{const group=modules.filter(m=>buildingFor(m.district)===b.id);return [b.id,error?'Activity unavailable':!data?'Loading…':!group.length?'Coming soon':group.some(m=>moduleStatus(m)==='Needs attention')?'Needs attention':group.some(m=>moduleStatus(m)==='Running')?'Running':`${group.length} automation${group.length===1?'':'s'}`]}))}/></div>
-  <div className={styles.mapFoot}><p>Glowing windows mean something is running right now.</p>{mode==='team'&&<button onClick={()=>setLegacy(true)}>Explore original 3D view</button>}</div>
+   <section className={`liquid-glass ${styles.widget} ${styles.aAuto}`} aria-label="Automations">
+    <p className={styles.kicker}>Automations</p>
+    <p className={styles.stat}>{error||!data?'—':modules.length}</p>
+    <p className={styles.statLabel}>in your workspace</p>
+   </section>
+   <div className={styles.aCal}>{clock?<MonthWidget at={clock.at}/>:null}</div>
+  </section>
+  <div className={styles.mapFoot}><p>Tap a building to see what’s inside. Glowing windows mean something is running right now.</p>{mode==='team'&&<button onClick={()=>setLegacy(true)}>Explore original 3D view</button>}</div>
   <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}>{b.name}</button>)}</div>
   <section className={`liquid-glass ${styles.industries}`} aria-label="Industry districts"><div><h3>Made for your industry</h3><p>Ready-made packs for your kind of business are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
   <section ref={details} tabIndex={-1} className={`liquid-glass ${styles.catalog}`} aria-label="Building automations">
