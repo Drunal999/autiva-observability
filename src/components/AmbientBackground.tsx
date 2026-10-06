@@ -83,11 +83,13 @@ export function AmbientBackground() {
         style={{
           background: [
             'linear-gradient(180deg,',
-            'rgba(10,16,32,0.93) 0%,',
-            'rgba(10,16,32,0.88) 22%,',
-            'rgba(10,16,32,0.80) 48%,',
-            'rgba(10,16,32,0.70) 74%,',
-            'rgba(10,16,32,0.62) 100%)',
+            // Lighter than the flat-canvas era: glass widgets carry their own
+            // fill for contrast now, and they need colour behind them to read.
+            'rgba(10,16,32,0.74) 0%,',
+            'rgba(10,16,32,0.66) 22%,',
+            'rgba(10,16,32,0.56) 48%,',
+            'rgba(10,16,32,0.48) 74%,',
+            'rgba(10,16,32,0.42) 100%)',
           ].join(' '),
         }}
       />

@@ -111,9 +111,9 @@ export function AutivaAssistant() {
     frame.current?.contentWindow?.postMessage({ type: 'autiva:approval-decision', id, decision }, VOICE)
   }
   if (!local) return null
-  return <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
-    {approvals.map(a => <div key={a.id} role="alertdialog" aria-label="The assistant asks for permission" className="w-80 rounded-2xl border border-orange-300/50 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-xl">
-      <p className="break-words">Allow the assistant to: {a.summary}?</p>
+  return <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2 max-[700px]:bottom-28">
+    {approvals.map(a => <div key={a.id} role="alertdialog" aria-label="Bolo asks for permission" className="w-80 rounded-2xl border border-orange-300/50 bg-slate-950/95 p-3 text-sm text-slate-100 shadow-xl">
+      <p className="break-words">Allow Bolo to: {a.summary}?</p>
       <div className="mt-2 flex flex-wrap gap-2">
         <button type="button" onClick={() => decide(a.id, 'once')} className="rounded-lg bg-emerald-300 px-3 py-1.5 text-xs font-semibold text-slate-950 focus-visible:ring-2 focus-visible:ring-white">Approve once</button>
         <button type="button" onClick={() => decide(a.id, 'always')} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Always allow this</button>
@@ -121,13 +121,13 @@ export function AutivaAssistant() {
       </div>
     </div>)}
     <p role="status" className="max-w-64 rounded-2xl bg-slate-950/95 px-3 py-2 text-xs text-slate-200">{status}{active ? ' · Tap to mute' : ''}</p>
-    <button type="button" disabled={!ready} aria-label={active ? 'Mute AUTIVA microphone and reply' : 'Talk to AUTIVA'} aria-pressed={active} title="Tap to talk. Swipe or use arrow keys to change appearance."
+    <button type="button" disabled={!ready} aria-label={active ? 'Mute Bolo' : 'Talk to Bolo'} aria-pressed={active} title="Tap to talk. Swipe or use arrow keys to change appearance."
       onPointerDown={event => {down.current=event.clientX; swiped.current=false; event.currentTarget.setPointerCapture(event.pointerId)}}
       onPointerUp={event => {const delta=event.clientX-down.current;if(Math.abs(delta)>28){swiped.current=true;changeFace(delta<0?1:-1)}}}
       onPointerCancel={() => {swiped.current=true}}
       onKeyDown={event => {if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();changeFace(event.key==='ArrowRight'?1:-1)}}}
       onClick={() => {if(swiped.current){swiped.current=false;return}toggle()}}
-      className={`flex h-[76px] w-[76px] touch-pan-y items-center justify-center rounded-full border bg-slate-950 shadow-xl focus-visible:ring-2 focus-visible:ring-brand-200 disabled:opacity-50 ${active ? 'border-brand-200 shadow-brand-400/30' : 'border-white/20'}`}>
+      className={`flex h-[76px] w-[76px] touch-pan-y items-center justify-center rounded-full border backdrop-blur-xl backdrop-saturate-150 shadow-xl transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[#ff9f0a] disabled:opacity-50 ${active ? 'border-[#ff9f0a]/80 bg-[#ff9f0a]/20 shadow-[0_0_44px_rgba(255,159,10,0.45)]' : 'border-white/25 bg-white/10'}`}>
       {face==='orb' ? <ThinkingOrb state={['Listening','Hearing you'].includes(status)?'listening':['Thinking','Understanding'].includes(status)?'working':status==='Speaking'?'composing':'breathing'} size={64} theme="dark" /> : <AssistantFace face={face} />}
     </button>
     <iframe ref={frame} title="AUTIVA audio connection" src={`${VOICE}/?voiceBridge=1`} allow="microphone; autoplay" aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute h-px w-px opacity-0" />
