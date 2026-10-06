@@ -661,3 +661,21 @@ enum NodeKind {
   CONDITION
   ACTION
 }
+
+/// Who is online right now, and what they are looking at. ONE ROW PER PERSON,
+/// overwritten by each heartbeat and deleted once it is older than the TTL
+/// (lib/ops/presence.ts): it never accumulates a history of who looked at
+/// what, when. It lives in the database only so every server instance sees
+/// the same roster; in process memory, two people on different instances
+/// could not see each other.
+model Presence {
+  tenantId String
+  userId   String
+  name     String
+  /// Human-readable location, e.g. "run r-8f2c" or "Home".
+  viewing  String
+  lastSeen DateTime
+
+  @@id([tenantId, userId])
+  @@index([tenantId, lastSeen])
+}

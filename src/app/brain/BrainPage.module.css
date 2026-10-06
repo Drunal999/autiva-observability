@@ -1,0 +1,16 @@
+/* Brain page in the same iOS glass language as the city home. */
+.page { padding: 8px clamp(16px, 2.4vw, 32px) 120px; color: var(--label); display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.top { padding: clamp(18px, 4vh, 36px) 6px 0; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.kicker { font-size: 15px; font-weight: 600; color: var(--label-2); }
+.top h1 { font-size: clamp(34px, 4vw, 48px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }
+.segment { display: flex; padding: 3px; border-radius: 14px; background: var(--fill); gap: 2px; }
+.segment button { height: 34px; padding: 0 18px; border-radius: 11px; font-size: 15px; font-weight: 600; color: var(--label); }
+.segment button[aria-pressed='true'] { background: var(--pill-2); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
+.hint { font-size: 15px; color: var(--label-2); padding: 0 6px; }
+.frame { position: relative; border-radius: 30px; padding: 8px; }
+.frame iframe { display: block; width: 100%; height: calc(100dvh - 300px); min-height: 460px; border: 0; border-radius: 24px; }
+.offline { position: relative; border-radius: 30px; padding: 22px; }
+.offline h2 { font-size: 17px; font-weight: 700; }
+.offline p { font-size: 15px; color: var(--label-2); margin-top: 6px; line-height: 1.5; }
+.offline code { display: block; margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--fill); font-family: var(--font-mono), ui-monospace, monospace; font-size: 13px; color: var(--label); overflow-x: auto; }
+.page button:focus-visible { outline: 2px solid var(--label); outline-offset: 2px; }

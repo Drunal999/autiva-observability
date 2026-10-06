@@ -3,48 +3,46 @@
 import { useEffect, useState } from 'react'
 import { OpsShell } from '@/components/ops/OpsShell'
 import { AutomationsView } from '@/components/ops/AutomationsView'
-
-// Served by AUTIVA's brain/server.mjs, which keeps the ElevenLabs key and the computer permissions local.
-// ponytail: localhost only; production needs the brain behind the tenant API (shared-brain PRD, acceptance 5).
-const BRAIN = 'http://127.0.0.1:8095'
+import { BRAIN_URL, useBrainStatus } from '@/lib/ops/brain'
+import styles from './BrainPage.module.css'
 
 /** The shared brain and the automation workflows it describes, as one section. */
 export default function BrainPage() {
-  const [local, setLocal] = useState<boolean | null>(null)
+  const brain = useBrainStatus()
   const [view, setView] = useState<'brain' | 'workflows'>('brain')
   useEffect(() => {
-    setLocal(['localhost', '127.0.0.1', '[::1]'].includes(location.hostname))
     if (new URLSearchParams(location.search).get('view') === 'workflows') setView('workflows')
   }, [])
   const tab = (id: typeof view, label: string) => (
-    <button onClick={() => setView(id)} aria-pressed={view === id}
-      className={`rounded border px-3 py-2 ${view === id ? 'border-cyan-300/60 bg-cyan-300/10' : 'border-white/20'}`}>{label}</button>
+    <button onClick={() => setView(id)} aria-pressed={view === id}>{label}</button>
   )
   return (
     <OpsShell>
-      <div className="flex h-full min-h-0 flex-col">
-        <div className="flex flex-wrap items-center gap-3 px-3 pt-3 text-sm md:px-5">
-          {tab('brain', 'Brain')}
-          {tab('workflows', 'Workflows')}
-          <span className="text-xs text-slate-400">
-            {view === 'brain' ? 'Talk with the orb at the bottom right; this view shows the same conversation.' : 'Choose a flow on the right to see its steps and recorded runs.'}
-          </span>
-        </div>
-        {view === 'workflows' ? <AutomationsView /> : (
-          // A mirror only: the orb owns the voice session, so switching tabs never cuts a conversation.
-          <section className="space-y-3 p-3 md:p-5">
-            <p className="text-xs text-slate-400">
-              Runs locally; start it from the AUTIVA repo with{' '}
-              <code className="text-slate-300">node --env-file=.env brain/server.mjs</code>
-            </p>
-            {local === false ? (
-              <p role="status" className="text-sm text-slate-400">The shared brain is only available on a local machine.</p>
-            ) : local ? (
-              <iframe title="AUTIVA shared brain" src={`${BRAIN}/?mirror=1`}
-                className="h-[calc(100dvh-200px)] min-h-[420px] w-full rounded-xl border border-white/10" />
-            ) : null}
+      <div className={styles.page}>
+        <header className={styles.top}>
+          <div><p className={styles.kicker}>Shared memory</p><h1>Brain</h1></div>
+          <div className={styles.segment} role="group" aria-label="Brain views">{tab('brain', 'Brain')}{tab('workflows', 'Workflows')}</div>
+        </header>
+        <p className={styles.hint}>
+          {view === 'brain' ? 'Talk to Bolo with the voice button; this view mirrors the same conversation.' : 'Choose a flow on the right to see its steps and recorded runs.'}
+        </p>
+        {view === 'workflows' ? <AutomationsView /> : brain === 'remote' ? (
+          <section className={`liquid-glass ${styles.offline}`}>
+            <h2>Only on your own machine</h2>
+            <p>The shared brain runs locally, so it isn’t available from here.</p>
           </section>
-        )}
+        ) : brain === 'offline' ? (
+          <section className={`liquid-glass ${styles.offline}`} role="status">
+            <h2>The brain isn’t running</h2>
+            <p>Start it from the AUTIVA repo, then reload this page.</p>
+            <code>node --env-file=.env brain/server.mjs</code>
+          </section>
+        ) : brain === 'online' ? (
+          // A mirror only: the orb owns the voice session, so switching tabs never cuts a conversation.
+          <div className={`liquid-glass ${styles.frame}`}>
+            <iframe title="AUTIVA shared brain" src={`${BRAIN_URL}/?mirror=1`} />
+          </div>
+        ) : null}
       </div>
     </OpsShell>
   )

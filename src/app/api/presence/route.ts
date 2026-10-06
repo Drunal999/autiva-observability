@@ -9,7 +9,7 @@ import { rateLimit } from '@/lib/ops/rateLimit'
 export async function GET() {
   const ctx = await getTenantContext()
   if (!ctx) return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
-  return NextResponse.json({ roster: roster(ctx.tenantId) })
+  return NextResponse.json({ roster: await roster(ctx.tenantId) })
 }
 
 /**
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   const viewing =
     typeof body.viewing === 'string' ? body.viewing.slice(0, 80) : 'the dashboard'
 
-  const entries = heartbeat({
+  const entries = await heartbeat({
     tenantId: ctx.tenantId,
     userId,
     name: session.user.name ?? 'Someone',
@@ -59,6 +59,6 @@ export async function DELETE() {
   if (!session?.user || !ctx || !userId) {
     return NextResponse.json({ error: 'unauthorised' }, { status: 401 })
   }
-  leave(ctx.tenantId, userId)
+  await leave(ctx.tenantId, userId)
   return NextResponse.json({ ok: true })
 }

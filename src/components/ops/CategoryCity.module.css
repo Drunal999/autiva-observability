@@ -1,0 +1,153 @@
+/* CSS-only 3D city. The scene is a tilted ground plane; towers are extruded
+   boxes standing on it. --yaw drives the camera sway, and labels and trees
+   undo it (and the tilt) so they always face the viewer. */
+@property --yaw {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: -40deg;
+}
+
+.viewport {
+  position: relative;
+  height: 600px;
+  min-height: 360px;
+  overflow: hidden;
+  perspective: 1700px;
+  perspective-origin: 50% 10%;
+  container-type: inline-size;
+}
+@media (max-width: 600px) {
+  .viewport { height: 380px; }
+}
+.scene {
+  --s: 0.8;
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform-style: preserve-3d;
+  transform: scale(var(--s)) rotateX(56deg) rotateZ(var(--yaw));
+  animation: sway 26s ease-in-out infinite alternate;
+}
+@container (max-width: 1000px) { .scene { --s: 0.66; } }
+@container (max-width: 760px) { .scene { --s: 0.5; } }
+@container (max-width: 520px) { .scene { --s: 0.32; top: 54%; } }
+@keyframes sway {
+  from { --yaw: -33deg; }
+  to { --yaw: -49deg; }
+}
+
+.ground {
+  position: absolute;
+  width: 960px;
+  height: 700px;
+  left: -480px;
+  top: -350px;
+  border-radius: 44px;
+  transform-style: preserve-3d;
+  background:
+    linear-gradient(var(--city-line) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--city-line) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--city-ground);
+  box-shadow: inset 0 0 0 1px var(--sep), 0 40px 80px rgba(0, 0, 0, 0.3);
+}
+.roadH, .roadV { position: absolute; background: var(--city-line); box-shadow: inset 0 0 0 1px var(--city-line); }
+.roadH { left: 0; right: 0; top: 280px; height: 34px; }
+.roadV { top: 0; bottom: 0; width: 20px; }
+.park {
+  position: absolute; left: 395px; top: 238px; width: 170px; height: 118px; border-radius: 50%;
+  background: radial-gradient(var(--fill-2), var(--fill) 70%); transform: translateZ(1px);
+  box-shadow: inset 0 0 0 1px var(--sep);
+  display: grid; place-items: end center; padding-bottom: 10px; box-sizing: border-box;
+}
+.park span { font-size: 11px; letter-spacing: 4px; color: var(--label-2); }
+
+
+.tower {
+  --win: repeating-linear-gradient(0deg, transparent 0 12px, var(--sep) 12px 14px);
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tower[data-state='lit'] { --win: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 206, 130, 0.7) 9px 12px); }
+.tower[data-state='soon'] { --win: repeating-linear-gradient(0deg, transparent 0 20px, var(--city-line) 20px 21px); }
+.tower:hover, .tower:focus-visible, .tower[aria-pressed='true'] { transform: translateZ(16px); }
+.tower:focus-visible { outline: none; }
+
+.pad {
+  position: absolute; inset: -16px; border-radius: 22px; transform: translateZ(1px);
+  background: var(--city-line);
+  transition: background 0.35s;
+}
+.tower[data-state='lit'] .pad { background: radial-gradient(rgba(255, 190, 90, 0.28), transparent 70%); }
+.tower[aria-pressed='true'] .pad, .tower:focus-visible .pad { background: radial-gradient(var(--fill-2), transparent 72%); }
+
+.body {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  animation: rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i) * 90ms + 150ms);
+}
+@keyframes rise {
+  from { transform: scale3d(1, 1, 0.02); }
+  to { transform: scale3d(1, 1, 1); }
+}
+.face {
+  position: absolute; display: block;
+  background-color: color-mix(in srgb, var(--c) 10%, var(--tower));
+  background-image: var(--win), linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%);
+  box-shadow: inset 0 0 0 1px var(--sep);
+}
+.tower[data-state='soon'] .face { opacity: 0.55; }
+.n, .s { left: 0; width: 120px; height: var(--h); transform-origin: top; transform: rotateX(90deg); }
+.n { top: 0; filter: brightness(0.7); }
+.s { top: 120px; }
+.w, .e { top: 0; width: var(--h); height: 120px; transform-origin: left; transform: rotateY(-90deg); }
+.w { left: 0; filter: brightness(0.72); }
+.e { left: 120px; filter: brightness(1.08); }
+.top {
+  left: 0; top: 0; width: 120px; height: 120px;
+  transform: translateZ(var(--h));
+  background-color: color-mix(in srgb, var(--c) 18%, var(--tower-top));
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+.tower[data-state='lit'] .top { box-shadow: inset 0 0 0 2px rgba(255, 207, 122, 0.6), 0 0 30px rgba(255, 190, 90, 0.35); }
+
+.label {
+  position: absolute; left: 50%; top: 50%;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 12px; border-radius: 14px; white-space: nowrap;
+  background: var(--lg-fill); border: 0.5px solid var(--sep);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  color: var(--label); font-family: inherit;
+  transform: translateZ(calc(var(--h) + 40px)) rotateZ(calc(-1 * var(--yaw))) rotateX(-56deg) translate(-50%, -50%);
+  animation: appear 0.5s ease both;
+  animation-delay: calc(var(--i) * 90ms + 700ms);
+}
+.label b { font-size: 15px; font-weight: 600; letter-spacing: -0.1px; }
+.label small { font-size: 12px; color: var(--label-2); }
+.tower[aria-pressed='true'] .label { background: var(--invert); color: var(--on-invert); border-color: transparent; }
+.tower[aria-pressed='true'] .label small { color: rgba(0, 0, 0, 0.7); }
+.tower:focus-visible .label { box-shadow: 0 0 0 3px var(--label); }
+@keyframes appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene, .body, .label { animation: none; }
+  .tower, .pad { transition: none; }
+}
+
+/* Hero: the city fills the home stage behind the widgets, so it sits a
+   little smaller and lower, centred in the open middle of the stage. */
+.viewport[data-hero='true'] .scene { --s: 0.54; top: 57%; left: 53%; }
+@container (max-width: 1000px) { .viewport[data-hero='true'] .scene { --s: 0.5; } }
+@container (max-width: 760px) { .viewport[data-hero='true'] .scene { --s: 0.46; top: 52%; left: 50%; } }
+@container (max-width: 520px) { .viewport[data-hero='true'] .scene { --s: 0.32; top: 54%; left: 50%; } }

@@ -1,0 +1,187 @@
+/* City workspace, iOS 26 style: a bento of widgets in the global
+   .liquid-glass material over a monochrome wallpaper. The glass and chrome
+   stay colourless; colour comes only from content (Bolo's orb, a red badge,
+   today's date, a lit building). */
+.workspace {
+  color: var(--label);
+  padding: 8px clamp(16px, 2.4vw, 32px) 120px;
+  min-height: calc(100dvh - 76px);
+}
+.industries, .catalog, .returnBar, .widget { position: relative; }
+
+.top { padding: 6px 6px 0; animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.date { font-size: 15px; font-weight: 600; color: var(--label-2); }
+.top h1 { font-size: clamp(34px, 4vw, 48px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }
+
+.widget {
+  border-radius: 30px; padding: 18px; min-width: 0; color: var(--label);
+  display: flex; flex-direction: column;
+  animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes rise-in { from { opacity: 0; transform: translateY(12px) scale(0.985); } to { opacity: 1; transform: none; } }
+a.widget { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+a.widget:hover { transform: translateY(-2px); }
+.kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--label-2); }
+.note { font-size: 13px; color: var(--label-2); margin-top: auto; padding-top: 10px; }
+
+/* City hero stage. The city sits in the grid's full area underneath; the
+   widgets are placed in the corners above it. */
+.stage {
+  position: relative; margin-top: 8px; display: grid; gap: 14px; padding: clamp(14px, 2vw, 22px);
+  min-height: max(660px, calc(100dvh - 110px));
+  grid-template-columns: minmax(150px, 185px) minmax(150px, 185px) 1fr minmax(260px, 300px);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "greet greet . now"
+    "bolo  bolo  . now"
+    ".     .     . brain"
+    "needs autos . cal";
+}
+.stageCity { grid-row: 1 / -1; grid-column: 1 / -1; position: relative; z-index: 0; margin: calc(-1 * clamp(14px, 2vw, 22px)); min-height: 0; }
+.stageCity > [role='group'] { height: 100%; }
+.stage > :not(.stageCity) { position: relative; z-index: 1; }
+.aGreet { grid-area: greet; } .aBolo { grid-area: bolo; } .aNow { grid-area: now; align-self: start; }
+.aBrain { grid-area: brain; align-self: end; }
+.aNeeds { grid-area: needs; } .aAuto { grid-area: autos; } .aCal { grid-area: cal; }
+.aGreet, .aCal { min-width: 0; }
+.aGreet h1 { text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25); }
+@media (max-width: 1100px) {
+  .stage { grid-template-columns: repeat(2, minmax(0, 1fr)) 1fr; grid-template-areas: "greet greet greet" "bolo bolo now" ". . brain" "needs autos cal"; }
+}
+@media (max-width: 850px) {
+  .stage { min-height: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none;
+    grid-template-areas: "greet greet" "city city" "bolo bolo" "now now" "brain brain" "needs autos" "cal cal"; }
+  .stageCity { grid-area: city; margin: 0; height: 380px; }
+}
+
+/* Bolo: the Google-widget pattern. A pill to ask, a row of round actions. */
+.ask {
+  height: 60px; border-radius: 30px; display: flex; align-items: center; gap: 14px; padding: 0 10px;
+  background: var(--pill); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font-size: 20px; font-weight: 500; color: var(--label-2);
+}
+.orb {
+  width: 40px; height: 40px; border-radius: 50%; flex: none;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9) 0, rgba(255, 255, 255, 0) 22%),
+    radial-gradient(circle at 70% 65%, #ff9f0a 0, rgba(255, 159, 10, 0) 55%),
+    radial-gradient(circle at 28% 72%, #bf5af2 0, rgba(191, 90, 242, 0) 55%),
+    radial-gradient(circle at 60% 25%, #0a84ff 0, rgba(10, 132, 255, 0) 50%),
+    #1a1030;
+  box-shadow: 0 0 18px rgba(191, 90, 242, 0.45);
+  animation: spin 12s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.quick a {
+  position: relative; height: 64px; border-radius: 32px; display: grid; place-items: center; color: var(--label);
+  background: var(--pill); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: background 0.2s;
+}
+.quick a:hover { background: var(--pill-2); }
+
+/* Right now: the live hook, counted from the records. */
+.liveNum { font-size: 64px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.liveText { font-size: 17px; font-weight: 600; margin-top: 4px; }
+.stat { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.stat[data-alert='true'] { color: var(--red); }
+.statLabel { font-size: 15px; font-weight: 600; margin-top: 4px; }
+
+/* Brain: its own colour (content, not chrome) and a live status dot. */
+.brainRow { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.brainMark {
+  width: 48px; height: 48px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff;
+  background: radial-gradient(circle at 30% 28%, #c5a3ff, #6d4cff 55%, #2b1c7a);
+  box-shadow: 0 0 22px rgba(124, 92, 255, 0.5);
+}
+.brainState { font-size: 13px; color: var(--label-2); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+.brainState::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--label-2); }
+.brainState[data-state='online']::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.brainState[data-state='offline']::before { background: var(--red); }
+
+/* Calendar: the iOS month widget. Red is reserved for the month and today. */
+.month { font-size: 13px; font-weight: 700; letter-spacing: 0.6px; color: var(--red); }
+.days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px 2px; margin-top: 8px; text-align: center; font-size: 13px; font-weight: 600; }
+.days > span { height: 22px; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.dow { color: var(--label-2); font-size: 11px; }
+.days > span[data-today='true'] { background: var(--red); border-radius: 50%; width: 22px; margin: 0 auto; }
+
+.mapFoot { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13px; color: var(--label-2); margin: 10px 4px 0; line-height: 1.5; }
+.mapFoot button { flex-shrink: 0; color: var(--blue); font-weight: 600; }
+.mobileBuildings { display: none; }
+
+.industries { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 24px 0; padding: 18px 20px; border-radius: 30px; }
+.industries h3 { font-size: 17px; font-weight: 700; }
+.industries p { font-size: 13px; color: var(--label-2); margin-top: 2px; }
+.industries > div:last-child { display: flex; gap: 8px; flex-wrap: wrap; }
+.industries button { background: var(--fill); padding: 10px 16px; border-radius: 14px; font-size: 15px; font-weight: 600; text-align: left; color: var(--label); }
+.industries button > span { display: block; font-size: 12px; font-weight: 500; color: var(--label-2); margin-top: 2px; }
+.industries button[aria-pressed='true'] { box-shadow: inset 0 0 0 1.5px var(--label); }
+
+.catalog { border-radius: 30px; padding: 24px; scroll-margin-top: 96px; }
+.catalogHeader { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; margin-bottom: 18px; }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--label-2); margin-bottom: 2px; }
+.catalogHeader h2 { font-size: 30px; font-weight: 700; letter-spacing: -0.4px; }
+.catalogHeader > div > p:last-child { font-size: 15px; color: var(--label-2); line-height: 1.5; margin-top: 4px; max-width: 60ch; }
+.search { flex-shrink: 0; font-size: 13px; color: var(--label-2); display: flex; flex-direction: column; gap: 6px; }
+.search input { font: inherit; font-size: 15px; height: 40px; padding: 0 14px; background: var(--fill); border: 0; border-radius: 20px; color: var(--label); width: 260px; }
+.search input::placeholder { color: var(--label-2); }
+.empty { padding: 24px; border-radius: 20px; background: var(--fill); }
+.empty h3 { font-size: 17px; font-weight: 700; }
+.empty p { font-size: 15px; line-height: 1.5; max-width: 64ch; color: var(--label-2); margin-top: 6px; }
+.empty button { font-size: 15px; font-weight: 600; margin-top: 14px; color: var(--blue); }
+
+/* The building's automations read as a tower: one floor per automation,
+   the top floor first. A floor's windows are lit only while it is Running. */
+.automationList { display: flex; flex-direction: column; gap: 6px; }
+.automation { background: var(--fill); border: 0.5px solid var(--sep); display: flex; padding: 0; border-radius: 18px; overflow: hidden; min-width: 0; }
+.floor {
+  width: 58px; flex: none; display: flex; align-items: center; justify-content: center;
+  background: var(--fill); background-image: repeating-linear-gradient(0deg, transparent 0 12px, var(--sep) 12px 14px);
+}
+.floor[data-lit='true'] { background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 206, 130, 0.7) 9px 12px); }
+.floor > span { font-size: 13px; font-weight: 800; background: rgba(0, 0, 0, 0.72); padding: 4px 7px; border-radius: 7px; font-variant-numeric: tabular-nums; }
+.floorBody { flex: 1; min-width: 0; padding: 16px 18px; }
+.automationTop { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; }
+.automation h3 { font-size: 17px; font-weight: 600; }
+.automationTop p { font-size: 15px; line-height: 1.45; color: var(--label-2); margin-top: 2px; max-width: 60ch; }
+.status { height: 26px; display: inline-flex; align-items: center; border-radius: 13px; padding: 0 10px; font-size: 12px; font-weight: 700; white-space: nowrap; background: rgba(235, 235, 245, 0.12); color: rgba(235, 235, 245, 0.8); }
+.status[data-status='Running'] { background: rgba(48, 209, 88, 0.18); color: var(--green); }
+.status[data-status='Needs attention'] { background: rgba(255, 214, 10, 0.16); color: var(--yellow); }
+.automation dl { margin: 14px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 13px; line-height: 1.4; }
+.automation dt { color: var(--label-2); }
+.automation dd { color: var(--label); margin-top: 2px; }
+.automationActions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 15px; }
+.automationActions > button:not(.primary), .automationActions > a:not(.primary) { height: 36px; padding: 0 14px; border-radius: 18px; background: var(--fill); font-weight: 600; }
+.automationActions > span { color: var(--label-2); margin-left: auto; font-size: 13px; }
+.primary { height: 36px; display: inline-flex; align-items: center; padding: 0 16px; background: var(--invert); color: var(--on-invert); border-radius: 18px; font-size: 15px; font-weight: 600; }
+.activity { margin-top: 16px; padding-top: 14px; border-top: 0.5px solid var(--sep); }
+.activity h4 { font-size: 15px; font-weight: 700; }
+.activity p { font-size: 13px; color: var(--label-2); line-height: 1.5; margin: 6px 0; }
+.activityRow { padding: 10px 0; border-bottom: 0.5px solid var(--sep); font-size: 13px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.activityRow time { color: var(--label-2); }
+.activityRow p { flex-basis: 100%; overflow-wrap: anywhere; }
+.activity > a { display: inline-block; margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--blue); }
+
+.workspace button:focus-visible, .workspace a:focus-visible, .workspace input:focus-visible { outline: 2px solid var(--label); outline-offset: 2px; }
+.returnBar { margin: 12px 16px; padding: 12px 16px; border-radius: 20px; display: flex; gap: 20px; align-items: center; font-size: 15px; }
+.returnBar button { color: var(--blue); font-weight: 600; }
+
+@media (max-width: 1250px) {
+  .industries { align-items: flex-start; flex-direction: column; }
+}
+@media (max-width: 850px) {
+  .catalogHeader { align-items: stretch; flex-direction: column; }
+  .search input { width: 100%; box-sizing: border-box; }
+  .mobileBuildings { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+  .mobileBuildings button { height: 36px; padding: 0 14px; border-radius: 18px; background: var(--pill); border: 0.5px solid var(--sep); font-size: 15px; font-weight: 600; color: var(--label); }
+  .mobileBuildings button[aria-pressed='true'] { background: var(--invert); color: var(--on-invert); border-color: transparent; }
+  .catalog { padding: 16px; }
+  .mapFoot { flex-direction: column; gap: 8px; }
+  .automationTop { flex-direction: column; }
+  .floor { width: 46px; }
+  .industries > div:last-child { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+}
+@media (max-width: 850px) {
+}
+@media (prefers-reduced-motion: reduce) { .top, .widget, .orb { animation: none; } }
