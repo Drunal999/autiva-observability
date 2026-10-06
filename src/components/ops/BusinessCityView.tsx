@@ -10,6 +10,7 @@ import {useWorkspaceMode} from './OpsShell'
 import {CategoryCity} from './CategoryCity'
 import styles from './BusinessCity.module.css'
 const LegacyCity=dynamic(()=>import('./ImmersiveCityView').then(m=>m.ImmersiveCityView),{loading:()=> <p className="p-6">Loading 3D city…</p>})
+const greeting=(hour:number)=>hour<5?'Working late':hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
 const fetcher=async(url:string)=>{const response=await fetch(url);if(!response.ok)throw new Error('Could not load your workspace activity.');return response.json()}
 export function BusinessCityView(){
  const {data,error,mutate,isValidating}=useSWR<MarketplaceData>('/api/city',fetcher,{refreshInterval:15000})
@@ -20,10 +21,10 @@ export function BusinessCityView(){
  const [industry,setIndustry]=useState<string|null>(null)
  const [expanded,setExpanded]=useState<string|null>(null)
  const [legacy,setLegacy]=useState(false)
- const [clock,setClock]=useState<{label:string;night:boolean}|null>(null)
+ const [clock,setClock]=useState<{label:string;night:boolean;hour:number}|null>(null)
  const [requestedModule,setRequestedModule]=useState<string|null>(null)
  const details=useRef<HTMLElement>(null)
- useEffect(()=>{const tick=()=>{const date=new Date();setClock({label:new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(date),night:date.getHours()<6||date.getHours()>=19})};tick();const timer=setInterval(tick,60000);return()=>clearInterval(timer)},[])
+ useEffect(()=>{const tick=()=>{const date=new Date();setClock({label:new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(date),night:date.getHours()<6||date.getHours()>=19,hour:date.getHours()})};tick();const timer=setInterval(tick,60000);return()=>clearInterval(timer)},[])
  useEffect(()=>{setRequestedModule(takeCityFocus());const focus=(e:Event)=>{takeCityFocus();setRequestedModule((e as CustomEvent<string>).detail)};window.addEventListener(CITY_FOCUS_EVENT,focus);return()=>window.removeEventListener(CITY_FOCUS_EVENT,focus)},[])
  useEffect(()=>{if(!requestedModule||!data||error)return;const automation=data.districts.find(m=>m.id===requestedModule);if(automation){setSelected(buildingFor(automation.district));setExpanded(automation.id);setIndustry(null);setQuery('');setLegacy(false);setRequestedModule(null)}},[requestedModule,data,error])
  const modules=error?[]:data?.districts??[]
@@ -35,8 +36,12 @@ export function BusinessCityView(){
  const choose=(id:BuildingId)=>{setSelected(id);setQuery('');setIndustry(null);setExpanded(null);enter()}
  if(legacy)return <><div className={styles.returnBar}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
  return <section className={styles.workspace}>
+  {/* The hook is the live state of the city, counted from the records; it never claims activity it can't see. */}
   <header className={styles.hero}>
-   <div className={styles.intro}><div><p className={styles.welcome}>A little clarity for your day</p><h1>Your business. All together.</h1><p>Choose a building to see what’s working, what needs you, and what’s next.</p></div><Link className={styles.assistantLink} href="/brain">Talk to Bolo <span aria-hidden="true">↗</span></Link></div>
+   <p className={styles.welcome}>{clock?greeting(clock.hour):'Welcome back'}</p>
+   <h1>{error?'Your city’s activity is unavailable right now.':!data?'Waking up your city…':running>0?<><em className={styles.big}>{running}</em> {running===1?'automation is':'automations are'} working for you right now.</>:'Your city is quiet right now.'}</h1>
+   <p className={styles.lede}>{!error&&data&&attention>0?`${attention} ${attention===1?'decision is':'decisions are'} waiting for you. `:''}Choose a building to see what’s working, what needs you, and what’s next.</p>
+   <div className={styles.heroActions}><Link className={styles.assistantLink} href="/brain">Talk to Bolo <span aria-hidden="true">↗</span></Link>{!error&&data&&attention>0&&<Link className={styles.secondary} href="/approvals">Review {attention===1?'decision':'decisions'}</Link>}</div>
   </header>
   <div className={styles.overview} aria-label="Workspace summary">
     <div><span>Automations in this workspace</span><strong>{error||!data?'—':modules.length}</strong></div>
