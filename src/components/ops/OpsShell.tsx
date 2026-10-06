@@ -6,7 +6,8 @@ import useSWR from 'swr'
 import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
 import { SIMPLE_NAV, TEAM_NAV, ASSISTANT_HREF, workspaceMode, type WorkspaceMode } from '@/lib/ops/workspaceNavigation'
-import { usePresence, PresenceBar } from './Presence'
+import { usePresence } from './Presence'
+import { TeamAvatars, TeamList, useTeam } from './TeamPresence'
 import { AutivaAssistant } from './AutivaAssistant'
 import { FactBubble } from './FactBubble'
 import { useEventListener } from '@/lib/realtime/client'
@@ -40,6 +41,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
   useEventListener(()=>void refreshNotifs(),['COMMENTS'])
   const current=[...SIMPLE_NAV,...TEAM_NAV].find(n=>n.href===pathname)
   const roster=usePresence(current?.label??'the dashboard')
+  const team=useTeam(roster)
   const failures=data?.agents?.filter(a=>a.status==='FAILED').length??0
   const pending=approvalError?undefined:approvals?.pending?.length
   const teamPage=TEAM_NAV.find(n=>n.href===pathname)
@@ -51,7 +53,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
       <div className={styles.headerStatus}>
         {IS_SAMPLE_DATA&&<span className={styles.sample} title="These records are examples, not production results.">Sample data</span>}
         {mode==='team'&&<span className={styles.health}>{error?'Activity unavailable':!data?'Connecting…':failures?`${failures} ${IS_SAMPLE_DATA?'sample ':''}agent${failures===1?'':'s'} need attention`:'No agent failures reported'}</span>}
-        {mode==='team'&&<PresenceBar roster={roster}/>}
+        <TeamAvatars team={team}/>
         <button type="button" className={styles.menuButton} aria-expanded={menu} aria-controls="workspace-navigation" onClick={()=>setMenu(!menu)}>Menu</button>
       </div>
     </header>
@@ -59,6 +61,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
       <nav aria-label="Business navigation">{SIMPLE_NAV.map(navLink)}</nav>
       {mode==='team'&&<nav aria-label="Team navigation" className={styles.teamNav}><p>Team workspace</p>{TEAM_NAV.map(navLink)}</nav>}
       {mode==='simple'&&teamPage&&<div className={styles.context}><p>You opened a team view.</p>{navLink(teamPage)}<button onClick={()=>changeMode('team')}>Show all team tools</button></div>}
+      <TeamList team={team}/>
       {/* Settings live at the bottom, out of the way of everyday navigation. */}
       <div className={styles.sidebarFoot}>
         <p className={styles.footLabel}>View</p>

@@ -83,3 +83,6 @@
   .main { margin-left: 0; min-height: calc(100dvh - 72px); padding-bottom: 96px; }
   .tabBar { display: flex; position: fixed; left: 12px; right: 12px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 46; gap: 10px; align-items: center; }
 }
+/* Narrow phones: the team faces need the room. "Sample data" is still said
+   in the Right now widget. */
+@media (max-width: 480px) { .sample { display: none; } }
