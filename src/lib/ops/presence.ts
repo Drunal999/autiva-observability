@@ -1,17 +1,17 @@
 /**
  * Who is online and what they are looking at.
  *
- * EPHEMERAL BY DESIGN. This never touches the database. Presence is worthless
- * five minutes after the fact, and persisting "who was looking at what, when"
- * would create a surveillance record nobody asked for and everybody would have
- * to reason about in a privacy review. It lives in process memory and dies
- * with the process.
+ * "CURRENT ONLY" BY DESIGN. Each person has one row, overwritten by every
+ * heartbeat and deleted once it is older than the TTL, so the table holds who
+ * is here now and nothing else. Presence is worthless five minutes after the
+ * fact, and keeping "who was looking at what, when" would be a surveillance
+ * record nobody asked for.
  *
- * CAVEAT, same as the bus and the rate limiter: on multiple instances each
- * container sees only its own connections, so the roster is partial rather
- * than wrong. Presence degrades gracefully in a way a queue or a limit does
- * not, which is why it is acceptable here and not there.
+ * It lives in the database rather than process memory so every server
+ * instance sees the same roster. In memory, two people served by different
+ * instances (normal on Vercel) could never see each other.
  */
+import { prisma } from '../prisma'
 
 export interface PresenceEntry {
   userId: string
@@ -25,58 +25,35 @@ export interface PresenceEntry {
 /** A client that has not checked in for this long is treated as gone. */
 export const PRESENCE_TTL_MS = 45_000
 
-// tenantId -> userId -> entry. Tenant is the outer key so a lookup can never
-// accidentally span tenants: there is no query that returns everyone.
-const byTenant = new Map<string, Map<string, PresenceEntry>>()
+/** The slice of the Prisma client presence uses; tests pass an in-memory stand-in. */
+export type PresenceDb = { presence: Pick<typeof prisma.presence, 'upsert' | 'deleteMany' | 'findMany'> }
 
-function fresh(entries: Map<string, PresenceEntry>, now: number) {
-  entries.forEach((e, k) => {
-    if (now - e.lastSeen > PRESENCE_TTL_MS) entries.delete(k)
+export async function heartbeat(
+  input: { tenantId: string; userId: string; name: string; viewing: string },
+  db: PresenceDb = prisma,
+  now = Date.now(),
+): Promise<PresenceEntry[]> {
+  const fields = { name: input.name, viewing: input.viewing, lastSeen: new Date(now) }
+  await db.presence.upsert({
+    where: { tenantId_userId: { tenantId: input.tenantId, userId: input.userId } },
+    create: { tenantId: input.tenantId, userId: input.userId, ...fields },
+    update: fields,
   })
+  return roster(input.tenantId, db, now)
 }
 
-export function heartbeat(input: {
-  tenantId: string
-  userId: string
-  name: string
-  viewing: string
-}): PresenceEntry[] {
-  const now = Date.now()
-  let entries = byTenant.get(input.tenantId)
-  if (!entries) {
-    entries = new Map()
-    byTenant.set(input.tenantId, entries)
-  }
-
-  entries.set(input.userId, {
-    userId: input.userId,
-    name: input.name,
-    viewing: input.viewing,
-    lastSeen: now,
-  })
-
-  fresh(entries, now)
-  const out: PresenceEntry[] = []
-  entries.forEach((e) => out.push(e))
-  return out
-}
-
-/** Roster for one tenant, expired entries already dropped. */
-export function roster(tenantId: string): PresenceEntry[] {
-  const entries = byTenant.get(tenantId)
-  if (!entries) return []
-  fresh(entries, Date.now())
-  const out: PresenceEntry[] = []
-  entries.forEach((e) => out.push(e))
-  return out.sort((a, b) => a.name.localeCompare(b.name))
+/**
+ * Roster for one tenant, sorted by name so avatars do not shuffle between
+ * polls. Stale rows are deleted on the way, which is what keeps the table
+ * "current only". Every query is scoped by tenant: none returns everyone.
+ */
+export async function roster(tenantId: string, db: PresenceDb = prisma, now = Date.now()): Promise<PresenceEntry[]> {
+  await db.presence.deleteMany({ where: { tenantId, lastSeen: { lt: new Date(now - PRESENCE_TTL_MS) } } })
+  const rows = await db.presence.findMany({ where: { tenantId }, orderBy: { name: 'asc' } })
+  return rows.map((r) => ({ userId: r.userId, name: r.name, viewing: r.viewing, lastSeen: r.lastSeen.getTime() }))
 }
 
 /** Explicit departure, so closing a tab does not leave a ghost for 45s. */
-export function leave(tenantId: string, userId: string): void {
-  byTenant.get(tenantId)?.delete(userId)
-}
-
-/** Test seam. */
-export function __resetPresence(): void {
-  byTenant.clear()
+export async function leave(tenantId: string, userId: string, db: PresenceDb = prisma): Promise<void> {
+  await db.presence.deleteMany({ where: { tenantId, userId } })
 }
