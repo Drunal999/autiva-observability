@@ -1,42 +1,20 @@
+/* Monochrome wallpaper, like a dark iOS home screen: near-black with soft
+   smoky white light. No colour here; colour belongs to the content. */
 .wall {
   position: fixed;
   inset: 0;
   z-index: -10;
   pointer-events: none;
   overflow: hidden;
-  background:
-    radial-gradient(900px 600px at 85% -5%, rgba(150, 64, 98, 0.5), transparent 60%),
-    radial-gradient(800px 560px at 5% 105%, rgba(214, 106, 52, 0.38), transparent 60%),
-    linear-gradient(160deg, #0d0a19, #181022 55%, #100b14);
+  background: var(--wall);
+  transition: background 0.4s;
 }
-
-/* Bolo's orb, fixed in one place behind every surface. The glass above it
-   blurs it into soft light; only its colours turn, never its position. */
-.orb {
-  position: absolute;
-  right: 6%;
-  top: 10%;
-  width: min(44vw, 560px);
-  aspect-ratio: 1;
-}
-.glow, .core {
+.smoke {
   position: absolute;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9) 0, rgba(255, 255, 255, 0) 20%),
-    radial-gradient(circle at 70% 65%, #ff9f0a 0, rgba(255, 159, 10, 0) 55%),
-    radial-gradient(circle at 26% 72%, #bf5af2 0, rgba(191, 90, 242, 0) 55%),
-    radial-gradient(circle at 62% 24%, #0a84ff 0, rgba(10, 132, 255, 0) 52%),
-    #1c1236;
-  animation: turn 60s linear infinite;
+  filter: blur(60px);
 }
-.glow { inset: -14%; filter: blur(80px); opacity: 0.55; }
-.core { inset: 6%; filter: blur(2px); opacity: 0.78; }
-@keyframes turn { to { transform: rotate(360deg); } }
-
-@media (max-width: 700px) {
-  .orb { right: -18%; top: 6%; width: 86vw; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .glow, .core { animation: none; }
-}
+.a { width: 62vw; height: 44vh; left: 38%; top: 6%; background: radial-gradient(closest-side, var(--smoke), transparent); transform: rotate(-24deg); }
+.b { width: 48vw; height: 36vh; left: -10%; top: 40%; background: radial-gradient(closest-side, var(--smoke-2), transparent); transform: rotate(18deg); }
+.c { width: 40vw; height: 30vh; left: 46%; top: 64%; background: radial-gradient(closest-side, var(--smoke), transparent); transform: rotate(-8deg); opacity: 0.55; }
+.d { width: 26vw; height: 60vh; left: 78%; top: 30%; background: radial-gradient(closest-side, var(--smoke-2), transparent); opacity: 0.7; }

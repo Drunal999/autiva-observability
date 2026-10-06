@@ -11,6 +11,16 @@ import {CategoryCity} from './CategoryCity'
 import styles from './BusinessCity.module.css'
 const LegacyCity=dynamic(()=>import('./ImmersiveCityView').then(m=>m.ImmersiveCityView),{loading:()=> <p className="p-6">Loading 3D city…</p>})
 const greeting=(hour:number)=>hour<5?'Working late':hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
+const Icon=({d}:{d:string})=><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>
+/** The iOS month widget: Sunday-first grid, red reserved for the month name and today. */
+function MonthWidget({at}:{at:number}){
+ const now=new Date(at),y=now.getFullYear(),m=now.getMonth(),today=now.getDate()
+ const cells=[...Array(new Date(y,m,1).getDay()).fill(null),...Array.from({length:new Date(y,m+1,0).getDate()},(_,i)=>i+1)]
+ return <Link href="/calendar" className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-label={`Open calendar. Today is ${now.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'})}`}>
+  <p className={styles.month}>{now.toLocaleDateString(undefined,{month:'long'}).toUpperCase()}</p>
+  <div className={styles.days} aria-hidden="true">{['S','M','T','W','T','F','S'].map((d,i)=><span key={`d${i}`} className={styles.dow}>{d}</span>)}{cells.map((d,i)=><span key={i} data-today={d===today}>{d??''}</span>)}</div>
+ </Link>
+}
 const fetcher=async(url:string)=>{const response=await fetch(url);if(!response.ok)throw new Error('Could not load your workspace activity.');return response.json()}
 export function BusinessCityView(){
  const {data,error,mutate,isValidating}=useSWR<MarketplaceData>('/api/city',fetcher,{refreshInterval:15000})
@@ -21,10 +31,10 @@ export function BusinessCityView(){
  const [industry,setIndustry]=useState<string|null>(null)
  const [expanded,setExpanded]=useState<string|null>(null)
  const [legacy,setLegacy]=useState(false)
- const [clock,setClock]=useState<{label:string;night:boolean;hour:number}|null>(null)
+ const [clock,setClock]=useState<{label:string;night:boolean;hour:number;day:string;at:number}|null>(null)
  const [requestedModule,setRequestedModule]=useState<string|null>(null)
  const details=useRef<HTMLElement>(null)
- useEffect(()=>{const tick=()=>{const date=new Date();setClock({label:new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(date),night:date.getHours()<6||date.getHours()>=19,hour:date.getHours()})};tick();const timer=setInterval(tick,60000);return()=>clearInterval(timer)},[])
+ useEffect(()=>{const tick=()=>{const date=new Date();setClock({label:new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'}).format(date),night:date.getHours()<6||date.getHours()>=19,hour:date.getHours(),day:new Intl.DateTimeFormat(undefined,{weekday:'long',day:'numeric',month:'long'}).format(date),at:date.getTime()})};tick();const timer=setInterval(tick,60000);return()=>clearInterval(timer)},[])
  useEffect(()=>{setRequestedModule(takeCityFocus());const focus=(e:Event)=>{takeCityFocus();setRequestedModule((e as CustomEvent<string>).detail)};window.addEventListener(CITY_FOCUS_EVENT,focus);return()=>window.removeEventListener(CITY_FOCUS_EVENT,focus)},[])
  useEffect(()=>{if(!requestedModule||!data||error)return;const automation=data.districts.find(m=>m.id===requestedModule);if(automation){setSelected(buildingFor(automation.district));setExpanded(automation.id);setIndustry(null);setQuery('');setLegacy(false);setRequestedModule(null)}},[requestedModule,data,error])
  const modules=error?[]:data?.districts??[]
@@ -34,27 +44,44 @@ export function BusinessCityView(){
  const running=modules.filter(m=>moduleStatus(m)==='Running').length
  const enter=()=>requestAnimationFrame(()=>{details.current?.scrollIntoView?.({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});details.current?.focus({preventScroll:true})})
  const choose=(id:BuildingId)=>{setSelected(id);setQuery('');setIndustry(null);setExpanded(null);enter()}
- if(legacy)return <><div className={styles.returnBar}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
+ if(legacy)return <><div className={`liquid-glass ${styles.returnBar}`}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
  return <section className={styles.workspace}>
-  {/* The hook is the live state of the city, counted from the records; it never claims activity it can't see. */}
-  <header className={styles.hero}>
-   <p className={styles.welcome}>{clock?greeting(clock.hour):'Welcome back'}</p>
-   <h1>{error?'Your city’s activity is unavailable right now.':!data?'Waking up your city…':running>0?<><em className={styles.big}>{running}</em> {running===1?'automation is':'automations are'} working for you right now.</>:'Your city is quiet right now.'}</h1>
-   <p className={styles.lede}>{!error&&data&&attention>0?`${attention} ${attention===1?'decision is':'decisions are'} waiting for you. `:''}Choose a building to see what’s working, what needs you, and what’s next.</p>
-   <div className={styles.heroActions}><Link className={styles.assistantLink} href="/brain">Talk to Bolo <span aria-hidden="true">↗</span></Link>{!error&&data&&attention>0&&<Link className={styles.secondary} href="/approvals">Review {attention===1?'decision':'decisions'}</Link>}</div>
-  </header>
-  <div className={styles.overview} aria-label="Workspace summary">
-    <div><span>Automations in this workspace</span><strong>{error||!data?'—':modules.length}</strong></div>
-    <div><span>Running now</span><strong>{error||!data?'—':running}</strong></div>
-    <div><span>Need attention</span><strong>{error||!data?'—':attention}</strong><Link href="/approvals">Review decisions</Link></div>
-    <p>{error?'Activity is unavailable.':!data?'Connecting to your workspace…':data.sample?'Sample workspace · These are example records.':'Based on recorded workspace activity.'}</p>
+  <header className={styles.top}><p className={styles.date}>{clock?.day??'\u00a0'}</p><h1>{clock?greeting(clock.hour):'Welcome back'}</h1></header>
+  {/* Widgets, iOS style. The live count is the hook; every figure is counted from the records. */}
+  <div className={styles.bento} aria-label="Workspace summary">
+   <section className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-label="Bolo">
+    <Link href="/brain" className={styles.ask}><span className={styles.orb} aria-hidden="true"/>Ask Bolo anything</Link>
+    <div className={styles.quick}>
+     <Link href="/brain" aria-label="Talk to Bolo"><Icon d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></Link>
+     <Link href="/approvals" aria-label="Decisions"><Icon d="M5 12.5l4.5 4.5L19 7.5"/></Link>
+     <Link href="/calendar" aria-label="Calendar"><Icon d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 3v4M16 3v4"/></Link>
+     <Link href="/chat" aria-label="Messages"><Icon d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4z"/></Link>
+    </div>
+   </section>
+   <section className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-label="Right now">
+    <p className={styles.kicker}>Right now</p>
+    <p className={styles.liveNum}>{error||!data?'—':running}</p>
+    <p className={styles.liveText}>{error?'Activity unavailable':!data?'Connecting to your city…':running===0?'Your city is quiet':running===1?'automation working for you':'automations working for you'}</p>
+    <p className={styles.note}>{error?'No records were changed.':!data?'':data.sample?'Sample workspace · These are example records.':'Based on recorded workspace activity.'}</p>
+   </section>
+   <section className={`liquid-glass ${styles.widget}`} aria-label="Automations">
+    <p className={styles.kicker}>Automations</p>
+    <p className={styles.stat}>{error||!data?'—':modules.length}</p>
+    <p className={styles.statLabel}>in your workspace</p>
+   </section>
+   <Link href="/approvals" className={`liquid-glass ${styles.widget}`} aria-label={`Needs you: ${error||!data?'unknown':attention}`}>
+    <p className={styles.kicker}>Needs you</p>
+    <p className={styles.stat} data-alert={!error&&!!data&&attention>0}>{error||!data?'—':attention}</p>
+    <p className={styles.statLabel}>{!error&&data&&attention>0?'Review decisions':'Nothing waiting'}</p>
+   </Link>
+   {clock?<MonthWidget at={clock.at}/>:<div className={`liquid-glass ${styles.widget} ${styles.wide}`} aria-hidden="true"/>}
   </div>
   <div className={styles.cityHeading}><div><h2>Explore your city</h2><p>Every building is a part of your business.</p></div><span>{clock?.label??'Local time'} <span aria-hidden="true">{clock?.night?'☾':'☀'}</span></span></div>
-  <div className={styles.mapScroll}><CategoryCity selected={industry?null:selected} onSelect={choose} night={clock?.night??false} labels={Object.fromEntries(BUILDINGS.map(b=>{const group=modules.filter(m=>buildingFor(m.district)===b.id);return [b.id,error?'Activity unavailable':!data?'Loading…':!group.length?'Coming soon':group.some(m=>moduleStatus(m)==='Needs attention')?'Needs attention':group.some(m=>moduleStatus(m)==='Running')?'Running':`${group.length} automation${group.length===1?'':'s'}`]}))}/></div>
+  <div className={`liquid-glass ${styles.mapScroll}`}><CategoryCity selected={industry?null:selected} onSelect={choose} night={clock?.night??false} labels={Object.fromEntries(BUILDINGS.map(b=>{const group=modules.filter(m=>buildingFor(m.district)===b.id);return [b.id,error?'Activity unavailable':!data?'Loading…':!group.length?'Coming soon':group.some(m=>moduleStatus(m)==='Needs attention')?'Needs attention':group.some(m=>moduleStatus(m)==='Running')?'Running':`${group.length} automation${group.length===1?'':'s'}`]}))}/></div>
   <div className={styles.mapFoot}><p>Buildings organise your automations. A building’s windows light up while one of its automations is running.</p><button onClick={()=>setLegacy(true)}>Explore original 3D view</button></div>
   <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}>{b.name}</button>)}</div>
-  <section className={styles.industries} aria-label="Industry districts"><div><h3>Built around your business</h3><p>Industry collections are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
-  <section ref={details} tabIndex={-1} className={styles.catalog} aria-label="Building automations">
+  <section className={`liquid-glass ${styles.industries}`} aria-label="Industry districts"><div><h3>Built around your business</h3><p>Industry collections are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
+  <section ref={details} tabIndex={-1} className={`liquid-glass ${styles.catalog}`} aria-label="Building automations">
     <div className={styles.catalogHeader}><div><p className={styles.eyebrow}>{industry?'Industry district':query?'Your workspace':'Inside the building'}</p><h2>{industry??(query?'Search results':selectedBuilding.name)}</h2><p>{industry?`A planned collection for ${industry.toLowerCase()} businesses. No industry package is available to install yet.`:selectedBuilding.purpose}</p></div><label className={styles.search}><span>Find an automation</span><input type="search" placeholder="Search your workspace" value={query} onChange={e=>{setQuery(e.target.value);setIndustry(null)}}/></label></div>
     {industry?<div className={styles.empty}><h3>Coming soon</h3><p>You can explore business categories today. Industry-specific packages will appear here when they’re available.</p><button onClick={()=>choose('operations')}>Explore Operations</button></div>:error?<div role="alert" className={styles.empty}><h3>Your activity couldn’t be loaded</h3><p>No records have been changed. Try reconnecting to see your automations.</p><button disabled={isValidating} onClick={()=>void mutate()}>{isValidating?'Retrying…':'Try again'}</button></div>:!data?<div role="status" className={styles.empty}>Loading your automations…</div>:visible.length===0?<div className={styles.empty}><h3>{query?'No matching automations':'Coming soon'}</h3><p>{query?'Try another name or choose a building.':'There are no automations listed in this category for your workspace yet. Nothing is installed or activated by browsing.'}</p><button onClick={()=>{setQuery('');choose('operations')}}>Explore Operations</button></div>:<div className={styles.automationList}>{visible.map((automation,index)=>{
       const status=moduleStatus(automation),info=moduleDetails(automation),open=expanded===automation.id

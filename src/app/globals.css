@@ -52,6 +52,94 @@ body {
   }
 }
 
+/* ── Appearance tokens ────────────────────────────────────────────
+   Dark is the iOS dark home screen: black liquid glass over smoke.
+   Light is calm white liquid glass over a pale grey wall. OpsShell sets
+   html[data-theme]; everything in the city workspace reads these. */
+:root {
+  --label: #fff;
+  --label-2: rgba(235, 235, 245, 0.62);
+  --fill: rgba(118, 118, 128, 0.24);
+  --fill-2: rgba(118, 118, 128, 0.36);
+  --pill: rgba(70, 70, 76, 0.45);
+  --pill-2: rgba(90, 90, 98, 0.6);
+  --sep: rgba(84, 84, 88, 0.6);
+  --invert: #fff;
+  --on-invert: #000;
+  --red: #ff453a;
+  --blue: #0a84ff;
+  --green: #30d158;
+  --yellow: #ffd60a;
+  --lg-fill: rgba(32, 32, 36, 0.52);
+  --lg-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.12), 0 16px 44px rgba(0, 0, 0, 0.45);
+  --lg-rim: linear-gradient(140deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12) 24%, rgba(255, 255, 255, 0.04) 58%, rgba(255, 255, 255, 0.16));
+  --wall: #050506;
+  --smoke: rgba(255, 255, 255, 0.2);
+  --smoke-2: rgba(220, 220, 230, 0.12);
+  --city-ground: linear-gradient(135deg, rgba(38, 38, 42, 0.92), rgba(18, 18, 20, 0.92));
+  --city-line: rgba(255, 255, 255, 0.05);
+  --tower: #1d1d21;
+  --tower-top: #2a2a30;
+  color-scheme: dark;
+}
+html[data-theme='light'] {
+  --label: #1d1d1f;
+  --label-2: rgba(60, 60, 67, 0.64);
+  --fill: rgba(120, 120, 128, 0.12);
+  --fill-2: rgba(120, 120, 128, 0.2);
+  --pill: rgba(255, 255, 255, 0.6);
+  --pill-2: rgba(255, 255, 255, 0.85);
+  --sep: rgba(60, 60, 67, 0.16);
+  --invert: #1d1d1f;
+  --on-invert: #fff;
+  --red: #ff3b30;
+  --blue: #007aff;
+  --green: #248a3d;
+  --yellow: #a05a00;
+  --lg-fill: rgba(255, 255, 255, 0.5);
+  --lg-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.9), 0 14px 40px rgba(40, 50, 70, 0.14);
+  --lg-rim: linear-gradient(140deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.55) 26%, rgba(255, 255, 255, 0.25) 60%, rgba(255, 255, 255, 0.7));
+  --wall: #e8eaee;
+  --smoke: rgba(255, 255, 255, 0.95);
+  --smoke-2: rgba(175, 185, 205, 0.4);
+  --city-ground: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(226, 229, 235, 0.75));
+  --city-line: rgba(0, 0, 0, 0.06);
+  --tower: #d9dce3;
+  --tower-top: #f6f7f9;
+  color-scheme: light;
+}
+
+/* ── Liquid Glass (iOS 26) ────────────────────────────────────────
+   One material for every floating surface: translucent fill, a specular
+   rim brightest at the top-left where the light lands, and a soft drop
+   shadow. Colour never lives on the glass; it comes from the content.
+   The element must be positioned (relative/fixed/absolute) for the rim
+   to sit on it. */
+.liquid-glass {
+  background: var(--lg-fill);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  backdrop-filter: blur(28px) saturate(1.6);
+  box-shadow: var(--lg-shadow);
+}
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: var(--lg-rim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass { background: var(--wall); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .liquid-glass::before { background: var(--label-2); }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

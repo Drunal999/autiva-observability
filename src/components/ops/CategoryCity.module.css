@@ -44,26 +44,25 @@
   border-radius: 44px;
   transform-style: preserve-3d;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 40px 40px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 40px 40px,
-    radial-gradient(420px 260px at 50% 46%, rgba(255, 159, 10, 0.1), transparent 70%),
-    linear-gradient(135deg, rgba(40, 30, 60, 0.92), rgba(20, 14, 32, 0.92));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 40px 80px rgba(0, 0, 0, 0.45);
+    linear-gradient(var(--city-line) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, var(--city-line) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--city-ground);
+  box-shadow: inset 0 0 0 1px var(--sep), 0 40px 80px rgba(0, 0, 0, 0.3);
 }
-.roadH, .roadV { position: absolute; background: rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
+.roadH, .roadV { position: absolute; background: var(--city-line); box-shadow: inset 0 0 0 1px var(--city-line); }
 .roadH { left: 0; right: 0; top: 280px; height: 34px; }
 .roadV { top: 0; bottom: 0; width: 20px; }
 .park {
   position: absolute; left: 395px; top: 238px; width: 170px; height: 118px; border-radius: 50%;
-  background: radial-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 70%); transform: translateZ(1px);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  background: radial-gradient(var(--fill-2), var(--fill) 70%); transform: translateZ(1px);
+  box-shadow: inset 0 0 0 1px var(--sep);
   display: grid; place-items: end center; padding-bottom: 10px; box-sizing: border-box;
 }
-.park span { font-size: 11px; letter-spacing: 4px; color: rgba(255, 255, 255, 0.45); }
+.park span { font-size: 11px; letter-spacing: 4px; color: var(--label-2); }
 
 
 .tower {
-  --win: repeating-linear-gradient(0deg, transparent 0 12px, rgba(255, 255, 255, 0.07) 12px 14px);
+  --win: repeating-linear-gradient(0deg, transparent 0 12px, var(--sep) 12px 14px);
   position: absolute;
   width: 120px;
   height: 120px;
@@ -76,17 +75,17 @@
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .tower[data-state='lit'] { --win: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 206, 130, 0.7) 9px 12px); }
-.tower[data-state='soon'] { --win: repeating-linear-gradient(0deg, transparent 0 20px, rgba(255, 255, 255, 0.05) 20px 21px); }
+.tower[data-state='soon'] { --win: repeating-linear-gradient(0deg, transparent 0 20px, var(--city-line) 20px 21px); }
 .tower:hover, .tower:focus-visible, .tower[aria-pressed='true'] { transform: translateZ(16px); }
 .tower:focus-visible { outline: none; }
 
 .pad {
   position: absolute; inset: -16px; border-radius: 22px; transform: translateZ(1px);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--city-line);
   transition: background 0.35s;
 }
 .tower[data-state='lit'] .pad { background: radial-gradient(rgba(255, 190, 90, 0.28), transparent 70%); }
-.tower[aria-pressed='true'] .pad, .tower:focus-visible .pad { background: radial-gradient(rgba(255, 159, 10, 0.6), transparent 72%); }
+.tower[aria-pressed='true'] .pad, .tower:focus-visible .pad { background: radial-gradient(var(--fill-2), transparent 72%); }
 
 .body {
   position: absolute; inset: 0; transform-style: preserve-3d;
@@ -99,9 +98,9 @@
 }
 .face {
   position: absolute; display: block;
-  background-color: color-mix(in srgb, var(--c) 26%, #141020);
+  background-color: color-mix(in srgb, var(--c) 10%, var(--tower));
   background-image: var(--win), linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px var(--sep);
 }
 .tower[data-state='soon'] .face { opacity: 0.55; }
 .n, .s { left: 0; width: 120px; height: var(--h); transform-origin: top; transform: rotateX(90deg); }
@@ -113,7 +112,7 @@
 .top {
   left: 0; top: 0; width: 120px; height: 120px;
   transform: translateZ(var(--h));
-  background-color: color-mix(in srgb, var(--c) 46%, #1a1326);
+  background-color: color-mix(in srgb, var(--c) 18%, var(--tower-top));
   background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
@@ -123,18 +122,18 @@
   position: absolute; left: 50%; top: 50%;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 6px 12px; border-radius: 14px; white-space: nowrap;
-  background: rgba(30, 28, 40, 0.62); border: 0.5px solid rgba(255, 255, 255, 0.28);
+  background: var(--lg-fill); border: 0.5px solid var(--sep);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  color: #fff; font-family: inherit;
+  color: var(--label); font-family: inherit;
   transform: translateZ(calc(var(--h) + 40px)) rotateZ(calc(-1 * var(--yaw))) rotateX(-56deg) translate(-50%, -50%);
   animation: appear 0.5s ease both;
   animation-delay: calc(var(--i) * 90ms + 700ms);
 }
 .label b { font-size: 15px; font-weight: 600; letter-spacing: -0.1px; }
-.label small { font-size: 12px; color: rgba(235, 235, 245, 0.7); }
-.tower[aria-pressed='true'] .label { background: #ff9f0a; color: #000; border-color: transparent; }
+.label small { font-size: 12px; color: var(--label-2); }
+.tower[aria-pressed='true'] .label { background: var(--invert); color: var(--on-invert); border-color: transparent; }
 .tower[aria-pressed='true'] .label small { color: rgba(0, 0, 0, 0.7); }
-.tower:focus-visible .label { box-shadow: 0 0 0 3px #fff; }
+.tower:focus-visible .label { box-shadow: 0 0 0 3px var(--label); }
 @keyframes appear {
   from { opacity: 0; }
   to { opacity: 1; }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans, JetBrains_Mono, Inter, Instrument_Serif } from 'next/font/google'
+import { Plus_Jakarta_Sans, JetBrains_Mono, Inter } from 'next/font/google'
 import './globals.css'
 import { SessionProviderWrapper } from '@/components/SessionProviderWrapper'
 import { AmbientBackground } from '@/components/AmbientBackground'
@@ -11,13 +11,6 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-jakarta',
-})
-// Display face for the one headline moment on the city home; everything else stays on the UI sans.
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  weight: '400',
-  style: ['normal', 'italic'],
-  variable: '--font-display',
 })
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -32,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn(jakarta.variable, jetbrainsMono.variable, instrumentSerif.variable, "font-sans", inter.variable)}>
+    <html lang="en" className={cn(jakarta.variable, jetbrainsMono.variable, "font-sans", inter.variable)}>
       <body>
         <AmbientBackground />
         <SessionProviderWrapper>{children}</SessionProviderWrapper>

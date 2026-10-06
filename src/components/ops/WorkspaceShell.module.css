@@ -1,26 +1,11 @@
-/* Apple-style glass shell. Glass sits on the floating chrome (header, sidebar,
-   tab bar) over AmbientBackground's wallpaper; content widgets have their own
-   lighter glass in BusinessCity.module.css. */
+/* iOS 26-style shell. The floating chrome (header, sidebar, tab bar, Bolo
+   button) wears the global .liquid-glass material; this file only places it.
+   The chrome is monochrome: links use system blue, selection is white. */
 .shell {
-  --glass: rgba(38, 38, 44, 0.5);
-  --glass-line: rgba(255, 255, 255, 0.16);
-  --label: #fff;
-  --label-2: rgba(235, 235, 245, 0.66);
-  --accent: #ff9f0a;
   min-height: 100dvh;
   color: var(--label);
   padding-top: 76px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-jakarta), system-ui, sans-serif;
-}
-.header,
-.sidebar,
-.tabs,
-.bolo {
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(30px) saturate(1.6);
-  backdrop-filter: blur(30px) saturate(1.6);
-  border: 0.5px solid var(--glass-line);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 12px 40px rgba(0, 0, 0, 0.4);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', var(--font-sans), system-ui, sans-serif;
 }
 .header {
   height: 56px;
@@ -40,70 +25,64 @@
 }
 .workspaceLabel { font-size: 13px; color: var(--label-2); }
 .headerStatus { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; }
-.sample { height: 26px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 13px; background: rgba(255, 214, 10, 0.16); color: #ffd60a; font-weight: 600; white-space: nowrap; }
+.sample { height: 26px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 13px; background: rgba(255, 214, 10, 0.16); color: var(--yellow); font-weight: 600; white-space: nowrap; }
 .health { color: var(--label-2); }
 
 .sidebar {
   position: fixed; left: 16px; top: 80px; bottom: 16px; width: 232px; box-sizing: border-box;
-  display: flex; flex-direction: column; overflow-y: auto; padding: 16px 12px; z-index: 40; border-radius: 26px;
+  display: flex; flex-direction: column; overflow-y: auto; padding: 16px 12px; z-index: 40; border-radius: 30px;
 }
-.mode { display: flex; padding: 3px; border-radius: 12px; background: rgba(118, 118, 128, 0.24); gap: 2px; }
+.mode { display: flex; padding: 3px; border-radius: 12px; background: var(--fill); gap: 2px; }
 .mode button { flex: 1; height: 32px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--label); }
-.mode button[aria-pressed='true'] { background: rgba(255, 255, 255, 0.2); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); }
+.mode button[aria-pressed='true'] { background: var(--pill-2); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
 .modeHint { font-size: 12px; color: var(--label-2); margin: 10px 0 18px; text-align: center; }
 .navLink {
   display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 15px; font-weight: 500;
-  padding: 0 12px; margin: 2px 0; border-radius: 12px; color: rgba(235, 235, 245, 0.8);
+  padding: 0 12px; margin: 2px 0; border-radius: 12px; color: var(--label-2);
 }
 .navLink > span:first-child { width: 20px; font-size: 17px; text-align: center; }
-.navLink:hover { background: rgba(255, 255, 255, 0.07); color: var(--label); }
-.navLink[aria-current='page'] { background: rgba(255, 255, 255, 0.15); color: var(--label); font-weight: 600; }
+.navLink:hover { background: var(--fill); color: var(--label); }
+.navLink[aria-current='page'] { background: var(--fill-2); color: var(--label); font-weight: 600; }
 .navLink b, .tab b {
   min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 10px; margin-left: auto;
   display: inline-flex; align-items: center; justify-content: center; background: #ff453a; color: #fff; font-size: 12px; font-weight: 700;
 }
-.teamNav { margin-top: 18px; border-top: 0.5px solid rgba(84, 84, 88, 0.65); padding-top: 14px; }
+.teamNav { margin-top: 18px; border-top: 0.5px solid var(--sep); padding-top: 14px; }
 .teamNav > p { font-size: 12px; font-weight: 600; color: var(--label-2); margin: 0 12px 8px; text-transform: uppercase; letter-spacing: 0.3px; }
 .sidebarFoot { margin-top: auto; padding: 24px 12px 4px; font-size: 13px; color: var(--label-2); line-height: 1.6; }
-.sidebarFoot > a { color: var(--accent); }
+.sidebarFoot > a { color: var(--blue); }
 .sidebarFoot p { margin-top: 10px; }
-.context { font-size: 13px; margin-top: 18px; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.07); color: var(--label-2); }
-.context button { color: var(--accent); margin-top: 6px; }
+.context { font-size: 13px; margin-top: 18px; padding: 12px; border-radius: 14px; background: var(--fill); color: var(--label-2); }
+.context button { color: var(--blue); margin-top: 6px; }
 
 .main { margin-left: 264px; min-height: calc(100dvh - 76px); display: flex; flex-direction: column; min-width: 0; }
 .main:focus { outline: none; }
-.skip { position: fixed; left: 12px; top: -80px; z-index: 100; background: #fff; color: #000; padding: 12px; border-radius: 10px; }
+.skip { position: fixed; left: 12px; top: -80px; z-index: 100; background: var(--invert); color: var(--on-invert); padding: 12px; border-radius: 10px; }
 .skip:focus { top: 8px; }
-.shell button:focus-visible, .shell a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shell button:focus-visible, .shell a:focus-visible { outline: 2px solid var(--label); outline-offset: 2px; }
 .menuButton { display: none; }
 
 /* Phone: a floating glass tab bar plus a separate round Bolo button,
    the same shape iOS uses for its separated search tab. */
 .tabBar { display: none; }
-.tabs { flex: 1; height: 64px; border-radius: 32px; padding: 5px; box-sizing: border-box; display: flex; gap: 2px; }
+.tabs { position: relative; flex: 1; height: 64px; border-radius: 32px; padding: 5px; box-sizing: border-box; display: flex; gap: 2px; }
 .tab {
   flex: 1; min-width: 0; border-radius: 27px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; font-size: 10px; font-weight: 600; color: rgba(255, 255, 255, 0.88);
+  gap: 2px; font-size: 10px; font-weight: 600; color: var(--label);
 }
 .tab > span:first-child { font-size: 20px; line-height: 1; }
-.tab[aria-current='page'] { background: rgba(255, 255, 255, 0.16); color: var(--accent); }
+.tab[aria-current='page'] { background: var(--fill-2); color: var(--label); }
 .tab b { position: absolute; top: 3px; left: 54%; margin: 0; min-width: 18px; height: 18px; font-size: 11px; }
-.bolo { width: 64px; height: 64px; border-radius: 32px; flex: none; display: grid; place-items: center; color: #fff; }
-.bolo[aria-current='page'] { background: var(--accent); color: #000; border-color: transparent; }
+.bolo { position: relative; width: 64px; height: 64px; border-radius: 32px; flex: none; display: grid; place-items: center; color: var(--label); }
+.bolo[aria-current='page'] { background: var(--invert); color: var(--on-invert); }
 
 @media (max-width: 1050px) { .workspaceLabel, .health { display: none; } }
 @media (max-width: 700px) {
   .shell { padding-top: 72px; }
   .header { inset: 8px 12px auto; height: 52px; gap: 10px; padding: 0 8px 0 14px; }
-  .menuButton { display: block; height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.12); font-size: 15px; font-weight: 600; }
+  .menuButton { display: block; height: 36px; padding: 0 14px; border-radius: 18px; background: var(--fill); color: var(--label); font-size: 15px; font-weight: 600; }
   .sidebar { display: none; top: 70px; left: 12px; bottom: 104px; width: min(300px, calc(100vw - 24px)); }
   .sidebar.open { display: flex; }
   .main { margin-left: 0; min-height: calc(100dvh - 72px); padding-bottom: 96px; }
   .tabBar { display: flex; position: fixed; left: 12px; right: 12px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 46; gap: 10px; align-items: center; }
-}
-@media (prefers-reduced-transparency: reduce) {
-  .header, .sidebar, .tabs, .bolo { background: #1c1c1e; -webkit-backdrop-filter: none; backdrop-filter: none; }
-}
-@media (prefers-contrast: more) {
-  .header, .sidebar, .tabs, .bolo { border-color: rgba(255, 255, 255, 0.55); }
 }
