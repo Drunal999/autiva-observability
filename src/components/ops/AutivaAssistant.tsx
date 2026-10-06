@@ -120,14 +120,14 @@ export function AutivaAssistant() {
         <button type="button" onClick={() => decide(a.id, 'deny')} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Deny</button>
       </div>
     </div>)}
-    <p role="status" className="max-w-64 rounded-2xl bg-slate-950/95 px-3 py-2 text-xs text-slate-200">{status}{active ? ' · Tap to mute' : ''}</p>
+    <p role="status" className="max-w-64 rounded-2xl bg-slate-950/95 px-3 py-2 text-xs text-slate-200 max-[700px]:hidden">{status}{active ? ' · Tap to mute' : ''}</p>
     <button type="button" disabled={!ready} aria-label={active ? 'Mute Bolo' : 'Talk to Bolo'} aria-pressed={active} title="Tap to talk. Swipe or use arrow keys to change appearance."
       onPointerDown={event => {down.current=event.clientX; swiped.current=false; event.currentTarget.setPointerCapture(event.pointerId)}}
       onPointerUp={event => {const delta=event.clientX-down.current;if(Math.abs(delta)>28){swiped.current=true;changeFace(delta<0?1:-1)}}}
       onPointerCancel={() => {swiped.current=true}}
       onKeyDown={event => {if(event.key==='ArrowRight'||event.key==='ArrowLeft'){event.preventDefault();changeFace(event.key==='ArrowRight'?1:-1)}}}
       onClick={() => {if(swiped.current){swiped.current=false;return}toggle()}}
-      className={`flex h-[76px] w-[76px] touch-pan-y items-center justify-center rounded-full border backdrop-blur-xl backdrop-saturate-150 shadow-xl transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[#ff9f0a] disabled:opacity-50 ${active ? 'border-[#ff9f0a]/80 bg-[#ff9f0a]/20 shadow-[0_0_44px_rgba(255,159,10,0.45)]' : 'border-white/25 bg-white/10'}`}>
+      className={`flex h-[76px] w-[76px] touch-pan-y max-[700px]:hidden items-center justify-center rounded-full border backdrop-blur-xl backdrop-saturate-150 shadow-xl transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-[#ff9f0a] disabled:opacity-50 ${active ? 'border-[#ff9f0a]/80 bg-[#ff9f0a]/20 shadow-[0_0_44px_rgba(255,159,10,0.45)]' : 'border-white/25 bg-white/10'}`}>
       {face==='orb' ? <ThinkingOrb state={['Listening','Hearing you'].includes(status)?'listening':['Thinking','Understanding'].includes(status)?'working':status==='Speaking'?'composing':'breathing'} size={64} theme="dark" /> : <AssistantFace face={face} />}
     </button>
     <iframe ref={frame} title="AUTIVA audio connection" src={`${VOICE}/?voiceBridge=1`} allow="microphone; autoplay" aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute h-px w-px opacity-0" />
