@@ -32,7 +32,8 @@ describe('Business city',()=>{
   render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Enter Marketing'}))
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Lead'}})
   expect(screen.getByText('Lead Follow-up')).toBeInTheDocument()
-  expect(screen.getByText('Not documented in this workspace yet.')).toBeInTheDocument()
+  // No connection requirement is claimed for an automation whose catalog entry does not document one.
+  expect(screen.queryByText(/connection/i)).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'View activity'}))
   expect(screen.getByText(/does not mean it has never run/)).toBeInTheDocument()
  })

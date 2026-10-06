@@ -23,7 +23,6 @@
   display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-size: 0;
   background: radial-gradient(circle at 35% 30%, #ffd38a 0, #ff9f0a 45%, #7a2e1a 100%);
 }
-.workspaceLabel { font-size: 13px; color: var(--label-2); }
 .headerStatus { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 13px; }
 .sample { height: 26px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: 13px; background: rgba(255, 214, 10, 0.16); color: var(--yellow); font-weight: 600; white-space: nowrap; }
 .health { color: var(--label-2); }
@@ -35,7 +34,6 @@
 .mode { display: flex; padding: 3px; border-radius: 12px; background: var(--fill); gap: 2px; }
 .mode button { flex: 1; height: 32px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--label); }
 .mode button[aria-pressed='true'] { background: var(--pill-2); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
-.modeHint { font-size: 12px; color: var(--label-2); margin: 10px 0 18px; text-align: center; }
 .navLink {
   display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 15px; font-weight: 500;
   padding: 0 12px; margin: 2px 0; border-radius: 12px; color: var(--label-2);
@@ -49,9 +47,8 @@
 }
 .teamNav { margin-top: 18px; border-top: 0.5px solid var(--sep); padding-top: 14px; }
 .teamNav > p { font-size: 12px; font-weight: 600; color: var(--label-2); margin: 0 12px 8px; text-transform: uppercase; letter-spacing: 0.3px; }
-.sidebarFoot { margin-top: auto; padding: 24px 12px 4px; font-size: 13px; color: var(--label-2); line-height: 1.6; }
-.sidebarFoot > a { color: var(--blue); }
-.sidebarFoot p { margin-top: 10px; }
+.sidebarFoot { margin-top: auto; padding: 20px 4px 2px; display: flex; flex-direction: column; gap: 6px; }
+.footLabel { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: 0.3px; margin: 6px 8px 0; }
 .context { font-size: 13px; margin-top: 18px; padding: 12px; border-radius: 14px; background: var(--fill); color: var(--label-2); }
 .context button { color: var(--blue); margin-top: 6px; }
 
@@ -76,7 +73,7 @@
 .bolo { position: relative; width: 64px; height: 64px; border-radius: 32px; flex: none; display: grid; place-items: center; color: var(--label); }
 .bolo[aria-current='page'] { background: var(--invert); color: var(--on-invert); }
 
-@media (max-width: 1050px) { .workspaceLabel, .health { display: none; } }
+@media (max-width: 1050px) { .health { display: none; } }
 @media (max-width: 700px) {
   .shell { padding-top: 72px; }
   .header { inset: 8px 12px auto; height: 52px; gap: 10px; padding: 0 8px 0 14px; }

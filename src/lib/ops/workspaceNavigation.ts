@@ -1,9 +1,9 @@
 export type WorkspaceMode = 'simple' | 'team'
 /** `short` is the one-word label the phone tab bar uses. */
 export const SIMPLE_NAV = [
-  {label:'Your city', short:'City', href:'/city', glyph:'⌂'},
+  {label:'Home', short:'Home', href:'/city', glyph:'⌂'},
   {label:'Messages', short:'Messages', href:'/chat', glyph:'◍'},
-  {label:'Needs your approval', short:'Approvals', href:'/approvals', glyph:'✓'},
+  {label:'Approvals', short:'Approvals', href:'/approvals', glyph:'✓'},
   {label:'Calendar', short:'Calendar', href:'/calendar', glyph:'▦'},
   {label:'Brain', short:'Brain', href:'/brain', glyph:'✺'},
 ] as const

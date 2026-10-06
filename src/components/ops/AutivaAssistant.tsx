@@ -40,6 +40,8 @@ export function AutivaAssistant() {
   const [local, setLocal] = useState(false)
   const [ready, setReady] = useState(false)
   const [active, setActive] = useState(false)
+  // The status pill stays hidden until someone taps the orb; connection chatter is not their problem.
+  const [touched, setTouched] = useState(false)
   const [status, setStatus] = useState('Connecting assistant...')
   const [face, setFace] = useState<Face>('orb')
   const [approvals, setApprovals] = useState<Approval[]>([])
@@ -96,6 +98,7 @@ export function AutivaAssistant() {
     setFace(next); try { localStorage.setItem('autiva-assistant-face',next) } catch {}
   }
   function toggle() {
+    setTouched(true)
     if (!ready) return
     if (active) {
       // Unmounting terminates pending capture/playback as well as active audio.
@@ -120,7 +123,7 @@ export function AutivaAssistant() {
         <button type="button" onClick={() => decide(a.id, 'deny')} className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Deny</button>
       </div>
     </div>)}
-    <p role="status" className="max-w-64 rounded-2xl bg-slate-950/95 px-3 py-2 text-xs text-slate-200 max-[700px]:hidden">{status}{active ? ' · Tap to mute' : ''}</p>
+    {(active || touched) && <p role="status" className="max-w-64 rounded-2xl bg-slate-950/95 px-3 py-2 text-xs text-slate-200 max-[700px]:hidden">{status}{active ? ' · Tap to mute' : ''}</p>}
     <button type="button" disabled={!ready} aria-label={active ? 'Mute Bolo' : 'Talk to Bolo'} aria-pressed={active} title="Tap to talk. Swipe or use arrow keys to change appearance."
       onPointerDown={event => {down.current=event.clientX; swiped.current=false; event.currentTarget.setPointerCapture(event.pointerId)}}
       onPointerUp={event => {const delta=event.clientX-down.current;if(Math.abs(delta)>28){swiped.current=true;changeFace(delta<0?1:-1)}}}
