@@ -5,9 +5,9 @@ export const SIMPLE_NAV = [
   {label:'Messages', short:'Messages', href:'/chat', glyph:'◍'},
   {label:'Needs your approval', short:'Approvals', href:'/approvals', glyph:'✓'},
   {label:'Calendar', short:'Calendar', href:'/calendar', glyph:'▦'},
-  {label:'Bolo', short:'Bolo', href:'/brain', glyph:'✺'},
+  {label:'Brain', short:'Brain', href:'/brain', glyph:'✺'},
 ] as const
-/** The voice assistant's route. On a phone it is the round button beside the tab bar, not a tab. */
+/** The Brain page, where Bolo (the voice assistant) also lives. On a phone it is the round Bolo button beside the tab bar, not a tab. */
 export const ASSISTANT_HREF = '/brain'
 export const TEAM_NAV = [
   {label:'Mission & board', href:'/board', glyph:'◈'},
