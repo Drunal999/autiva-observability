@@ -1,5 +1,6 @@
-/* Monochrome wallpaper, like a dark iOS home screen: near-black with soft
-   smoky white light. No colour here; colour belongs to the content. */
+/* Wallpaper. Dark: near-black with smoky white light, like a dark iOS home
+   screen. Light: a pale wall with faint pastel light, so the white glass
+   above has something to refract. The UI itself stays colourless. */
 .wall {
   position: fixed;
   inset: 0;
@@ -16,5 +17,14 @@
 }
 .a { width: 62vw; height: 44vh; left: 38%; top: 6%; background: radial-gradient(closest-side, var(--smoke), transparent); transform: rotate(-24deg); }
 .b { width: 48vw; height: 36vh; left: -10%; top: 40%; background: radial-gradient(closest-side, var(--smoke-2), transparent); transform: rotate(18deg); }
-.c { width: 40vw; height: 30vh; left: 46%; top: 64%; background: radial-gradient(closest-side, var(--smoke), transparent); transform: rotate(-8deg); opacity: 0.55; }
-.d { width: 26vw; height: 60vh; left: 78%; top: 30%; background: radial-gradient(closest-side, var(--smoke-2), transparent); opacity: 0.7; }
+.c { width: 40vw; height: 30vh; left: 46%; top: 64%; background: radial-gradient(closest-side, var(--smoke-3), transparent); transform: rotate(-8deg); }
+.d { width: 30vw; height: 60vh; left: 74%; top: 26%; background: radial-gradient(closest-side, var(--smoke-4), transparent); }
+/* Phones: the lights are sized off the narrow width, so enlarge them or the
+   glass has nothing to pick up. */
+@media (max-width: 700px) {
+  .smoke { filter: blur(48px); }
+  .a { width: 130vw; height: 42vh; left: 0; top: 0; }
+  .b { width: 120vw; height: 34vh; left: -50%; top: 36%; }
+  .c { width: 110vw; height: 32vh; left: 20%; top: 66%; }
+  .d { width: 90vw; height: 46vh; left: 45%; top: 22%; }
+}
