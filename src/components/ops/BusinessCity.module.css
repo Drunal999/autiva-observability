@@ -1,8 +1,8 @@
 /* City workspace as macOS-style widgets: white-transparent glass over the
    AmbientBackground wallpaper. One accent (dusk amber) for primary actions. */
 .workspace {
-  --widget: rgba(255, 255, 255, 0.085);
-  --widget-line: rgba(255, 255, 255, 0.2);
+  --widget: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), rgba(24, 18, 36, 0.3);
+  --widget-line: rgba(255, 255, 255, 0.24);
   --fill: rgba(255, 255, 255, 0.09);
   --label: #fff;
   --label-2: rgba(235, 235, 245, 0.68);
@@ -15,67 +15,24 @@
 }
 .overview, .mapScroll, .industries, .catalog, .returnBar {
   background: var(--widget);
-  -webkit-backdrop-filter: blur(40px) saturate(1.7);
-  backdrop-filter: blur(40px) saturate(1.7);
+  -webkit-backdrop-filter: blur(50px) saturate(1.8);
+  backdrop-filter: blur(50px) saturate(1.8);
   border: 0.5px solid var(--widget-line);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 18px 50px rgba(0, 0, 0, 0.3);
 }
 
-/* Home hero: a dusk sky over the city's skyline, the same scene as the canvas design. */
+/* Home hero: a white-glass panel; Bolo's orb (AmbientBackground) glows through it. */
 .hero {
-  position: relative; overflow: hidden; border-radius: 28px; margin: 8px 0 18px; min-height: 280px;
-  background: linear-gradient(180deg, #120f24 0%, #33193a 38%, #8a3437 68%, #e0743f 88%, #ffb35c 100%);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  position: relative; border-radius: 28px; margin: 8px 0 18px;
+  background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)), rgba(24, 18, 36, 0.32);
+  -webkit-backdrop-filter: blur(50px) saturate(1.8); backdrop-filter: blur(50px) saturate(1.8);
+  border: 0.5px solid rgba(255, 255, 255, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 24px 60px rgba(0, 0, 0, 0.3);
 }
-/* Bolo's orb as the setting sun. It drifts on a slow loop; .skyGlow is its
-   child, so the warm light across the sky travels with it. */
-.orbWrap {
-  position: absolute; left: 62%; bottom: 58px; width: 118px; height: 118px; border-radius: 50%;
-  animation: drift 16s ease-in-out infinite alternate;
-}
-.skyGlow {
-  position: absolute; inset: -220px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(255, 170, 90, 0.42), rgba(191, 90, 242, 0.16) 55%, transparent 100%);
-}
-.orbGlow, .orb {
-  position: absolute; border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85) 0, rgba(255, 255, 255, 0) 22%),
-    radial-gradient(circle at 70% 65%, #ff9f0a 0, rgba(255, 159, 10, 0) 55%),
-    radial-gradient(circle at 28% 72%, #bf5af2 0, rgba(191, 90, 242, 0) 55%),
-    radial-gradient(circle at 60% 25%, #0a84ff 0, rgba(10, 132, 255, 0) 50%),
-    #1a1030;
-  animation: spin 14s linear infinite;
-}
-.orbGlow { inset: -8px; filter: blur(24px); opacity: 0.85; }
-.orbRing {
-  position: absolute; inset: 0; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8); backdrop-filter: blur(16px) saturate(1.8);
-  border: 0.5px solid rgba(255, 255, 255, 0.3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transition: background 0.4s;
-}
-.orb { inset: 16px; }
-.orbWrap:hover .orbRing { background: rgba(255, 159, 10, 0.18); }
-.orbWrap:hover .orbGlow { animation: spin 3s linear infinite, pulse 1.4s ease-in-out infinite; }
-@keyframes drift {
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(-46px, -22px); }
-  100% { transform: translate(34px, -40px); }
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse { 50% { opacity: 1; filter: blur(30px); } }
-.skyline { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; display: flex; align-items: flex-end; gap: 10px; padding: 0 28px; }
-.skyline > span {
-  flex-basis: 0; border-radius: 3px 3px 0 0; background-color: #0d0a14;
-  background-image: repeating-linear-gradient(135deg, rgba(255, 159, 10, 0.22) 0 2px, transparent 2px 10px);
-}
-.skyline > span[data-lit='true'] { background-image: radial-gradient(#ffcf7a 1.2px, transparent 1.7px); background-size: 9px 11px; }
-.intro > * { pointer-events: auto; }
-.intro { pointer-events: none; position: relative; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding: 26px 26px 140px; }
+.intro { position: relative; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; padding: 32px; }
 .welcome { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, 0.8); margin-bottom: 4px; }
-.intro h1 { font-size: clamp(28px, 3vw, 38px); line-height: 1.15; font-weight: 700; letter-spacing: -0.6px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45); }
-.intro > div > p:last-child { font-size: 15px; color: rgba(255, 255, 255, 0.88); line-height: 1.5; margin-top: 6px; max-width: 52ch; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55); }
+.intro h1 { font-size: clamp(28px, 3vw, 38px); line-height: 1.15; font-weight: 700; letter-spacing: -0.6px; }
+.intro > div > p:last-child { font-size: 15px; color: rgba(255, 255, 255, 0.88); line-height: 1.5; margin-top: 6px; max-width: 52ch; }
 .assistantLink {
   height: 44px; display: inline-flex; align-items: center; padding: 0 20px; border-radius: 22px;
   background: var(--accent); color: #000; font-size: 15px; font-weight: 600; white-space: nowrap;
@@ -125,9 +82,9 @@
 .automation { background: var(--fill); border: 0.5px solid rgba(255, 255, 255, 0.1); display: flex; padding: 0; border-radius: 18px; overflow: hidden; min-width: 0; }
 .floor {
   width: 58px; flex: none; display: flex; align-items: center; justify-content: center;
-  background: #0d0a14; background-image: repeating-linear-gradient(135deg, rgba(255, 159, 10, 0.26) 0 2px, transparent 2px 10px);
+  background: rgba(255, 255, 255, 0.06); background-image: repeating-linear-gradient(0deg, transparent 0 12px, rgba(255, 255, 255, 0.07) 12px 14px);
 }
-.floor[data-lit='true'] { background-image: radial-gradient(#ffcf7a 1.2px, transparent 1.7px); background-size: 9px 11px; }
+.floor[data-lit='true'] { background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 206, 130, 0.7) 9px 12px); }
 .floor > span { font-size: 13px; font-weight: 800; background: rgba(0, 0, 0, 0.72); padding: 4px 7px; border-radius: 7px; font-variant-numeric: tabular-nums; }
 .floorBody { flex: 1; min-width: 0; padding: 16px 18px; }
 .automationTop { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; }
@@ -161,10 +118,7 @@
   .industries { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 850px) {
-  .intro { align-items: flex-start; flex-direction: column; padding: 20px 18px 120px; }
-  .skyline { height: 110px; gap: 5px; padding: 0 12px; }
-  .orbWrap { left: auto; right: 18px; bottom: 54px; width: 84px; height: 84px; }
-  .orb { inset: 12px; }
+  .intro { align-items: flex-start; flex-direction: column; padding: 22px 18px; }
   .catalogHeader { align-items: stretch; flex-direction: column; }
   .search input { width: 100%; box-sizing: border-box; }
   .mobileBuildings { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
@@ -177,7 +131,6 @@
   .floor { width: 46px; }
   .industries > div:last-child { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .orbWrap, .orb, .orbGlow, .orbWrap:hover .orbGlow { animation: none; } }
 @media (prefers-reduced-transparency: reduce) {
   .overview, .mapScroll, .industries, .catalog, .automation, .empty, .returnBar { background: #1c1c1e; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }

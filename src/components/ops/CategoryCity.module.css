@@ -15,6 +15,9 @@
   perspective-origin: 50% 10%;
   container-type: inline-size;
 }
+@media (max-width: 600px) {
+  .viewport { height: 380px; }
+}
 .scene {
   --s: 0.8;
   position: absolute;
@@ -26,6 +29,7 @@
 }
 @container (max-width: 1000px) { .scene { --s: 0.66; } }
 @container (max-width: 760px) { .scene { --s: 0.5; } }
+@container (max-width: 520px) { .scene { --s: 0.32; top: 54%; } }
 @keyframes sway {
   from { --yaw: -33deg; }
   to { --yaw: -49deg; }
@@ -40,34 +44,26 @@
   border-radius: 44px;
   transform-style: preserve-3d;
   background:
-    radial-gradient(420px 260px at 50% 46%, rgba(255, 159, 10, 0.12), transparent 70%),
-    linear-gradient(135deg, #1d1530, #150f22);
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 40px 40px,
+    radial-gradient(420px 260px at 50% 46%, rgba(255, 159, 10, 0.1), transparent 70%),
+    linear-gradient(135deg, rgba(40, 30, 60, 0.92), rgba(20, 14, 32, 0.92));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 40px 80px rgba(0, 0, 0, 0.45);
 }
-.roadH, .roadV { position: absolute; background-color: #2b2240; }
-.roadH {
-  left: 0; right: 0; top: 268px; height: 58px;
-  background-image: linear-gradient(90deg, rgba(255, 214, 140, 0.55) 50%, transparent 50%);
-  background-size: 34px 2px; background-repeat: repeat-x; background-position: 0 28px;
-}
-.roadV { top: 0; bottom: 0; width: 30px; }
+.roadH, .roadV { position: absolute; background: rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
+.roadH { left: 0; right: 0; top: 280px; height: 34px; }
+.roadV { top: 0; bottom: 0; width: 20px; }
 .park {
   position: absolute; left: 395px; top: 238px; width: 170px; height: 118px; border-radius: 50%;
-  background: radial-gradient(#2c4a3c 0 40%, #1f3a33 41%); transform: translateZ(1px);
+  background: radial-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 70%); transform: translateZ(1px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   display: grid; place-items: end center; padding-bottom: 10px; box-sizing: border-box;
 }
-.park span { font-size: 11px; letter-spacing: 3px; color: rgba(214, 235, 220, 0.6); }
+.park span { font-size: 11px; letter-spacing: 4px; color: rgba(255, 255, 255, 0.45); }
 
-.tree { position: absolute; width: 0; height: 0; transform-style: preserve-3d; }
-.tree span {
-  position: absolute; width: 22px; height: 32px; left: -11px; top: -32px; border-radius: 50% 50% 45% 45%;
-  background: radial-gradient(circle at 40% 35%, #4f8a64, #234a37);
-  transform-origin: 50% 100%;
-  transform: translateZ(2px) rotateZ(calc(-1 * var(--yaw))) rotateX(-56deg);
-}
 
 .tower {
-  --win: radial-gradient(rgba(255, 207, 122, 0.14) 1.6px, transparent 2.2px);
+  --win: repeating-linear-gradient(0deg, transparent 0 12px, rgba(255, 255, 255, 0.07) 12px 14px);
   position: absolute;
   width: 120px;
   height: 120px;
@@ -79,8 +75,8 @@
   transform: translateZ(0);
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.tower[data-state='lit'] { --win: radial-gradient(#ffd98f 1.9px, rgba(255, 190, 90, 0.35) 2.6px, transparent 3.4px); }
-.tower[data-state='soon'] { --win: repeating-linear-gradient(135deg, rgba(255, 159, 10, 0.32) 0 2px, transparent 2px 11px); }
+.tower[data-state='lit'] { --win: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 206, 130, 0.7) 9px 12px); }
+.tower[data-state='soon'] { --win: repeating-linear-gradient(0deg, transparent 0 20px, rgba(255, 255, 255, 0.05) 20px 21px); }
 .tower:hover, .tower:focus-visible, .tower[aria-pressed='true'] { transform: translateZ(16px); }
 .tower:focus-visible { outline: none; }
 
@@ -103,12 +99,11 @@
 }
 .face {
   position: absolute; display: block;
-  background-color: color-mix(in srgb, var(--c) 30%, #120d1c);
-  background-image: var(--win);
-  background-size: 14px 16px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  background-color: color-mix(in srgb, var(--c) 26%, #141020);
+  background-image: var(--win), linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
-.tower[data-state='soon'] .face { background-size: auto; }
+.tower[data-state='soon'] .face { opacity: 0.55; }
 .n, .s { left: 0; width: 120px; height: var(--h); transform-origin: top; transform: rotateX(90deg); }
 .n { top: 0; filter: brightness(0.7); }
 .s { top: 120px; }
@@ -118,25 +113,25 @@
 .top {
   left: 0; top: 0; width: 120px; height: 120px;
   transform: translateZ(var(--h));
-  background-color: color-mix(in srgb, var(--c) 72%, #1a1326);
-  background-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.22), transparent 60%);
-  background-size: auto;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+  background-color: color-mix(in srgb, var(--c) 46%, #1a1326);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 .tower[data-state='lit'] .top { box-shadow: inset 0 0 0 2px rgba(255, 207, 122, 0.6), 0 0 30px rgba(255, 190, 90, 0.35); }
 
 .label {
   position: absolute; left: 50%; top: 50%;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 7px 14px; border-radius: 16px; white-space: nowrap;
-  background: rgba(28, 28, 34, 0.82); border: 0.5px solid rgba(255, 255, 255, 0.24);
+  padding: 6px 12px; border-radius: 14px; white-space: nowrap;
+  background: rgba(30, 28, 40, 0.62); border: 0.5px solid rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   color: #fff; font-family: inherit;
   transform: translateZ(calc(var(--h) + 40px)) rotateZ(calc(-1 * var(--yaw))) rotateX(-56deg) translate(-50%, -50%);
   animation: appear 0.5s ease both;
   animation-delay: calc(var(--i) * 90ms + 700ms);
 }
-.label b { font-size: 17px; font-weight: 700; }
-.label small { font-size: 13px; color: rgba(235, 235, 245, 0.72); }
+.label b { font-size: 15px; font-weight: 600; letter-spacing: -0.1px; }
+.label small { font-size: 12px; color: rgba(235, 235, 245, 0.7); }
 .tower[aria-pressed='true'] .label { background: #ff9f0a; color: #000; border-color: transparent; }
 .tower[aria-pressed='true'] .label small { color: rgba(0, 0, 0, 0.7); }
 .tower:focus-visible .label { box-shadow: 0 0 0 3px #fff; }
