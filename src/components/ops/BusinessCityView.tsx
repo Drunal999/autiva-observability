@@ -36,7 +36,8 @@ export function BusinessCityView(){
  if(legacy)return <><div className={styles.returnBar}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
  return <section className={styles.workspace}>
   <header className={styles.hero}>
-   <div className={styles.sun} aria-hidden="true"/>
+   {/* Bolo's orb is the setting sun. The sky's glow is a child of the orb, so the light moves with it. */}
+   <Link href="/brain" tabIndex={-1} aria-hidden="true" className={styles.orbWrap}><span className={styles.skyGlow}/><span className={styles.orbGlow}/><span className={styles.orbRing}/><span className={styles.orb}/></Link>
    {/* One tower per building; its windows light only while one of its automations is Running. */}
    <div className={styles.skyline} aria-hidden="true">{BUILDINGS.map((b,i)=><span key={b.id} data-lit={modules.some(m=>buildingFor(m.district)===b.id&&moduleStatus(m)==='Running')} style={{flexGrow:[1.3,1,1.2,.9,1.1,1,.8,1.2][i],height:`${[88,66,100,54,76,60,48,70][i]}%`}}/>)}</div>
    <div className={styles.intro}><div><p className={styles.welcome}>A little clarity for your day</p><h1>Your business. All together.</h1><p>Choose a building to see what’s working, what needs you, and what’s next.</p></div><Link className={styles.assistantLink} href="/brain">Talk to Bolo <span aria-hidden="true">↗</span></Link></div>
@@ -49,7 +50,7 @@ export function BusinessCityView(){
   </div>
   <div className={styles.cityHeading}><div><h2>Explore your city</h2><p>Every building is a part of your business.</p></div><span>{clock?.label??'Local time'} <span aria-hidden="true">{clock?.night?'☾':'☀'}</span></span></div>
   <div className={styles.mapScroll}><CategoryCity selected={industry?null:selected} onSelect={choose} night={clock?.night??false} labels={Object.fromEntries(BUILDINGS.map(b=>{const group=modules.filter(m=>buildingFor(m.district)===b.id);return [b.id,error?'Activity unavailable':!data?'Loading…':!group.length?'Coming soon':group.some(m=>moduleStatus(m)==='Needs attention')?'Needs attention':group.some(m=>moduleStatus(m)==='Running')?'Running':`${group.length} automation${group.length===1?'':'s'}`]}))}/></div>
-  <div className={styles.mapFoot}><p>Buildings organise your automations. Lighting is illustrative and follows your device time.</p><button onClick={()=>setLegacy(true)}>Explore original 3D view</button></div>
+  <div className={styles.mapFoot}><p>Buildings organise your automations. A building’s windows light up while one of its automations is running.</p><button onClick={()=>setLegacy(true)}>Explore original 3D view</button></div>
   <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}>{b.name}</button>)}</div>
   <section className={styles.industries} aria-label="Industry districts"><div><h3>Built around your business</h3><p>Industry collections are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
   <section ref={details} tabIndex={-1} className={styles.catalog} aria-label="Building automations">
