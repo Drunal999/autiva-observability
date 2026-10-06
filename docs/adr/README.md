@@ -20,3 +20,5 @@ If you are about to change one of these, read the "when to revisit" line first
 | [009](009-recurring-occurrence-exceptions.md) | EXDATE + RECURRENCE-ID; the edit scope is asked, not inferred | Accepted |
 | [010](010-local-city-demo-fixture.md) | The Agentic City proof is a fail-closed local fixture | Accepted |
 | [011](011-departments-and-approval-on-ingest.md) | Departments group districts for the nav; an engine run can request an approval | Accepted |
+
+| [012](012-city-first-workspace.md) | City home with Simple and Team navigation | Implemented locally |

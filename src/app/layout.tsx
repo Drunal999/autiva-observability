@@ -19,8 +19,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'JARVIS. — Team Board',
-  description: 'Internal Team Dashboard — Task & Assignment Board',
+  title: 'AUTIVA — Your business workspace',
+  description: 'Your automations, decisions and team in one business city.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

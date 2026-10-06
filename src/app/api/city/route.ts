@@ -72,6 +72,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
+    mode: ctx.mode,
     districts: modules.map((m) => {
       const district = districtFor(m.key)
       return {
