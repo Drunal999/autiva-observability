@@ -1,5 +1,5 @@
 import {describe,it,expect,vi,beforeEach} from 'vitest'
-import {render,screen,fireEvent} from '@testing-library/react'
+import {render,screen,fireEvent,within} from '@testing-library/react'
 import useSWR from 'swr'
 import {BusinessCityView} from '../BusinessCityView'
 import {OpsShell} from '../OpsShell'
@@ -11,6 +11,8 @@ vi.mock('../AutivaAssistant',()=>({AutivaAssistant:()=>null}))
 vi.mock('../FactBubble',()=>({FactBubble:()=>null}))
 vi.mock('../Presence',()=>({usePresence:()=>[],PresenceBar:()=>null}))
 const automation:CityModule={id:'m1',key:'lead-followup',displayName:'Lead Follow-up',district:'sales',pendingApprovals:0,agents:[{id:'a1',status:'IDLE'}],runs:[]}
+// The home bento also lists automations; marketplace assertions look inside the marketplace only.
+const catalog=()=>within(screen.getByRole('region',{name:'Building automations'}))
 const stub=(data:unknown,error?:Error)=>vi.mocked(useSWR).mockReturnValue({data,error,mutate:vi.fn(),isValidating:false,isLoading:false} as ReturnType<typeof useSWR>)
 beforeEach(()=>{vi.clearAllMocks();localStorage.clear();stub({districts:[automation],sample:true})})
 describe('Business city',()=>{
@@ -21,7 +23,7 @@ describe('Business city',()=>{
   expect(moduleStatus({...automation,pendingApprovals:1})).toBe('Needs attention')
  })
  it('enters buildings from the category list and labels future collections',()=>{
-  render(<BusinessCityView/>);expect(screen.getByText('Lead Follow-up')).toBeInTheDocument()
+  render(<BusinessCityView/>);expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Legal & Compliance'}))
   expect(screen.getByRole('heading',{name:'Coming soon'})).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:/Clinics.*Coming soon/}))
@@ -31,7 +33,7 @@ describe('Business city',()=>{
  it('searches across buildings and exposes actual records without inventing connections',()=>{
   render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Lead'}})
-  expect(screen.getByText('Lead Follow-up')).toBeInTheDocument()
+  expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
   // No connection requirement is claimed for an automation whose catalog entry does not document one.
   expect(screen.queryByText(/connection/i)).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'View activity'}))

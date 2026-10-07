@@ -9,6 +9,7 @@ import {CITY_FOCUS_EVENT,takeCityFocus} from '@/lib/ops/cityFocus'
 import {useWorkspaceMode} from './OpsShell'
 import {useBrainStatus} from '@/lib/ops/brain'
 import {WorkflowEditor,hasWorkflow} from './WorkflowGraph'
+import {HomeBento} from './HomeBento'
 import styles from './BusinessCity.module.css'
 const LegacyCity=dynamic(()=>import('./ImmersiveCityView').then(m=>m.ImmersiveCityView),{loading:()=> <p className="p-6">Loading 3D city…</p>})
 const greeting=(hour:number)=>hour<5?'Working late':hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
@@ -132,6 +133,7 @@ export function BusinessCityView(){
    </section>
    <div className={styles.aCal}>{clock?<MonthWidget at={clock.at}/>:null}</div>
   </section>
+  <HomeBento modules={modules}/>
   <div className={styles.mapFoot}><p>Tap a building to open its marketplace. The people walking are a simulation; a blinking dot on a building means a real run landed in the last 30 minutes. Ctrl + scroll zooms the city.</p>{mode==='team'&&<button onClick={()=>setLegacy(true)}>Explore original 3D view</button>}</div>
   <section className={`liquid-glass ${styles.industries}`} aria-label="Industry districts"><div><h3>Made for your industry</h3><p>Ready-made packs for your kind of business are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
   <section ref={details} tabIndex={-1} className={`liquid-glass ${styles.catalog}`} style={{'--c':industry||query?'#8e8e93':selectedBuilding.glow} as CSSProperties} aria-label="Building automations">

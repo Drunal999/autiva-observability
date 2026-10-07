@@ -37,7 +37,7 @@ function ageTone(iso: string): string {
  * this is the one screen where a misclick costs money, and an undo after the
  * money has moved is not an undo. Escape disarms.
  */
-function DecideControls({
+export function DecideControls({
   approval,
   busy,
   onDecide,
