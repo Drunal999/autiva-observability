@@ -4,7 +4,7 @@
    today's date, a lit building). */
 .workspace {
   color: var(--label);
-  padding: 8px clamp(16px, 2.4vw, 32px) 120px;
+  padding: 8px clamp(16px, 2.4vw, 32px) 16px;
   min-height: calc(100dvh - 76px);
 }
 .industries, .catalog, .returnBar, .widget { position: relative; }
@@ -24,43 +24,44 @@ a.widget:hover { transform: translateY(-2px); }
 .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--label-2); }
 .note { font-size: 13px; color: var(--label-2); margin-top: auto; padding-top: 10px; }
 
-/* City hero stage. The city sits in the grid's full area underneath; the
-   widgets are placed in the corners above it. */
-.stage {
-  position: relative; margin-top: 8px; display: grid; gap: 14px; padding: clamp(14px, 2vw, 22px);
-  min-height: max(660px, calc(100dvh - 110px));
-  grid-template-columns: minmax(150px, 185px) minmax(150px, 185px) 1fr minmax(260px, 300px);
-  grid-template-rows: auto auto 1fr auto;
-  grid-template-areas:
-    "greet greet . now"
-    "bolo  bolo  . now"
-    ".     .     . brain"
-    "needs autos . cal";
-}
-/* The city is the wallpaper of the whole page, not a box in it: fixed behind
-   everything, so every glass panel blurs the live, moving city through it as
-   you scroll. The stage keeps its height as an open window onto the city, and
-   only its widgets catch the pointer, so taps in the gaps reach the buildings. */
+/* One screen, like the 6 Oct prototype: greeting, Bolo and Right now across
+   the top; Agents, Needs your OK and Today in the middle; Brain and Automations
+   at the foot. The glowing city is the fixed wallpaper behind all of it (it
+   shows through the glass), "Explore the city" brings it forward, and the
+   marketplace opens as a sheet instead of a long section below. */
 .stageCity { position: fixed; inset: 0; z-index: 0; }
-.stage { pointer-events: none; }
-.stage > * { pointer-events: auto; }
-.workspace > :not(.stage) { position: relative; z-index: 1; }
-.stageCity > [role='group'] { height: 100%; }
-.glowCity { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; border-radius: inherit; background: #03060d; }
-.stage > :not(.stageCity) { position: relative; z-index: 1; }
-.aGreet { grid-area: greet; } .aBolo { grid-area: bolo; } .aNow { grid-area: now; align-self: start; }
-.aBrain { grid-area: brain; align-self: end; }
-.aNeeds { grid-area: needs; } .aAuto { grid-area: autos; } .aCal { grid-area: cal; }
-.aGreet, .aCal { min-width: 0; }
-.aGreet h1 { text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25); }
+.glowCity { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: #03060d; }
+.home { position: relative; z-index: 1; display: grid; gap: 14px; margin-top: 6px;
+  height: calc(100dvh - 110px); min-height: 620px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "greet bolo now" "agents ok today" "brain brain autos"; pointer-events: none; }
+.home > * { pointer-events: auto; min-height: 0; min-width: 0; }
+.home > div > section { height: 100%; overflow: auto; scrollbar-width: none; }
+.home > div > section::-webkit-scrollbar { display: none; }
+.hGreet { grid-area: greet; } .hBolo { grid-area: bolo; } .hNow { grid-area: now; }
+.hAgents { grid-area: agents; } .hOk { grid-area: ok; } .hToday { grid-area: today; }
+.hBrain { grid-area: brain; } .hAutos { grid-area: autos; }
+.hGreet h1 { text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35); }
+.cityNote { font-size: 12px; line-height: 1.45; color: var(--label-2); margin-top: 8px; max-width: 46ch; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+.greetActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.greetActions .exploreBtn { margin-top: 0; }
 @media (max-width: 1100px) {
-  .stage { grid-template-columns: repeat(2, minmax(0, 1fr)) 1fr; grid-template-areas: "greet greet greet" "bolo bolo now" ". . brain" "needs autos cal"; }
+  .home { height: auto; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none;
+    grid-template-areas: "greet greet" "bolo now" "agents ok" "today autos" "brain brain"; }
+  .home > div > section { height: auto; }
 }
-@media (max-width: 850px) {
-  .stage { min-height: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none;
-    grid-template-areas: "greet greet" "city city" "bolo bolo" "now now" "brain brain" "needs autos" "cal cal"; }
-  .stage::after { content: ''; grid-area: city; height: 360px; }
+@media (max-width: 700px) {
+  .home { grid-template-columns: 1fr; grid-template-areas: "greet" "bolo" "now" "ok" "today" "agents" "autos" "brain"; }
 }
+
+/* Marketplace sheet */
+.sheetBackdrop { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 24px;
+  background: rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sheet { position: relative; width: min(1180px, 100%); max-height: calc(100dvh - 48px); overflow: auto; border-radius: 34px; padding: 18px; scrollbar-width: thin; }
+.sheetClose { position: sticky; top: 0; float: right; z-index: 3; height: 36px; padding: 0 14px; border-radius: 18px; font-size: 14px; font-weight: 600;
+  color: var(--label); background: rgba(255, 255, 255, 0.12); border: 0.5px solid rgba(255, 255, 255, 0.2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.sheet .industries { margin-top: 0; }
+@media (max-width: 700px) { .sheetBackdrop { padding: 0; } .sheet { max-height: 100dvh; border-radius: 0; } }
 
 /* Bolo: the Google-widget pattern. A pill to ask, a row of round actions. */
 .ask {
@@ -224,8 +225,7 @@ a.widget:hover { transform: translateY(-2px); }
 .exploreBtn { margin-top: 12px; height: 40px; padding: 0 18px; border-radius: 20px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace > .exploreBack { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 61; height: 42px; padding: 0 20px; border-radius: 21px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace[data-explore='true'] .stageCity { z-index: 60; }
-.workspace[data-explore='true'] .stage > :not(.stageCity),
-.workspace[data-explore='true'] > :not(.stage):not(.exploreBack) { visibility: hidden; }
+.workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack) { visibility: hidden; }
 
 /* Glass everywhere in the marketplace: translucent fill, blur, and a lit top edge. */
 .automation, .mobileBuildings button:not([aria-pressed='true']), .search input, .industries button, .empty {

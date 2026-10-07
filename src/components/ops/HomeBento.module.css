@@ -2,7 +2,7 @@
    colour only for state (live green, checking amber, down red). */
 .bento { position: relative; z-index: 1; display: grid; gap: 14px; margin: 18px 0 0;
   grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.card { position: relative; border-radius: 26px; padding: 16px 18px; min-width: 0; color: var(--label); }
+.card { position: relative; border-radius: 26px; padding: 14px 18px 12px; min-width: 0; color: var(--label); }
 .wide { grid-column: span 2; }
 .card header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .card h3 { font-size: 17px; font-weight: 700; }
@@ -12,7 +12,7 @@
 .muted { font-size: 13px; line-height: 1.5; color: var(--label-2); }
 .note { font-size: 13px; color: var(--label-2); margin-top: 8px; }
 
-.rows li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 0.5px solid rgba(255, 255, 255, 0.1); }
+.rows li { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 0.5px solid rgba(255, 255, 255, 0.1); }
 .rows li:first-child { border-top: 0; }
 .rows li > div { min-width: 0; flex: 1; }
 .rows b { display: block; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -43,3 +43,11 @@
 
 @media (max-width: 1100px) { .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) { .bento { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
+
+.memories li { display: flex; gap: 14px; padding: 8px 0; min-width: 0; border-top: 0.5px solid rgba(255, 255, 255, 0.1); }
+.memories li > div { min-width: 0; }
+.memories li:first-child { border-top: 0; }
+.memories time { width: 52px; flex: none; font-size: 12.5px; font-weight: 600; color: var(--label-2); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.memories b { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.memories small { display: block; font-size: 12px; color: var(--label-2); margin-top: 2px; }
+@media (min-width: 1101px) { .memories { display: grid; grid-template-columns: 1fr 1fr; column-gap: 22px; } .memories li:nth-child(2) { border-top: 0; } }

@@ -19,7 +19,7 @@ const RISK: Record<ApprovalRisk, string> = { MONEY: 'Money', PUBLISH: 'Publishes
 type Stack = { reachable: boolean; agents: { id: string; name: string; role: string; ready: boolean; label: string }[] }
 type Item = { id: string; layer: string; title: string; startsAt: string; allDay?: boolean }
 
-function Agents() {
+export function Agents() {
  const { data, error, mutate } = useSWR<Stack>('/api/stack-status', json)
  const [busy, setBusy] = useState(false)
  const [local, setLocal] = useState(false)
@@ -37,7 +37,7 @@ function Agents() {
  </section>
 }
 
-function NeedsOk() {
+export function NeedsOk() {
  const { data, error, mutate } = useSWR<ApprovalsResponse>('/api/approvals', json, { refreshInterval: 20000 })
  const [busy, setBusy] = useState<string | null>(null)
  const [note, setNote] = useState<string | null>(null)
@@ -66,7 +66,7 @@ function NeedsOk() {
  </section>
 }
 
-function Today() {
+export function Today() {
  const [win] = useState(() => { const s = new Date(); s.setHours(0, 0, 0, 0); const e = new Date(s); e.setDate(e.getDate() + 1); return `from=${s.toISOString()}&to=${e.toISOString()}` })
  const { data, error } = useSWR<{ items: Item[] }>(`/api/calendar?${win}`, json)
  const items = (data?.items ?? []).slice().sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt)).slice(0, 4)
@@ -80,8 +80,11 @@ function Today() {
  </section>
 }
 
-function Brain() {
+type Memory = { date: string; title: string; kind: string; source: string }
+export function Brain() {
  const status = useBrainStatus()
+ // Only ask for memories when the brain is on this machine; it never leaves it.
+ const { data: mem } = useSWR<{ reachable: boolean; memories: Memory[] }>(status === 'online' ? '/api/brain-memories' : null, json)
  return <section className={`liquid-glass ${styles.card} ${styles.wide}`} aria-label="Brain">
   <header><h3>Brain</h3><span className={styles.count}>Shared memory · every agent reads the same store</span></header>
   {/* Opens Bolo, which asks the brain; a text box here would drop what was typed. */}
@@ -89,17 +92,20 @@ function Brain() {
    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
    <span>Ask your brain anything</span>
   </Link>
-  <p className={styles.muted}>{status === 'online' ? 'The brain is running. Asking opens Bolo, which answers from the shared memory.'
+  {mem?.reachable && mem.memories.length > 0 && <ul className={styles.memories}>{mem.memories.slice(0, 6).map(m => <li key={m.source + m.date + m.title}>
+   <time dateTime={m.date}>{new Date(m.date + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</time>
+   <div><b>{m.title}</b><small>{m.kind} · {m.source}</small></div></li>)}</ul>}
+  {!(mem?.reachable && mem.memories.length) && <p className={styles.muted}>{status === 'online' ? 'The brain is running. Asking opens Bolo, which answers from the shared memory.'
    : status === 'offline' ? 'The brain server isn’t running on this machine right now.'
-   : status === 'remote' ? 'The brain stays on your own machine; it is not reachable from this page.' : 'Checking the brain…'}</p>
+   : status === 'remote' ? 'The brain stays on your own machine; it is not reachable from this page.' : 'Checking the brain…'}</p>}
  </section>
 }
 
-function Automations({ modules }: { modules: CityModule[] }) {
+export function Automations({ modules }: { modules: CityModule[] }) {
  return <section className={`liquid-glass ${styles.card}`} aria-label="Automations">
   <header><h3>Automations</h3><span className={styles.count}>{modules.length}</span></header>
   {modules.length === 0 ? <p className={styles.muted}>No automations in this workspace yet.</p>
-   : <ul className={styles.rows}>{modules.slice(0, 6).map(m => { const s = moduleStatus(m); return <li key={m.id}><div><b>{m.displayName}</b><small className={styles.mono}>{m.key.includes('.') ? m.key : `${m.district}.${m.key}`}</small></div><em data-tone={s === 'Running' ? 'live' : s === 'Needs attention' ? 'checking' : undefined}>{s}</em></li> })}</ul>}
+   : <ul className={styles.rows}>{modules.slice(0, 4).map(m => { const s = moduleStatus(m); return <li key={m.id}><div><b>{m.displayName}</b><small className={styles.mono}>{m.key.includes('.') ? m.key : `${m.district}.${m.key}`}</small></div><em data-tone={s === 'Running' ? 'live' : s === 'Needs attention' ? 'checking' : undefined}>{s}</em></li> })}</ul>}
  </section>
 }
 

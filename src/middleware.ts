@@ -32,6 +32,7 @@ export const config = {
     '/api/presence/:path*',
     '/api/team',
     '/api/stack-status',
+    '/api/brain-memories',
     '/api/calls/:path*',
     // '/api/calendar/feed' is deliberately excluded: calendar clients fetch it
     // unattended with no session, authenticated by its own token instead.

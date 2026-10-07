@@ -23,7 +23,7 @@ describe('Business city',()=>{
   expect(moduleStatus({...automation,pendingApprovals:1})).toBe('Needs attention')
  })
  it('enters buildings from the category list and labels future collections',()=>{
-  render(<BusinessCityView/>);expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
+  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}));expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Legal & Compliance'}))
   expect(screen.getByRole('heading',{name:'Coming soon'})).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:/Clinics.*Coming soon/}))
@@ -31,7 +31,7 @@ describe('Business city',()=>{
   expect(screen.queryByRole('button',{name:/install|buy/i})).not.toBeInTheDocument()
  })
  it('searches across buildings and exposes actual records without inventing connections',()=>{
-  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
+  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}));fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Lead'}})
   expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
   // No connection requirement is claimed for an automation whose catalog entry does not document one.
@@ -41,9 +41,12 @@ describe('Business city',()=>{
  })
  it('does not present stale data or zero as healthy after a request fails',()=>{
   stub({districts:[automation],sample:true},new Error('offline'));render(<BusinessCityView/>)
+  // Home: the count is unknown, not zero.
+  expect(screen.getByText('Activity unavailable')).toBeInTheDocument()
+  expect(screen.getAllByText('—')).toHaveLength(1)
+  fireEvent.click(screen.getByRole('button',{name:'Marketplace'}))
   expect(screen.getByRole('alert')).toBeInTheDocument()
   expect(screen.queryByText('Lead Follow-up')).not.toBeInTheDocument()
-  expect(screen.getAllByText('—')).toHaveLength(3)
  })
  it('starts simple and exposes all preserved engineering URLs in Team',()=>{
   stub(undefined);render(<OpsShell><p>Same data</p></OpsShell>)
