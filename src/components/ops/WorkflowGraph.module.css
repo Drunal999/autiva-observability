@@ -1,0 +1,69 @@
+/* n8n-style canvas: near-black dotted board, glass nodes, wires that glow in
+   the building's colour (--c, inherited from the marketplace panel). */
+.wrap { margin: 14px 0 0; border-radius: 22px; overflow: hidden; border: 0.5px solid rgba(255, 255, 255, 0.14);
+  background: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.3px) 0 0 / 22px 22px, rgba(10, 12, 18, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.scroll { overflow-x: auto; padding: 6px; scrollbar-width: thin; }
+.scroll svg { display: block; height: auto; }
+.wrap figcaption { font-size: 12px; color: var(--label-2); padding: 10px 14px 12px; border-top: 0.5px solid var(--sep); }
+.wrap figcaption b { color: var(--label); font-weight: 600; }
+.none { margin-top: 12px; font-size: 13px; color: var(--label-2); line-height: 1.5; }
+
+.wire { fill: none; stroke: color-mix(in srgb, var(--c, #3ddc97) 55%, white); stroke-width: 1.4; opacity: 0.9; }
+.halo { fill: none; stroke: var(--c, #3ddc97); stroke-width: 7; opacity: 0.28; }
+.pulse { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 3 60; opacity: 0; }
+.wrap[data-running='true'] .pulse { opacity: 0.9; animation: flow 1.8s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -63; } }
+.edge[data-label='no'] .wire { stroke-dasharray: 5 5; opacity: 0.55; }
+.label { font-size: 12px; fill: var(--label-2); text-anchor: middle; font-style: italic; }
+
+.card { fill: url(#wf-glass); stroke: url(#wf-rim); stroke-width: 1; }
+.node:hover .card { stroke: color-mix(in srgb, var(--c, #3ddc97) 80%, white); }
+.chip { fill: color-mix(in srgb, var(--c, #3ddc97) 26%, transparent); stroke: rgba(255, 255, 255, 0.28); stroke-width: 0.8; }
+.node[data-kind='trigger'] .chip { fill: rgba(255, 255, 255, 0.22); }
+.glyph { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transform-box: fill-box; }
+.name { font-size: 13px; font-weight: 600; fill: #f2f2f7; }
+.kind { font-size: 11px; fill: rgba(235, 235, 245, 0.55); text-transform: uppercase; letter-spacing: 0.06em; }
+
+@media (prefers-reduced-motion: reduce) { .wrap[data-running='true'] .pulse { animation: none; opacity: 0.5; } }
+
+/* The trigger is the lit node, like the filled model card in the reference. */
+.fillA { stop-color: color-mix(in srgb, var(--c, #3ddc97) 55%, transparent); }
+.fillB { stop-color: color-mix(in srgb, var(--c, #3ddc97) 14%, transparent); }
+.node[data-kind='trigger'] .card { fill: url(#wf-fill); stroke: color-mix(in srgb, var(--c, #3ddc97) 80%, white); }
+.port { fill: #fff; stroke: var(--c, #3ddc97); stroke-width: 1.5; }
+
+/* Editor shell */
+.editor { --c: #3ddc97; position: relative; margin-top: 14px; border-radius: 28px; padding: 18px; color: #f2f2f7;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 10%, rgba(30, 30, 36, 0.42)), rgba(18, 18, 22, 0.34)); }
+.edHead { display: flex; align-items: flex-start; gap: 12px; }
+.edHead h4 { font-size: 22px; font-weight: 300; letter-spacing: -0.02em; }
+.edHead p { font-size: 13px; color: rgba(235, 235, 245, 0.45); margin-top: 1px; }
+.tag { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 10px; color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: color-mix(in srgb, var(--c) 14%, transparent); border: 0.5px solid color-mix(in srgb, var(--c) 45%, transparent); }
+.tabs { display: inline-flex; gap: 2px; margin: 14px 0 0; padding: 3px; border-radius: 14px; background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+.tabs button { height: 32px; padding: 0 14px; border-radius: 9px; font-size: 13px; font-weight: 600; color: rgba(235, 235, 245, 0.6); }
+.tabs button[aria-selected='true'] { background: rgba(255, 255, 255, 0.18); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 8px rgba(0, 0, 0, 0.2); }
+.edBody { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 14px; }
+.edMain { position: relative; min-width: 0; }
+.zoom { position: absolute; left: 12px; bottom: 54px; display: flex; gap: 4px; }
+.zoom button { height: 32px; min-width: 32px; padding: 0 8px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #fff;
+  background: rgba(255, 255, 255, 0.1); border: 0.5px solid rgba(255, 255, 255, 0.2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+.runs { margin-top: 14px; border-radius: 20px; background: rgba(255, 255, 255, 0.05); border: 0.5px solid rgba(255, 255, 255, 0.14); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+.runs li { display: flex; justify-content: space-between; gap: 10px; padding: 12px 14px; font-size: 13px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.08); }
+.runs li:last-child { border-bottom: 0; }
+.runs time { color: rgba(235, 235, 245, 0.5); }
+.runs span[data-status='SUCCESS'] { color: #30d158; } .runs span[data-status='FAILED'] { color: #ff453a; }
+.tools { margin-top: 14px; padding: 12px; border-radius: 22px; align-self: start; background: rgba(255, 255, 255, 0.06); border: 0.5px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+.toolsHead { font-size: 13px; font-weight: 700; }
+.toolsGroup { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(235, 235, 245, 0.45); margin: 12px 0 6px; }
+.tool { display: flex; align-items: center; gap: 10px; padding: 7px 4px; }
+.tool b { display: block; font-size: 13px; font-weight: 600; }
+.tool small { display: block; font-size: 11px; color: rgba(235, 235, 245, 0.5); }
+.toolMark { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; font-size: 11px; font-weight: 800;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.22), color-mix(in srgb, var(--c) 18%, transparent)); border: 0.5px solid rgba(255, 255, 255, 0.28); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.tool[data-state='package'] { opacity: 0.55; }
+.tool[data-state='package'] .toolMark { background: rgba(255, 255, 255, 0.08); box-shadow: none; }
+.toolsNote { font-size: 11px; line-height: 1.5; color: rgba(235, 235, 245, 0.45); margin-top: 10px; }
+@media (max-width: 900px) { .edBody { grid-template-columns: 1fr; } }

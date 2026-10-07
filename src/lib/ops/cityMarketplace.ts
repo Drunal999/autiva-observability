@@ -1,13 +1,14 @@
 import type { District } from './districts'
+/** `color` is the calm UI tint; `glow` is the neon of that district in the 3D city (marketing green, finance pink…). */
 export const BUILDINGS = [
- {id:'sales',name:'Sales & Leads',purpose:'Find opportunities and keep conversations moving.',color:'#e9b987',districts:['sales']},
- {id:'marketing',name:'Marketing',purpose:'Help more people discover your business.',color:'#a8bddf',districts:['marketing']},
- {id:'support',name:'Customer Support',purpose:'Keep customer questions organised.',color:'#b5cfba',districts:['support']},
- {id:'finance',name:'Finance & Billing',purpose:'Keep track of invoices and payments.',color:'#d1b6db',districts:['finance']},
- {id:'operations',name:'Operations',purpose:'Keep daily work and your team on track.',color:'#dcc798',districts:['operations','people']},
- {id:'security',name:'Security',purpose:'Review access and protect your business.',color:'#91bcc4',districts:['security']},
- {id:'knowledge',name:'Business Knowledge',purpose:'Bring research and business knowledge together.',color:'#b7c594',districts:['intelligence']},
- {id:'legal',name:'Legal & Compliance',purpose:'A future home for contracts and compliance.',color:'#c8c9d3',districts:[]},
+ {id:'sales',name:'Sales & Leads',purpose:'Find opportunities and keep conversations moving.',color:'#e9b987',glow:'#a878ff',districts:['sales']},
+ {id:'marketing',name:'Marketing',purpose:'Help more people discover your business.',color:'#a8bddf',glow:'#3ddc97',districts:['marketing']},
+ {id:'support',name:'Customer Support',purpose:'Keep customer questions organised.',color:'#b5cfba',glow:'#38d6ff',districts:['support']},
+ {id:'finance',name:'Finance & Billing',purpose:'Keep track of invoices and payments.',color:'#d1b6db',glow:'#ff6bd6',districts:['finance']},
+ {id:'operations',name:'Operations',purpose:'Keep daily work and your team on track.',color:'#dcc798',glow:'#4d8dff',districts:['operations','people']},
+ {id:'security',name:'Security',purpose:'Review access and protect your business.',color:'#91bcc4',glow:'#ffc663',districts:['security']},
+ {id:'knowledge',name:'Business Knowledge',purpose:'Bring research and business knowledge together.',color:'#b7c594',glow:'#7ee0ff',districts:['intelligence']},
+ {id:'legal',name:'Legal & Compliance',purpose:'A future home for contracts and compliance.',color:'#c8c9d3',glow:'#c8c9d3',districts:[]},
 ] as const
 export type BuildingId = typeof BUILDINGS[number]['id']
 export interface CityModule {

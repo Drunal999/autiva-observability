@@ -20,16 +20,16 @@ describe('Business city',()=>{
   expect(moduleStatus({...automation,agents:[]})).toBe('Status not reported')
   expect(moduleStatus({...automation,pendingApprovals:1})).toBe('Needs attention')
  })
- it('enters buildings by keyboard and labels future collections',()=>{
+ it('enters buildings from the category list and labels future collections',()=>{
   render(<BusinessCityView/>);expect(screen.getByText('Lead Follow-up')).toBeInTheDocument()
-  fireEvent.keyDown(screen.getByRole('button',{name:'Enter Legal & Compliance'}),{key:'Enter'})
+  fireEvent.click(screen.getByRole('button',{name:'Legal & Compliance'}))
   expect(screen.getByRole('heading',{name:'Coming soon'})).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:/Clinics.*Coming soon/}))
   expect(screen.getByRole('heading',{name:'Clinics'})).toBeInTheDocument()
   expect(screen.queryByRole('button',{name:/install|buy/i})).not.toBeInTheDocument()
  })
  it('searches across buildings and exposes actual records without inventing connections',()=>{
-  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Enter Marketing'}))
+  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Lead'}})
   expect(screen.getByText('Lead Follow-up')).toBeInTheDocument()
   // No connection requirement is claimed for an automation whose catalog entry does not document one.
