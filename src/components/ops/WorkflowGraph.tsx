@@ -2,6 +2,7 @@
 import { useState, type CSSProperties } from 'react'
 import graphs from '@/lib/ops/workflowGraphs.json'
 import { TOOLS } from '@/lib/ops/connections'
+import { BLUEPRINTS, type Graph } from '@/lib/ops/workflowBlueprints'
 import styles from './WorkflowGraph.module.css'
 
 /**
@@ -9,9 +10,17 @@ import styles from './WorkflowGraph.module.css'
  * nodes and wires. Shape only (names, kinds, positions, connections) — see
  * scripts/export-workflow-graphs.mjs. Wires carry a moving pulse only while
  * the automation is Running, so motion always means something real.
+ * A module with no n8n workflow yet shows its labelled blueprint, never pulsing.
  */
-type Graph = { source: string; nodes: { id: number; name: string; kind: string; x: number; y: number }[]; edges: { from: number; to: number; label: string | null }[] }
-const ALL = graphs as Record<string, Graph>
+const REAL = graphs as Record<string, Graph[]>
+// `marketing.seo_audit` (AUTIVA's catalog) and `seo-audit` (this seed) are the same module.
+const norm = (key: string) => key.toLowerCase().split('.').pop()!.replace(/_/g, '-')
+/** The module's workflow layers, and whether they are a blueprint rather than real n8n. */
+export function layersFor(key: string): { graphs: Graph[]; blueprint: boolean } {
+ const k = norm(key)
+ if (REAL[k]) return { graphs: REAL[k], blueprint: false }
+ return BLUEPRINTS[k] ? { graphs: [BLUEPRINTS[k]], blueprint: true } : { graphs: [], blueprint: false }
+}
 const W = 168, H = 58, PAD = 40, STEP = 240, PER_ROW = 5
 const GLYPH: Record<string, string> = {
  trigger: 'M13 2L4 14h7l-1 8 9-12h-7z', http: 'M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
@@ -19,10 +28,12 @@ const GLYPH: Record<string, string> = {
  send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', step: 'M5 12h14',
 }
 
-export const hasWorkflow = (key: string) => key in ALL
+export const hasWorkflow = (key: string) => layersFor(key).graphs.length > 0
 
-export function WorkflowGraph({ moduleKey, running, zoom = 1 }: { moduleKey: string; running: boolean; zoom?: number }) {
- const g = ALL[moduleKey]
+export function WorkflowGraph({ moduleKey, running, zoom = 1, layer = 0 }: { moduleKey: string; running: boolean; zoom?: number; layer?: number }) {
+ const { graphs: gs, blueprint } = layersFor(moduleKey)
+ const g = gs[layer]
+ if (blueprint) running = false
  if (!g) return <p className={styles.none}>This automation’s workflow hasn’t been mapped here yet, so there’s nothing real to draw.</p>
  // n8n lays a workflow out as one long line. Fold it into rows of PER_ROW columns,
  // keeping each node's column order and its offset within the column; the
@@ -32,7 +43,7 @@ export function WorkflowGraph({ moduleKey, running, zoom = 1 }: { moduleKey: str
  const minX = -PAD, minY = -PAD
  const width = Math.max(...laid.map(n => n.x)) + W + 2 * PAD, height = Math.max(...laid.map(n => n.y)) + H + 2 * PAD
  const at = (id: number) => laid[id]
- return <figure className={styles.wrap} data-running={running}>
+ return <figure className={styles.wrap} data-running={running} data-blueprint={blueprint || undefined}>
   <div className={styles.scroll}>
    <svg viewBox={`${minX} ${minY} ${width} ${height}`} style={{ width: `${zoom * 100}%`, minWidth: 760 * zoom }} role="img" aria-label={`Workflow ${g.source}: ${g.nodes.length} steps`}>
     <defs>
@@ -63,7 +74,9 @@ export function WorkflowGraph({ moduleKey, running, zoom = 1 }: { moduleKey: str
     </g>)}
    </svg>
   </div>
-  <figcaption>Drawn from the real n8n workflow <b>{g.source}</b> · {g.nodes.length} steps{running ? ' · pulses show it is running now' : ''}</figcaption>
+  <figcaption>{blueprint
+   ? <><b>Blueprint</b> · the planned design, not built in n8n yet, so it never shows as running</>
+   : <>Drawn from the real n8n workflow <b>{g.source}</b> · {g.nodes.length} steps{running ? ' · pulses show it is running now' : ''}</>}</figcaption>
  </figure>
 }
 
@@ -76,6 +89,8 @@ export function WorkflowEditor({ name, moduleKey, building, glow, running, runs 
  { name: string; moduleKey: string; building: string; glow: string; running: boolean; runs: Run[] }) {
  const [tab, setTab] = useState<'editor' | 'runs'>('editor')
  const [zoom, setZoom] = useState(1)
+ const [layer, setLayer] = useState(0)
+ const { graphs: layers } = layersFor(moduleKey)
  return <section className={`liquid-glass ${styles.editor}`} style={{ '--c': glow } as CSSProperties} aria-label={`${name} workflow`}>
   <header className={styles.edHead}>
    <div><h4>{name}</h4><p>/{building.toLowerCase()}</p></div>
@@ -88,7 +103,11 @@ export function WorkflowEditor({ name, moduleKey, building, glow, running, runs 
   <div className={styles.edBody}>
    <div className={styles.edMain}>
     {tab === 'editor' ? <>
-     <WorkflowGraph moduleKey={moduleKey} running={running} zoom={zoom} />
+     {layers.length > 1 && <div className={styles.layers} role="tablist" aria-label="Workflow layers">
+      {layers.map((l, i) => <button key={l.source} role="tab" aria-selected={layer === i} onClick={() => setLayer(i)}>
+       <span>{i + 1}</span>{l.source.replace(/^E\d+_|_v\d+$/g, '').replace(/_/g, ' ')}</button>)}
+     </div>}
+     <WorkflowGraph moduleKey={moduleKey} running={running} zoom={zoom} layer={layer} />
      {hasWorkflow(moduleKey) && <div className={styles.zoom}>
       <button aria-label="Zoom out" onClick={() => setZoom(z => Math.max(0.7, +(z - 0.15).toFixed(2)))}>−</button>
       <button aria-label="Fit" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>

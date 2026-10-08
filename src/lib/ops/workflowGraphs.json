@@ -1,343 +1,457 @@
 {
- "seo-audit": {
-  "source": "E5_website_audit_v1",
-  "nodes": [
-   {
-    "id": 0,
-    "name": "When clicking Execute",
-    "kind": "trigger",
-    "x": 0,
-    "y": 0
-   },
-   {
-    "id": 1,
-    "name": "Input",
-    "kind": "code",
-    "x": 240,
-    "y": 0
-   },
-   {
-    "id": 2,
-    "name": "Fetch homepage",
-    "kind": "http",
-    "x": 720,
-    "y": 0
-   },
-   {
-    "id": 3,
-    "name": "PageSpeed",
-    "kind": "http",
-    "x": 960,
-    "y": 0
-   },
-   {
-    "id": 4,
-    "name": "Parse + Score",
-    "kind": "code",
-    "x": 1200,
-    "y": 0
-   },
-   {
-    "id": 5,
-    "name": "Scored OK?",
-    "kind": "branch",
-    "x": 1440,
-    "y": 0
-   },
-   {
-    "id": 6,
-    "name": "Write findings",
-    "kind": "http",
-    "x": 1680,
-    "y": 0
-   },
-   {
-    "id": 7,
-    "name": "Validate findings",
-    "kind": "code",
-    "x": 1920,
-    "y": 0
-   },
-   {
-    "id": 8,
-    "name": "Render report",
-    "kind": "code",
-    "x": 2160,
-    "y": 0
-   },
-   {
-    "id": 9,
-    "name": "Create run",
-    "kind": "http",
-    "x": 480,
-    "y": 0
-   },
-   {
-    "id": 10,
-    "name": "Log run",
-    "kind": "http",
-    "x": 3120,
-    "y": 0
-   },
-   {
-    "id": 11,
-    "name": "Log failure",
-    "kind": "http",
-    "x": 1680,
-    "y": 220
-   },
-   {
-    "id": 12,
-    "name": "Store report",
-    "kind": "http",
-    "x": 2400,
-    "y": 0
-   },
-   {
-    "id": 13,
-    "name": "Embed summary",
-    "kind": "http",
-    "x": 2640,
-    "y": 0
-   },
-   {
-    "id": 14,
-    "name": "Save memory",
-    "kind": "http",
-    "x": 2880,
-    "y": 0
-   },
-   {
-    "id": 15,
-    "name": "GMB lookup",
-    "kind": "http",
-    "x": 600,
-    "y": 200
-   }
-  ],
-  "edges": [
-   {
-    "from": 0,
-    "to": 1,
-    "label": null
-   },
-   {
-    "from": 1,
-    "to": 9,
-    "label": null
-   },
-   {
-    "from": 9,
-    "to": 15,
-    "label": null
-   },
-   {
-    "from": 2,
-    "to": 3,
-    "label": null
-   },
-   {
-    "from": 3,
-    "to": 4,
-    "label": null
-   },
-   {
-    "from": 4,
-    "to": 5,
-    "label": null
-   },
-   {
-    "from": 5,
-    "to": 6,
-    "label": "yes"
-   },
-   {
-    "from": 5,
-    "to": 11,
-    "label": "no"
-   },
-   {
-    "from": 6,
-    "to": 7,
-    "label": null
-   },
-   {
-    "from": 6,
-    "to": 11,
-    "label": null
-   },
-   {
-    "from": 7,
-    "to": 8,
-    "label": null
-   },
-   {
-    "from": 7,
-    "to": 11,
-    "label": null
-   },
-   {
-    "from": 8,
-    "to": 12,
-    "label": null
-   },
-   {
-    "from": 12,
-    "to": 13,
-    "label": null
-   },
-   {
-    "from": 12,
-    "to": 11,
-    "label": null
-   },
-   {
-    "from": 13,
-    "to": 14,
-    "label": null
-   },
-   {
-    "from": 13,
-    "to": 11,
-    "label": null
-   },
-   {
-    "from": 14,
-    "to": 10,
-    "label": null
-   },
-   {
-    "from": 14,
-    "to": 11,
-    "label": null
-   },
-   {
-    "from": 15,
-    "to": 2,
-    "label": null
-   }
-  ]
- },
- "lead-followup": {
-  "source": "E2_lead_producer_v1",
-  "nodes": [
-   {
-    "id": 0,
-    "name": "Daily 07:00 IST",
-    "kind": "trigger",
-    "x": 0,
-    "y": 0
-   },
-   {
-    "id": 1,
-    "name": "Fetch new leads",
-    "kind": "http",
-    "x": 240,
-    "y": 0
-   },
-   {
-    "id": 2,
-    "name": "Create run",
-    "kind": "http",
-    "x": 480,
-    "y": 0
-   },
-   {
-    "id": 3,
-    "name": "Draft opener",
-    "kind": "http",
-    "x": 720,
-    "y": 0
-   },
-   {
-    "id": 4,
-    "name": "Quality gate",
-    "kind": "code",
-    "x": 960,
-    "y": 0
-   },
-   {
-    "id": 5,
-    "name": "Passed gate?",
-    "kind": "branch",
-    "x": 1200,
-    "y": 0
-   },
-   {
-    "id": 6,
-    "name": "Mark ready",
-    "kind": "http",
-    "x": 1440,
-    "y": -120
-   },
-   {
-    "id": 7,
-    "name": "Log blocked draft",
-    "kind": "http",
-    "x": 1440,
-    "y": 140
-   },
-   {
-    "id": 8,
-    "name": "Log gate rejection",
-    "kind": "http",
-    "x": 1680,
-    "y": 140
-   },
-   {
-    "id": 9,
-    "name": "Close run",
-    "kind": "http",
-    "x": 1680,
-    "y": -120
-   }
-  ],
-  "edges": [
-   {
-    "from": 0,
-    "to": 1,
-    "label": null
-   },
-   {
-    "from": 1,
-    "to": 2,
-    "label": null
-   },
-   {
-    "from": 2,
-    "to": 3,
-    "label": null
-   },
-   {
-    "from": 3,
-    "to": 4,
-    "label": null
-   },
-   {
-    "from": 4,
-    "to": 5,
-    "label": null
-   },
-   {
-    "from": 5,
-    "to": 6,
-    "label": "yes"
-   },
-   {
-    "from": 5,
-    "to": 7,
-    "label": "no"
-   },
-   {
-    "from": 6,
-    "to": 9,
-    "label": null
-   },
-   {
-    "from": 7,
-    "to": 8,
-    "label": null
-   }
-  ]
- }
+ "seo-audit": [
+  {
+   "source": "E5_website_audit_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "When clicking Execute",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Input",
+     "kind": "code",
+     "x": 240,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "Fetch homepage",
+     "kind": "http",
+     "x": 720,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "PageSpeed",
+     "kind": "http",
+     "x": 960,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Parse + Score",
+     "kind": "code",
+     "x": 1200,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Scored OK?",
+     "kind": "branch",
+     "x": 1440,
+     "y": 0
+    },
+    {
+     "id": 6,
+     "name": "Write findings",
+     "kind": "http",
+     "x": 1680,
+     "y": 0
+    },
+    {
+     "id": 7,
+     "name": "Validate findings",
+     "kind": "code",
+     "x": 1920,
+     "y": 0
+    },
+    {
+     "id": 8,
+     "name": "Render report",
+     "kind": "code",
+     "x": 2160,
+     "y": 0
+    },
+    {
+     "id": 9,
+     "name": "Create run",
+     "kind": "http",
+     "x": 480,
+     "y": 0
+    },
+    {
+     "id": 10,
+     "name": "Log run",
+     "kind": "http",
+     "x": 3120,
+     "y": 0
+    },
+    {
+     "id": 11,
+     "name": "Log failure",
+     "kind": "http",
+     "x": 1680,
+     "y": 220
+    },
+    {
+     "id": 12,
+     "name": "Store report",
+     "kind": "http",
+     "x": 2400,
+     "y": 0
+    },
+    {
+     "id": 13,
+     "name": "Embed summary",
+     "kind": "http",
+     "x": 2640,
+     "y": 0
+    },
+    {
+     "id": 14,
+     "name": "Save memory",
+     "kind": "http",
+     "x": 2880,
+     "y": 0
+    },
+    {
+     "id": 15,
+     "name": "GMB lookup",
+     "kind": "http",
+     "x": 600,
+     "y": 200
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 9,
+     "label": null
+    },
+    {
+     "from": 9,
+     "to": 15,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 4,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": "yes"
+    },
+    {
+     "from": 5,
+     "to": 11,
+     "label": "no"
+    },
+    {
+     "from": 6,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 6,
+     "to": 11,
+     "label": null
+    },
+    {
+     "from": 7,
+     "to": 8,
+     "label": null
+    },
+    {
+     "from": 7,
+     "to": 11,
+     "label": null
+    },
+    {
+     "from": 8,
+     "to": 12,
+     "label": null
+    },
+    {
+     "from": 12,
+     "to": 13,
+     "label": null
+    },
+    {
+     "from": 12,
+     "to": 11,
+     "label": null
+    },
+    {
+     "from": 13,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 13,
+     "to": 11,
+     "label": null
+    },
+    {
+     "from": 14,
+     "to": 10,
+     "label": null
+    },
+    {
+     "from": 14,
+     "to": 11,
+     "label": null
+    },
+    {
+     "from": 15,
+     "to": 2,
+     "label": null
+    }
+   ]
+  }
+ ],
+ "lead-followup": [
+  {
+   "source": "E2_lead_producer_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "Daily 07:00 IST",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Fetch new leads",
+     "kind": "http",
+     "x": 240,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "Create run",
+     "kind": "http",
+     "x": 480,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "Draft opener",
+     "kind": "http",
+     "x": 720,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Quality gate",
+     "kind": "code",
+     "x": 960,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Passed gate?",
+     "kind": "branch",
+     "x": 1200,
+     "y": 0
+    },
+    {
+     "id": 6,
+     "name": "Mark ready",
+     "kind": "http",
+     "x": 1440,
+     "y": -120
+    },
+    {
+     "id": 7,
+     "name": "Log blocked draft",
+     "kind": "http",
+     "x": 1440,
+     "y": 140
+    },
+    {
+     "id": 8,
+     "name": "Log gate rejection",
+     "kind": "http",
+     "x": 1680,
+     "y": 140
+    },
+    {
+     "id": 9,
+     "name": "Close run",
+     "kind": "http",
+     "x": 1680,
+     "y": -120
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 2,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 4,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": "yes"
+    },
+    {
+     "from": 5,
+     "to": 7,
+     "label": "no"
+    },
+    {
+     "from": 6,
+     "to": 9,
+     "label": null
+    },
+    {
+     "from": 7,
+     "to": 8,
+     "label": null
+    }
+   ]
+  },
+  {
+   "source": "E2_outreach_sender_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "Every 15 min (business hours IST)",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Claim lead",
+     "kind": "http",
+     "x": 240,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "Create run",
+     "kind": "http",
+     "x": 480,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "Send email",
+     "kind": "send",
+     "x": 720,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Mark sent",
+     "kind": "http",
+     "x": 960,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Log event",
+     "kind": "http",
+     "x": 1200,
+     "y": 0
+    },
+    {
+     "id": 6,
+     "name": "Close run",
+     "kind": "http",
+     "x": 1440,
+     "y": 0
+    },
+    {
+     "id": 7,
+     "name": "Mark bounced",
+     "kind": "http",
+     "x": 960,
+     "y": 220
+    },
+    {
+     "id": 8,
+     "name": "Log failure",
+     "kind": "http",
+     "x": 1200,
+     "y": 220
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 2,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 4,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 7,
+     "to": 8,
+     "label": null
+    }
+   ]
+  }
+ ]
 }

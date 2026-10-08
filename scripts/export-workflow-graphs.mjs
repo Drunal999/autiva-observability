@@ -16,9 +16,10 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 const dir = resolve(process.argv[2] ?? '../AUTIVA/workflows')
+// A module can run on several workflows in sequence: its layers, in order.
 const MAP = {
-  'seo-audit': 'E5_website_audit_v1.json',
-  'lead-followup': 'E2_lead_producer_v1.json',
+  'seo-audit': ['E5_website_audit_v1.json'],
+  'lead-followup': ['E2_lead_producer_v1.json', 'E2_outreach_sender_v1.json'],
 }
 
 const kindOf = (type) => {
@@ -31,8 +32,7 @@ const kindOf = (type) => {
   return 'step'
 }
 
-const out = {}
-for (const [key, file] of Object.entries(MAP)) {
+function graphOf(file) {
   const wf = JSON.parse(readFileSync(join(dir, file), 'utf8'))
   const ids = new Map(wf.nodes.map((n, i) => [n.name, i]))
   const nodes = wf.nodes.map((n, i) => ({ id: i, name: n.name, kind: kindOf(n.type), x: n.position[0], y: n.position[1] }))
@@ -46,8 +46,11 @@ for (const [key, file] of Object.entries(MAP)) {
       }
     })
   }
-  out[key] = { source: file.replace(/\.json$/, ''), nodes, edges }
+  return { source: file.replace(/\.json$/, ''), nodes, edges }
 }
+
+const out = {}
+for (const [key, files] of Object.entries(MAP)) out[key] = files.map(graphOf)
 
 const target = resolve('src/lib/ops/workflowGraphs.json')
 writeFileSync(target, JSON.stringify(out, null, 1) + '\n')
