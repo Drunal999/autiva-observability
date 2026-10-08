@@ -454,7 +454,7 @@
    ]
   }
  ],
- "content-studio": [
+ "content-drafts": [
   {
    "source": "E4_content_draft_v1",
    "nodes": [
@@ -691,7 +691,9 @@
      "label": null
     }
    ]
-  },
+  }
+ ],
+ "content-publish": [
   {
    "source": "E4_content_publish_v1",
    "nodes": [

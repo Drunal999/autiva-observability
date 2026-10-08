@@ -27,10 +27,30 @@ export const CATALOG: CatalogItem[] = [
     purpose: 'Answers client questions on WhatsApp and email with their own filing status, and qualifies new enquiries.',
     audience: 'CA firms answering the same questions daily', needs: 'Claude, Gmail, WhatsApp Business API',
     guard: 'Only replies to people who wrote first; tax advice goes to a partner.' },
-  { key: 'content-studio', name: 'Content Studio', building: 'marketing', stage: 'ready',
-    purpose: 'Researches a topic, drafts a post, waits for your OK, then publishes through the official LinkedIn API.',
-    audience: 'Owners who want to post regularly', needs: 'Claude, LinkedIn API',
-    guard: 'Nothing is posted without your approval.' },
+  { key: 'content-drafts', name: 'Content Drafts', building: 'marketing', stage: 'ready',
+    purpose: 'Picks a topic, researches it and drafts a post, learning from drafts you rejected before.',
+    audience: 'Owners who want to post regularly', needs: 'Claude',
+    guard: 'Every draft waits for your approval.' },
+  { key: 'content-publish', name: 'Content Publishing', building: 'marketing', stage: 'ready',
+    purpose: 'Publishes the drafts you approved through the official LinkedIn API and confirms they went live.',
+    audience: 'Owners who already write their posts', needs: 'LinkedIn API',
+    guard: 'Only approved drafts are posted.' },
+  { key: 'ca-notice-reader', name: 'Notice Reader', building: 'legal', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Reads an Income Tax or GST notice the moment it lands, and gives the partner the section, demand, reply-by date and documents needed.',
+    audience: 'CA firms handling notices for many clients', needs: 'Claude, Gmail (or a notice upload)',
+    guard: 'Never replies to the department; the partner decides and signs.' },
+  { key: 'ca-gst-recon', name: 'GSTR-2B Reconciliation', building: 'finance', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Matches the client’s purchase register against GSTR-2B and lists missing, extra and mismatched invoices before the return.',
+    audience: 'CA firms filing monthly GST', needs: 'GSTR-2B JSON from the GST portal, the purchase register',
+    guard: 'Lists mismatches only; never files a return or claims credit.' },
+  { key: 'ca-bank-ledger', name: 'Bank Statement to Ledger', building: 'finance', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Turns a bank statement PDF into categorised entries, flags the unclear ones and prepares an import for your accounting software.',
+    audience: 'CA firms doing bookkeeping for small clients', needs: 'Claude, your accounting software’s import format',
+    guard: 'Nothing is posted to the books until someone reviews it.' },
+  { key: 'ca-client-update', name: 'Monthly Client Update', building: 'support', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Sends each client one message a month: what was filed, what is pending from them, and fees due.',
+    audience: 'CA firms that want fewer “what’s the status?” calls', needs: 'Google Sheets, email, WhatsApp Business API',
+    guard: 'One message a month, only to existing clients; the partner sees the batch first.' },
   { key: 'ugc-ads', name: 'UGC Ad Studio', building: 'marketing', stage: 'planned',
     purpose: 'Turns a product brief into short creator-style ad videos with an AI presenter.',
     audience: 'Brands running Instagram and YouTube ads', needs: 'Claude, Higgsfield (paid per video)',
@@ -63,4 +83,24 @@ export const CATALOG: CatalogItem[] = [
     purpose: 'Phone your own assistant to hear today’s status and what needs your OK.',
     audience: 'Owners away from the desk', needs: 'ElevenLabs voice agent (per minute), a phone number',
     guard: 'Read-only on the phone: approvals still happen in the app.' },
+]
+
+/**
+ * Packages bundle parts that work well together. Every part is also offered
+ * on its own, so a business takes the whole package or only what it needs.
+ * No prices until pricing is real.
+ */
+export type Package = { id: string; name: string; pitch: string; keys: string[] }
+
+export const PACKAGES: Package[] = [
+  { id: 'ca-suite', name: 'CA Firm Suite', pitch: 'Deadlines, documents, notices, GST, books and client updates: the whole practice.',
+    keys: ['ca-compliance-reminders', 'ca-document-chaser', 'ca-client-desk', 'ca-notice-reader', 'ca-gst-recon', 'ca-bank-ledger', 'ca-client-update'] },
+  { id: 'ca-starter', name: 'CA Starter', pitch: 'The three that cut the most “what’s pending?” calls.',
+    keys: ['ca-compliance-reminders', 'ca-document-chaser', 'ca-client-update'] },
+  { id: 'content', name: 'Content Package', pitch: 'Drafts written for you, then published once you approve.',
+    keys: ['content-drafts', 'content-publish'] },
+  { id: 'creative', name: 'Creative Package', pitch: 'Ads, reels and product shots from one brief.',
+    keys: ['ugc-ads', 'ad-reengineer', 'photo-to-reel', 'product-shots'] },
+  { id: 'voice', name: 'Voice Package', pitch: 'Your phone answered, call-backs made, and your assistant one call away.',
+    keys: ['voice-receptionist', 'callback-agent', 'call-your-agent'] },
 ]

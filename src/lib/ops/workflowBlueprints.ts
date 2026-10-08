@@ -80,6 +80,25 @@ export const BLUEPRINTS: Record<string, Graph> = {
     ['Draft answer', 'code', 3, -1], ['Tax advice?', 'branch', 4, -1], ['Reply', 'send', 5, -1], ['Partner answers', 'step', 5, 0],
     ['Qualify the enquiry', 'code', 2, 1], ['Add to leads', 'step', 3, 1],
   ], [[0, 1], [1, 2, 'yes'], [2, 3], [3, 4], [4, 5, 'no'], [4, 6, 'yes'], [1, 7, 'no'], [7, 8]]),
+  'ca-notice-reader': plan('ca-notice-reader blueprint', [
+    ['Notice arrives', 'trigger', 0], ['Read the notice', 'code', 1], ['Section, demand, reply-by', 'code', 2],
+    ['Reply due in 7 days?', 'branch', 3], ['Urgent alert to partner', 'send', 4, -1], ['Brief for partner', 'step', 4, 1],
+    ['Task with deadline', 'step', 5],
+  ], [[0, 1], [1, 2], [2, 3], [3, 4, 'yes'], [3, 5, 'no'], [4, 6], [5, 6]]),
+  'ca-gst-recon': plan('ca-gst-recon blueprint', [
+    ['Before GSTR-3B', 'trigger', 0], ['Load GSTR-2B', 'http', 1], ['Load purchase register', 'http', 1, 1],
+    ['Match invoices', 'code', 2], ['Any mismatch?', 'branch', 3], ['Mismatch report', 'step', 4, -1],
+    ['Ask client or vendor', 'send', 5, -1], ['All matched', 'step', 4, 1],
+  ], [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [4, 5, 'yes'], [5, 6], [4, 7, 'no']]),
+  'ca-bank-ledger': plan('ca-bank-ledger blueprint', [
+    ['Statement uploaded', 'trigger', 0], ['Read transactions', 'code', 1], ['Categorise', 'code', 2],
+    ['Sure of it?', 'branch', 3], ['Ready for review', 'step', 4, -1], ['Ask the client', 'send', 4, 1],
+    ['Reviewer approves', 'step', 5], ['Export for import', 'step', 6],
+  ], [[0, 1], [1, 2], [2, 3], [3, 4, 'yes'], [3, 5, 'no'], [4, 6], [5, 6], [6, 7]]),
+  'ca-client-update': plan('ca-client-update blueprint', [
+    ['1st of the month', 'trigger', 0], ['Each client', 'step', 1], ['Filed, pending, fees', 'http', 2],
+    ['Write the update', 'code', 3], ['Partner checks batch', 'step', 4], ['Send update', 'send', 5],
+  ], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]]),
   'market-trends': plan('market-trends blueprint', [
     ['Every week', 'trigger', 0], ['Fetch search trends', 'http', 1], ['Spot rising topics', 'code', 2],
     ['Save to the brain', 'step', 3],

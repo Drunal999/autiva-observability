@@ -25,6 +25,10 @@ describe('Business city',()=>{
  it('enters buildings from the category list and labels future collections',()=>{
   render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}));expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'Legal & Compliance'}))
+  expect(catalog().getByRole('heading',{name:'Notice Reader'})).toBeInTheDocument()
+  expect(catalog().getByRole('region',{name:'CA Firm Suite'})).toBeInTheDocument()
+  expect(catalog().getAllByText('Planned').length).toBeGreaterThan(0)
+  fireEvent.click(screen.getByRole('button',{name:'Security'}))
   expect(screen.getByRole('heading',{name:'Coming soon'})).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:/Clinics.*Coming soon/}))
   expect(screen.getByRole('heading',{name:'Clinics'})).toBeInTheDocument()

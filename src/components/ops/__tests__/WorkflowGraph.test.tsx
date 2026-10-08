@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { WorkflowGraph, hasWorkflow, layersFor } from '../WorkflowGraph'
 import graphs from '@/lib/ops/workflowGraphs.json'
-import { CATALOG } from '@/lib/ops/marketplaceCatalog'
+import { CATALOG, PACKAGES } from '@/lib/ops/marketplaceCatalog'
 
 type G = { nodes: unknown[]; edges: { from: number; to: number }[] }
 const REAL = graphs as unknown as Record<string, G[]>
@@ -37,5 +37,9 @@ describe('WorkflowGraph', () => {
    expect(g.length, item.key).toBeGreaterThan(0)
    expect(blueprint, item.key).toBe(item.stage === 'planned')
   }
+ })
+ it('every package is made of real catalogue parts', () => {
+  const keys = new Set(CATALOG.map(c => c.key))
+  for (const p of PACKAGES) for (const k of p.keys) expect(keys.has(k), `${p.id}: ${k}`).toBe(true)
  })
 })

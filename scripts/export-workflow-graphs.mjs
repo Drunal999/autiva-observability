@@ -20,7 +20,8 @@ const dir = resolve(process.argv[2] ?? '../AUTIVA/workflows')
 const MAP = {
   'seo-audit': ['E5_website_audit_v1.json'],
   'lead-followup': ['E2_lead_producer_v1.json', 'E2_outreach_sender_v1.json'],
-  'content-studio': ['E4_content_draft_v1.json', 'E4_content_publish_v1.json'],
+  'content-drafts': ['E4_content_draft_v1.json'],
+  'content-publish': ['E4_content_publish_v1.json'],
   'menu-onboarding': ['E3_menu_onboarding_v1.json'],
   'feed-liveness': ['E6_feed_liveness_v1.json'],
 }
