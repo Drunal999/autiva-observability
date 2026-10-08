@@ -1,0 +1,34 @@
+.backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px;
+  background: rgba(2, 4, 10, 0.35); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); animation: fade 0.4s ease both; }
+.card { position: relative; width: min(460px, 100%); border-radius: 34px; padding: 22px 24px 20px; color: #fff; text-align: center;
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.visual { height: 150px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 24px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 120%, rgba(56, 214, 255, 0.28), transparent 60%), rgba(3, 6, 13, 0.55); }
+.lights { position: relative; width: 100%; height: 100%; }
+.lights i { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #ffd27a; box-shadow: 0 0 12px #ffb347; opacity: 0.2; animation: lamp 2.4s ease-in-out infinite; }
+.lights i:nth-child(3n) { background: #38d6ff; box-shadow: 0 0 12px #38d6ff; }
+.lights i:nth-child(4n) { background: #ff6bd6; box-shadow: 0 0 12px #ff6bd6; }
+.lights i:nth-child(1) { left: 12%; top: 62%; } .lights i:nth-child(2) { left: 20%; top: 40%; } .lights i:nth-child(3) { left: 28%; top: 70%; }
+.lights i:nth-child(4) { left: 34%; top: 30%; } .lights i:nth-child(5) { left: 41%; top: 55%; } .lights i:nth-child(6) { left: 47%; top: 22%; }
+.lights i:nth-child(7) { left: 52%; top: 66%; } .lights i:nth-child(8) { left: 58%; top: 42%; } .lights i:nth-child(9) { left: 63%; top: 75%; }
+.lights i:nth-child(10) { left: 69%; top: 28%; } .lights i:nth-child(11) { left: 74%; top: 58%; } .lights i:nth-child(12) { left: 80%; top: 38%; }
+.lights i:nth-child(13) { left: 86%; top: 68%; } .lights i:nth-child(14) { left: 16%; top: 24%; } .lights i:nth-child(15) { left: 38%; top: 80%; }
+.lights i:nth-child(16) { left: 56%; top: 84%; } .lights i:nth-child(17) { left: 90%; top: 20%; } .lights i:nth-child(18) { left: 8%; top: 82%; }
+.shots { display: flex; gap: 8px; padding: 0 12px; }
+.shots img { width: 120px; height: 120px; object-fit: cover; border-radius: 18px; border: 0.5px solid rgba(255, 255, 255, 0.25); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
+.shots img:nth-child(2) { transform: translateY(-8px) scale(1.06); }
+.kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
+.card h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-top: 6px; }
+.body { font-size: 15px; line-height: 1.55; color: rgba(255, 255, 255, 0.78); margin: 10px auto 0; max-width: 36ch; }
+.dots { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
+.dots span { width: 7px; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, 0.3); transition: width 0.3s ease, background 0.3s ease; }
+.dots span[data-on='true'] { width: 22px; background: #fff; }
+.actions { display: flex; gap: 10px; margin-top: 18px; }
+.actions button { flex: 1; height: 48px; border-radius: 24px; font-size: 15px; font-weight: 600; }
+.skip { color: #fff; background: rgba(255, 255, 255, 0.1); border: 0.5px solid rgba(255, 255, 255, 0.2); }
+.next { color: #000; background: #fff; }
+.actions button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+@keyframes lamp { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(18px) scale(0.98); } }
+@media (prefers-reduced-motion: reduce) { .backdrop, .card, .lights i { animation: none; } .lights i { opacity: 0.8; } }

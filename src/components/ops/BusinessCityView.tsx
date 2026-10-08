@@ -9,10 +9,25 @@ import {CITY_FOCUS_EVENT,takeCityFocus} from '@/lib/ops/cityFocus'
 import {useWorkspaceMode} from './OpsShell'
 import {WorkflowEditor,hasWorkflow} from './WorkflowGraph'
 import {Agents,NeedsOk,Today,Brain,Automations} from './HomeBento'
+import {BoloOrb,useBolo,moodOf} from './BoloOrb'
+import {Welcome} from './Welcome'
 import styles from './BusinessCity.module.css'
 const LegacyCity=dynamic(()=>import('./ImmersiveCityView').then(m=>m.ImmersiveCityView),{loading:()=> <p className="p-6">Loading 3D city…</p>})
 const greeting=(hour:number)=>hour<5?'Working late':hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
-const Icon=({d}:{d:string})=><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>
+/** Bolo on Home: one big orb that starts the same voice session as anywhere else, and three
+ *  shortcuts to real places. No language list: Bolo answers in whatever language it is spoken to. */
+function BoloCard({onBrowse}:{onBrowse:()=>void}){
+ const b=useBolo()
+ return <section className={`liquid-glass ${styles.widget} ${styles.hBolo} ${styles.bolo}`} aria-label="Bolo">
+  <button type="button" className={styles.boloOrb} onClick={b.toggle} disabled={!b.ready} aria-pressed={b.active} aria-label={b.active?'Stop talking to Bolo':'Talk to Bolo'}><BoloOrb size={88} mood={moodOf(b.status,b.active)}/></button>
+  <div className={styles.boloText}>
+   <p className={styles.kicker}>Bolo</p>
+   <h2>{b.active?b.status:'What should we do today?'}</h2>
+   <p className={styles.boloHint}>{b.active?'Tap the orb to stop.':b.ready?'Tap the orb and just talk.':b.status}</p>
+   <div className={styles.boloChips}><Link href="/approvals">What needs my OK?</Link><Link href="/calendar">Today’s plan</Link><button type="button" onClick={onBrowse}>Browse automations</button></div>
+  </div>
+ </section>
+}
 /** The original glowing city as the home hero. Its walkers are a simulation; the live dot on a
  *  district is real (a run in the last 30 minutes). Tapping a building or label opens its category. */
 function GlowCity({data,onSelect,explore,onPreviews}:{data:MarketplaceData|undefined;onSelect:(id:BuildingId)=>void;explore:boolean;onPreviews:(p:Record<string,string>)=>void}){
@@ -81,6 +96,7 @@ export function BusinessCityView(){
  if(legacy)return <><div className={`liquid-glass ${styles.returnBar}`}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
  return <section className={styles.workspace} data-explore={explore}>
   {explore&&<button className={`liquid-glass ${styles.exploreBack}`} onClick={()=>setExplore(false)}>← Back to home</button>}
+  <Welcome previews={previews}/>
   <div className={styles.stageCity}><GlowCity data={error?undefined:data} onSelect={choose} explore={explore} onPreviews={p=>setPreviews(p)}/></div>
   <section className={styles.home} aria-label="Workspace summary">
    <header className={`${styles.top} ${styles.hGreet}`}>
@@ -90,17 +106,8 @@ export function BusinessCityView(){
      <button className={`liquid-glass ${styles.exploreBtn}`} onClick={()=>enter()}>Marketplace</button>
      {mode==='team'&&<button className={`liquid-glass ${styles.exploreBtn}`} onClick={()=>setLegacy(true)}>Original 3D view</button>}
     </div>
-    <p className={styles.cityNote}>Tap a building in the city to open its marketplace. The walkers are a simulation; a blinking dot means a real run in the last 30 minutes.</p>
    </header>
-   <section className={`liquid-glass ${styles.widget} ${styles.hBolo}`} aria-label="Bolo">
-    <Link href="/brain" className={styles.ask}><span className={styles.orb} aria-hidden="true"/>Ask Bolo anything</Link>
-    <div className={styles.quick}>
-     <Link href="/brain" aria-label="Talk to Bolo"><Icon d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/></Link>
-     <Link href="/approvals" aria-label="Decisions"><Icon d="M5 12.5l4.5 4.5L19 7.5"/></Link>
-     <Link href="/calendar" aria-label="Calendar"><Icon d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 3v4M16 3v4"/></Link>
-     <Link href="/chat" aria-label="Messages"><Icon d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4z"/></Link>
-    </div>
-   </section>
+   <BoloCard onBrowse={()=>enter()}/>
    <section className={`liquid-glass ${styles.widget} ${styles.hNow}`} aria-label="Right now">
     <p className={styles.kicker}>Right now</p>
     <div className={styles.liveRow}><p className={styles.liveNum}>{error||!data?'—':running}</p>{!error&&data&&clock&&bins.some(Boolean)&&<Spark bins={bins}/>}</div>
@@ -116,11 +123,9 @@ export function BusinessCityView(){
   </section>
   {sheet&&<div className={styles.sheetBackdrop} onClick={()=>setSheet(false)}>
   <div role="dialog" aria-modal="true" aria-label="Marketplace" className={`liquid-glass ${styles.sheet}`} onClick={e=>e.stopPropagation()}>
-  <button className={styles.sheetClose} onClick={()=>setSheet(false)}>Close</button>
-  <section className={`liquid-glass ${styles.industries}`} aria-label="Industry districts"><div><h3>Made for your industry</h3><p>Ready-made packs for your kind of business are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
   <section ref={details} tabIndex={-1} className={`liquid-glass ${styles.catalog}`} style={{'--c':industry||query?'#8e8e93':selectedBuilding.glow} as CSSProperties} aria-label="Building automations">
-    <div className={styles.catalogHeader}><div><p className={styles.eyebrow}>{industry?'Industry district':query?'Your workspace':'Marketplace · inside the building'}</p><h2>{industry??(query?'Search results':selectedBuilding.name)}</h2><p>{industry?`A pack for ${industry.toLowerCase()} is on the way.`:selectedBuilding.purpose}</p></div><label className={styles.search}><span>Search</span><input type="search" placeholder="Search automations" value={query} onChange={e=>{setQuery(e.target.value);setIndustry(null)}}/></label></div>
-    <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}><span className={styles.shot} aria-hidden="true">{previews[b.id]?<img src={previews[b.id]} alt=""/>:<span>{b.id==='security'||b.id==='legal'?'No building yet':'Loading…'}</span>}</span><span className={styles.chipName}><span className={styles.chipDot} style={{background:b.glow}} aria-hidden="true"/>{b.name}</span></button>)}</div>
+    <div className={styles.catalogHeader}><div><p className={styles.eyebrow}>{industry?'Industry district':query?'Your workspace':'Marketplace · inside the building'}</p><h2>{industry??(query?'Search results':selectedBuilding.name)}</h2><p>{industry?`A pack for ${industry.toLowerCase()} is on the way.`:selectedBuilding.purpose}</p></div><div className={styles.headTools}><label className={styles.search}><span>Search</span><input type="search" placeholder="Search automations" value={query} onChange={e=>{setQuery(e.target.value);setIndustry(null)}}/></label><button type="button" className={styles.sheetClose} onClick={()=>setSheet(false)}>Close</button></div></div>
+    <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}><span className={styles.shot} aria-hidden="true">{previews[b.id]?<img src={previews[b.id]} alt=""/>:<span>{b.id==='security'||b.id==='legal'?'No building yet':'Loading…'}</span>}</span><span className={styles.chipName}><span className={styles.chipDot} style={{background:b.glow}} aria-hidden="true"/>{b.name}</span><span className={styles.tileCount} aria-hidden="true">{!data||error?'\u00a0':(n=>n?`${n} automation${n===1?'':'s'}`:'Coming soon')(modules.filter(m=>buildingFor(m.district)===b.id).length)}</span></button>)}</div>
     
     {industry?<div className={styles.empty}><h3>Coming soon</h3><p>It will appear here when it’s ready. Meanwhile, explore the buildings above.</p><button onClick={()=>choose('operations')}>Explore Operations</button></div>:error?<div role="alert" className={styles.empty}><h3>Couldn’t load your automations</h3><p>Nothing was changed. Check your connection and try again.</p><button disabled={isValidating} onClick={()=>void mutate()}>{isValidating?'Retrying…':'Try again'}</button></div>:!data?<div role="status" className={styles.empty}>Loading your automations…</div>:visible.length===0?<div className={styles.empty}><h3>{query?'No matching automations':'Coming soon'}</h3><p>{query?'Try another name or choose a building.':'Nothing here yet. New automations for this building are on the way.'}</p><button onClick={()=>{setQuery('');choose('operations')}}>Explore Operations</button></div>:<div className={styles.automationList}>{visible.map((automation,index)=>{
       const status=moduleStatus(automation),info=moduleDetails(automation),open=expanded===automation.id
@@ -136,6 +141,7 @@ export function BusinessCityView(){
       </article>
     })}</div>}
   </section>
+  <section className={`liquid-glass ${styles.industries}`} aria-label="Industry districts"><div><h3>Made for your industry</h3><p>Ready-made packs for your kind of business are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
   </div></div>}
  </section>
 }

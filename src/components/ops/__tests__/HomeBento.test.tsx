@@ -17,7 +17,7 @@ describe('HomeBento', () => {
  it('never shows an agent as Live when the stack cannot be reached, and lists real approvals', () => {
   render(<HomeBento modules={[]} />)
   expect(screen.queryByText('Live')).not.toBeInTheDocument()
-  expect(screen.getByText(/run on your own machine|isn’t running on this machine/)).toBeInTheDocument()
+  expect(screen.getAllByText('Not checked')).toHaveLength(5)
   expect(screen.getByText('Pay vendor invoice')).toBeInTheDocument()
   expect(screen.getByText('Nothing on today’s calendar.')).toBeInTheDocument()
  })

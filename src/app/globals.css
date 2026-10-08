@@ -70,8 +70,8 @@ body {
   --blue: #0a84ff;
   --green: #30d158;
   --yellow: #ffd60a;
-  --lg-fill: rgba(32, 32, 36, 0.52);
-  --lg-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.12), 0 16px 44px rgba(0, 0, 0, 0.45);
+  --lg-fill: linear-gradient(155deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 40%, rgba(8, 10, 18, 0.3));
+  --lg-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.28), inset 0 -1px 0.5px rgba(255, 255, 255, 0.06), 0 18px 48px rgba(0, 0, 0, 0.32);
   --lg-rim: linear-gradient(140deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12) 24%, rgba(255, 255, 255, 0.04) 58%, rgba(255, 255, 255, 0.16));
   --wall: #050506;
   --smoke: rgba(255, 255, 255, 0.2);
@@ -121,10 +121,14 @@ html[data-theme='light'] {
    to sit on it. */
 .liquid-glass {
   background: var(--lg-fill);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  backdrop-filter: blur(28px) saturate(1.6);
+  /* High saturation is what makes the glass pick up the colour of whatever
+     moves behind it (the city's neon), instead of reading as a grey box. */
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.7);
   box-shadow: var(--lg-shadow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
 }
+html[data-theme='light'] .liquid-glass { text-shadow: none; }
 .liquid-glass::before {
   content: '';
   position: absolute;

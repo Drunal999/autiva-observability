@@ -14,6 +14,8 @@ import styles from './HomeBento.module.css'
  * source cannot be reached from here, the widget says that instead of guessing.
  */
 const json = async (url: string) => { const r = await fetch(url, { cache: 'no-store' }); if (!r.ok) throw new Error(String(r.status)); return r.json() }
+// Same roster as /api/stack-status, shown when the live status can't be read.
+const TEAM = [{ name: 'Claude', role: 'Specs and judgement' }, { name: 'Codex', role: 'Builds and activates' }, { name: 'Hermes', role: 'Bulk research' }, { name: 'Ollama', role: 'Local voice model' }, { name: 'OmniRoute', role: 'Model router' }]
 const json2 = async (url: string) => { const r = await fetch(url, { method: 'POST' }); if (!r.ok) throw new Error(String(r.status)); return r.json() }
 const RISK: Record<ApprovalRisk, string> = { MONEY: 'Money', PUBLISH: 'Publishes publicly', BULK_MESSAGE: 'Messages many people', DATA_DELETE: 'Deletes data', OTHER: 'Needs review' }
 type Stack = { reachable: boolean; agents: { id: string; name: string; role: string; ready: boolean; label: string }[] }
@@ -29,7 +31,7 @@ export function Agents() {
   <header><h3>Agents</h3>{(data?.reachable || local) && <button className={styles.link} disabled={busy} onClick={recheck}>{busy ? 'Checking…' : 'Recheck'}</button>}</header>
   {error ? <p className={styles.muted}>Couldn’t read agent status.</p>
    : !data ? <p className={styles.muted}>Checking…</p>
-   : !data.reachable ? <p className={styles.muted}>{local ? 'Jarvis isn’t running on this machine, so agent status can’t be read. Start Jarvis and press Recheck.' : 'Your agents run on your own machine. Open the dashboard there, with Jarvis running, to see who’s up.'}</p>
+   : !data.reachable ? <><ul className={styles.rows}>{TEAM.map(a => <li key={a.name}><span className={styles.dot} /><div><b>{a.name}</b><small>{a.role}</small></div><em>Not checked</em></li>)}</ul><p className={styles.note}>{local ? 'Start Jarvis, then press Recheck to see who’s up.' : 'Status is read on your own machine, where your agents run.'}</p></>
    : <ul className={styles.rows}>{data.agents.map(a => {
       const tone = a.ready ? 'live' : a.label === 'checking' ? 'checking' : 'down'
       return <li key={a.id}><span className={styles.dot} data-tone={tone} /><div><b>{a.name}</b><small>{a.role}</small></div><em data-tone={tone}>{a.ready ? 'Live' : a.label === 'checking' ? 'Checking' : a.label === 'not started' || a.label === 'offline' ? 'Down' : a.label}</em></li>
@@ -96,7 +98,7 @@ export function Brain() {
    <time dateTime={m.date}>{new Date(m.date + 'T00:00:00').toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</time>
    <div><b>{m.title}</b><small>{m.kind} · {m.source}</small></div></li>)}</ul>}
   {!(mem?.reachable && mem.memories.length) && <p className={styles.muted}>{status === 'online' ? 'The brain is running. Asking opens Bolo, which answers from the shared memory.'
-   : status === 'offline' ? 'The brain server isn’t running on this machine right now.'
+   : status === 'offline' ? 'The brain is asleep on this machine. Start it and your shared memory appears here.'
    : status === 'remote' ? 'The brain stays on your own machine; it is not reachable from this page.' : 'Checking the brain…'}</p>}
  </section>
 }
