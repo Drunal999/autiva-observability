@@ -11,7 +11,7 @@ import styles from './Welcome.module.css'
  */
 const KEY = 'autiva.welcome.v1'
 const STEPS = [
- { kicker: 'Welcome to AUTIVA', title: 'Your business, as a living city', body: 'Every light in the city is part of your business. When one of your automations really runs, its building lights up. The people walking around are only an illustration.' },
+ { kicker: 'Welcome to AUTIVA', title: 'Your business, as a living city', body: 'Every light in the city is part of your business. Your agents walk it by name, coloured by what they are really doing. The faint crowd around them is just city life.' },
  { kicker: 'The marketplace', title: 'Every building is a category', body: 'Sales, Marketing, Finance, Support… Tap a building to see the automations inside it, what they did today, and how each one works.' },
  { kicker: 'Meet Bolo', title: 'Just talk to it', body: 'Bolo is your assistant. Tap the orb and say what you need. Anything that spends money or messages people waits for your OK first.' },
 ]
@@ -36,7 +36,7 @@ export function Welcome({ previews }: { previews: Record<string, string> }) {
  return <div className={styles.backdrop}>
   <div role="dialog" aria-modal="true" aria-labelledby="welcome-title" className={`liquid-glass ${styles.card}`}>
    <div className={styles.visual} aria-hidden="true">
-    {step === 0 && <div className={styles.lights}>{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ animationDelay: `${(i * 0.37) % 2.4}s` }} />)}</div>}
+    {step === 0 && <div className={styles.lights}>{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ animationDelay: `${(i * 0.37) % 2.4}s` }} />)}<img className={styles.logo} src="/brand/autiva-full.png" alt="" /></div>}
     {step === 1 && (shots.length ? <div className={styles.shots}>{shots.map((src, i) => <img key={i} src={src} alt="" />)}</div> : <div className={styles.lights} />)}
     {step === 2 && <BoloOrb size={104} mood="listening" />}
    </div>
