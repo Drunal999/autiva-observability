@@ -51,7 +51,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
     <a className={styles.skip} href="#workspace-content">Skip to content</a>
     <header className={`liquid-glass ${styles.header}`}>
       {/* eslint-disable-next-line @next/next/no-img-element -- a small static PNG */}
-      <Link href="/city" className={styles.brand} aria-label="AUTIVA home"><img src="/brand/autiva-logo.png" alt="AUTIVA" className={styles.brandLogo} /></Link>
+      <Link href="/city" className={styles.brand} aria-label="AUTIVA home"><img src="/brand/autiva-logo.png?v=2" alt="AUTIVA" className={styles.brandLogo} /></Link>
       <div className={styles.headerStatus}>
         {IS_SAMPLE_DATA&&<span className={styles.sample} title="These records are examples, not production results.">Sample data</span>}
         {mode==='team'&&<span className={styles.health}>{error?'Activity unavailable':!data?'Connecting…':failures?`${failures} ${IS_SAMPLE_DATA?'sample ':''}agent${failures===1?'':'s'} need attention`:'No agent failures reported'}</span>}

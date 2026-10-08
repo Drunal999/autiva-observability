@@ -3,14 +3,14 @@
  * server. No React here, so API routes can import it; clean() is the single
  * gate every stored or received value passes through.
  */
-export type Palette = 'aurora' | 'sunset' | 'ocean' | 'mint' | 'mono'
+export type Palette = 'orca' | 'aurora' | 'sunset' | 'ocean' | 'mint' | 'mono'
 export type Accent = 'amber' | 'blue' | 'violet' | 'green' | 'pink'
 export type HomeCard = 'agents' | 'ok' | 'today' | 'brain' | 'autos'
 export interface Prefs { assistantName: string; palette: Palette; accent: Accent; glass: 'clear' | 'frosted'; hidden: HomeCard[] }
 
-export const DEFAULT_PREFS: Prefs = { assistantName: 'Bolo', palette: 'aurora', accent: 'amber', glass: 'clear', hidden: [] }
+export const DEFAULT_PREFS: Prefs = { assistantName: 'Bolo', palette: 'orca', accent: 'amber', glass: 'clear', hidden: [] }
 export const ACCENTS: Record<Accent, string> = { amber: '#ff9f0a', blue: '#0a84ff', violet: '#bf5af2', green: '#30d158', pink: '#ff375f' }
-export const PALETTES: Palette[] = ['aurora', 'sunset', 'ocean', 'mint', 'mono']
+export const PALETTES: Palette[] = ['orca', 'aurora', 'sunset', 'ocean', 'mint', 'mono']
 export const CARDS: { id: HomeCard; label: string }[] = [
  { id: 'agents', label: 'Agents' }, { id: 'ok', label: 'Needs your OK' }, { id: 'today', label: 'Today' },
  { id: 'brain', label: 'Brain' }, { id: 'autos', label: 'Automations' },

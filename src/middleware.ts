@@ -1,4 +1,7 @@
-export { default } from 'next-auth/middleware'
+import { withAuth } from 'next-auth/middleware'
+
+// Signed-out visitors land on the branded page, not NextAuth's built-in one.
+export default withAuth({ pages: { signIn: '/signin' } })
 
 export const config = {
   matcher: [

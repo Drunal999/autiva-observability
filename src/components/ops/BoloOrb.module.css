@@ -32,3 +32,4 @@
 .orb[data-palette='ocean'] { --o1: #0a84ff; --o2: #38d6ff; --o3: #5ee7df; --o4: #3b5bdb; --g1: rgba(10, 132, 255, 0.45); --g2: rgba(94, 231, 223, 0.2); }
 .orb[data-palette='mint'] { --o1: #30d158; --o2: #5ee7df; --o3: #c4f135; --o4: #0ea5a4; --g1: rgba(48, 209, 88, 0.42); --g2: rgba(94, 231, 223, 0.2); }
 .orb[data-palette='mono'] { --o1: #f2f2f7; --o2: #8e8e93; --o3: #ffffff; --o4: #48484a; --g1: rgba(255, 255, 255, 0.3); --g2: rgba(142, 142, 147, 0.18); }
+.orb[data-palette='orca'] { --o1: #1ea0ff; --o2: #ffffff; --o3: #0b3d91; --o4: #5fd3ff; --g1: rgba(30, 160, 255, 0.55); --g2: rgba(255, 255, 255, 0.16); }

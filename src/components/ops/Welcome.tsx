@@ -36,7 +36,7 @@ export function Welcome({ previews }: { previews: Record<string, string> }) {
  return <div className={styles.backdrop}>
   <div role="dialog" aria-modal="true" aria-labelledby="welcome-title" className={`liquid-glass ${styles.card}`}>
    <div className={styles.visual} aria-hidden="true">
-    {step === 0 && <div className={styles.lights}>{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ animationDelay: `${(i * 0.37) % 2.4}s` }} />)}<img className={styles.logo} src="/brand/autiva-full.png" alt="" /></div>}
+    {step === 0 && <div className={styles.lights}>{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ animationDelay: `${(i * 0.37) % 2.4}s` }} />)}<img className={styles.logo} src="/brand/autiva-full.png?v=2" alt="" /></div>}
     {step === 1 && (shots.length ? <div className={styles.shots}>{shots.map((src, i) => <img key={i} src={src} alt="" />)}</div> : <div className={styles.lights} />)}
     {step === 2 && <BoloOrb size={104} mood="listening" />}
    </div>
