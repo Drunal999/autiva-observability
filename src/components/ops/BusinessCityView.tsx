@@ -1,5 +1,5 @@
 'use client'
-import {useEffect,useRef,useState,type CSSProperties} from 'react'
+import {useEffect,useMemo,useRef,useState,type CSSProperties} from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import useSWR from 'swr'
@@ -30,14 +30,15 @@ function BoloCard({onBrowse}:{onBrowse:()=>void}){
 }
 /** The original glowing city as the home hero. Its walkers are a simulation; the live dot on a
  *  district is real (a run in the last 30 minutes). Tapping a building or label opens its category. */
-function GlowCity({data,onSelect,explore,onPreviews}:{data:MarketplaceData|undefined;onSelect:(id:BuildingId)=>void;explore:boolean;onPreviews:(p:Record<string,string>)=>void}){
+type RealAgent={id:string;name:string;district:string;status:string;step:string|null}
+function GlowCity({data,agents,onSelect,explore,onPreviews}:{data:MarketplaceData|undefined;agents:RealAgent[];onSelect:(id:BuildingId)=>void;explore:boolean;onPreviews:(p:Record<string,string>)=>void}){
  const frame=useRef<HTMLIFrameElement>(null)
  const pick=useRef(onSelect);pick.current=onSelect
  const shots=useRef(onPreviews);shots.current=onPreviews
  const exploring=useRef(explore);exploring.current=explore
  useEffect(()=>{
   const post=(msg:object)=>frame.current?.contentWindow?.postMessage(msg,location.origin)
-  const send=()=>post({type:'autiva:city',payload:data??{districts:[]}})
+  const send=()=>{post({type:'autiva:city',payload:data??{districts:[]}});post({type:'autiva:city-agents',agents})}
   const listen=(event:MessageEvent)=>{
    if(event.origin!==location.origin||event.source!==frame.current?.contentWindow)return
    if(event.data?.type==='autiva:city-ready'){send();post({type:'autiva:city-mode',explore:exploring.current});post({type:'autiva:city-previews'})}
@@ -46,7 +47,7 @@ function GlowCity({data,onSelect,explore,onPreviews}:{data:MarketplaceData|undef
   }
   window.addEventListener('message',listen);send()
   return()=>window.removeEventListener('message',listen)
- },[data])
+ },[data,agents])
  useEffect(()=>{frame.current?.contentWindow?.postMessage({type:'autiva:city-mode',explore},location.origin)},[explore])
  // The iframe is server-rendered and can finish loading before hydration, missing both 'ready' and onLoad.
  useEffect(()=>{frame.current?.contentWindow?.postMessage({type:'autiva:city-previews'},location.origin)},[])
@@ -87,6 +88,12 @@ export function BusinessCityView(){
  useEffect(()=>{setRequestedModule(takeCityFocus());const focus=(e:Event)=>{takeCityFocus();setRequestedModule((e as CustomEvent<string>).detail)};window.addEventListener(CITY_FOCUS_EVENT,focus);return()=>window.removeEventListener(CITY_FOCUS_EVENT,focus)},[])
  useEffect(()=>{if(!requestedModule||!data||error)return;const automation=data.districts.find(m=>m.id===requestedModule);if(automation){setSelected(buildingFor(automation.district));setExpanded(automation.id);setIndustry(null);setQuery('');setLegacy(false);setSheet(true);setRequestedModule(null)}},[requestedModule,data,error])
  const modules=error?[]:data?.districts??[]
+ const {data:agentRows}=useSWR<{agents?:{id:string;name:string;status:string;currentStep:string|null}[]}|{id:string;name:string;status:string;currentStep:string|null}[]>('/api/agents',fetcher,{refreshInterval:15000})
+ const realAgents=useMemo<RealAgent[]>(()=>{
+  const rows=Array.isArray(agentRows)?agentRows:agentRows?.agents??[]
+  const where=new Map(modules.flatMap(m=>m.agents.map(a=>[a.id,m.district] as const)))
+  return rows.filter(a=>where.has(a.id)).map(a=>({id:a.id,name:a.name,district:where.get(a.id)!,status:a.status,step:a.currentStep}))
+ },[agentRows,modules])
  const selectedBuilding=BUILDINGS.find(b=>b.id===selected)!
  const visible=modules.filter(m=>query?`${m.displayName} ${moduleDetails(m).purpose}`.toLowerCase().includes(query.toLowerCase()):buildingFor(m.district)===selected)
  const running=modules.filter(m=>moduleStatus(m)==='Running').length
@@ -97,7 +104,7 @@ export function BusinessCityView(){
  return <section className={styles.workspace} data-explore={explore}>
   {explore&&<button className={`liquid-glass ${styles.exploreBack}`} onClick={()=>setExplore(false)}>← Back to home</button>}
   <Welcome previews={previews}/>
-  <div className={styles.stageCity}><GlowCity data={error?undefined:data} onSelect={choose} explore={explore} onPreviews={p=>setPreviews(p)}/></div>
+  <div className={styles.stageCity}><GlowCity data={error?undefined:data} agents={realAgents} onSelect={choose} explore={explore} onPreviews={p=>setPreviews(p)}/></div>
   <section className={styles.home} aria-label="Workspace summary">
    <header className={`${styles.top} ${styles.hGreet}`}>
     <p className={styles.date}>{clock?.day??'\u00a0'}</p><h1>{clock?greeting(clock.hour):'Welcome back'}</h1>

@@ -13,7 +13,10 @@ html[data-hero="true"] .sel,
 html[data-hero="true"] .caption,
 html[data-hero="true"] #gate,
 html[data-hero="true"] #maker,
-html[data-hero="true"] #labels {display:none!important}
+html[data-hero="true"] #labels .dlab {display:none!important}
+/* Inside the dashboard the city shows real agents: no toy agent maker, and no log of the decorative crowd. */
+html[data-dashboard="true"] .log,
+html[data-dashboard="true"] .dock .cta {display:none!important}
 html[data-dashboard="true"] .dlab{pointer-events:auto;cursor:pointer}
 html[data-dashboard="true"] .dlab:hover{background:rgba(6,12,24,.92)}
 html[data-hero="true"] body{overscroll-behavior:auto}
@@ -426,6 +429,7 @@ function districtAt(x, z) {
 /* Explore: the dashboard steps its widgets aside and the city gets its own
    controls back (follow an agent, look inside a tower). Hero again on return. */
 var SNAP = { wanted: false };
+var PENDING_AGENTS = null;   /* applied on the next frame, once the scene exists */
 window.addEventListener('message', function (event) {
   if (event.origin !== location.origin || event.source !== parent || !event.data) return;
   if (event.data.type === 'autiva:city-mode') {
@@ -433,6 +437,7 @@ window.addEventListener('message', function (event) {
     else document.documentElement.dataset.hero = 'true';
   }
   if (event.data.type === 'autiva:city-previews') SNAP.wanted = true;
+  if (event.data.type === 'autiva:city-agents' && Array.isArray(event.data.agents)) PENDING_AGENTS = event.data.agents.slice(0, 64);
 });
 parent.postMessage({type:'autiva:city-ready'}, location.origin);
 
@@ -761,7 +766,9 @@ function doorPoint(x, z, w, d, out, gap) {
   out[2] = Math.atan2(v[0], v[1]);      /* yaw, for anything that must face out */
 }
 
-var USER_MAX = 8;
+/* Inside the dashboard these slots hold the business's REAL agents (one per
+   Agent row), so there is room for a real roster; the standalone toy keeps 8. */
+var USER_MAX = document.documentElement.dataset.dashboard ? 24 : 8;
 var CFG = {
   agents: (MOBILE ? 320 : 900) + USER_MAX,
   motes: MOBILE ? 1100 : 3600,
@@ -862,6 +869,12 @@ function Simulation(sites, cfg) {
   };
 
   function pickTarget(i) {
+    var hu = s.userOf ? s.userOf(i) : null;
+    if (hu && hu.homeD != null) {
+      var own = [];
+      for (var q = 0; q < S; q++) if (sites[q].district === hu.homeD && q !== s.cur[i]) own.push(q);
+      if (own.length) return own[(rnd() * own.length) | 0];
+    }
     var want = s.state[i];
     for (var tries = 0; tries < 8; tries++) {
       var k = (rnd() * S) | 0;
@@ -1052,6 +1065,7 @@ function Simulation(sites, cfg) {
       one every few seconds, so the pool cycles and nothing else ever gets a
       turn. Celebrations are rationed. */
   function think(u, mood, hold) {
+    if (u.realId) return; /* a real agent's bubble is its real current step, set by the dashboard */
     if (mood === 'win') {
       if (s.time - u.lastWin < 26) return;
       u.lastWin = s.time;
@@ -1205,6 +1219,7 @@ function Simulation(sites, cfg) {
         if (near && s.phase[i] === PH.TRAVEL) s.phase[i] = PH.APPROACH;
         var ease = near ? Math.max(0.18, (1 - s.t[i]) / 0.14) : 1;
         s.t[i] += s.speed[i] * dt * ease * (0.6 + s.energy[i] * 0.6);
+        if (i >= s.base && s.users.length) { var hu2 = s.userOf(i); if (hu2 && hu2.hold && s.t[i] > 0.985) s.t[i] = 0.985; }
 
         if (s.t[i] >= 1) {
           s.t[i] = 1; s.phase[i] = PH.ENTER; s.timer[i] = LIFT_T;
@@ -3073,13 +3088,18 @@ var agPhase = fleet.mesh.geometry.attributes.aPhase;
 var agStride = fleet.mesh.geometry.attributes.aStride;
 var stateColors = STATE_COLOR.map(function (h) { return new T.Color(h); });
 var userColor = new T.Color(USER_HEX);
+var _dim = new T.Color();
+var FAINT = Boolean(document.documentElement.dataset.dashboard);
 
 function syncAgents(dt) {
   for (var i = 0; i < SIM.N; i++) {
     var i3 = i * 3;
     var sc = SIM.scale[i];
     var mine = i >= SIM.base && SIM.live[i];
-    var cl = mine ? userColor : stateColors[SIM.state[i]];
+    var B0 = bodyOf[i];
+    var cl = mine ? (B0 && B0.rec.tone ? B0.rec.tone : userColor) : stateColors[SIM.state[i]];
+    /* In the dashboard the decorative crowd is city life, not your agents: dim and small. */
+    if (!mine && FAINT) { _dim.copy(cl).multiplyScalar(0.32); cl = _dim; sc *= 0.72; }
     if (sc <= 0.001) {
       _s.set(0, 0, 0);
       _m.compose(_p.set(0, -999, 0), _q, _s);
@@ -3129,7 +3149,7 @@ function syncAgents(dt) {
     }
     rides.setMatrixAt(i, _rm);
     agTint.array[i3] = cl.r; agTint.array[i3 + 1] = cl.g; agTint.array[i3 + 2] = cl.b;
-    agGlow.array[i] = SIM.phase[i] === 3 ? 0.55 + 0.45 * Math.sin(SIM.time * 3 + SIM.seed[i] * 20) : (mine ? 0.4 : 0);
+    agGlow.array[i] = (!mine && FAINT) ? 0 : SIM.phase[i] === 3 ? 0.55 + 0.45 * Math.sin(SIM.time * 3 + SIM.seed[i] * 20) : (mine ? 0.4 : 0);
     if (B) {
       /* The visitor's own mesh takes the pose, and the fleet slot is collapsed
          so the shared robot is not drawn inside their character. */
@@ -3592,6 +3612,42 @@ function snapDistricts() {
   parent.postMessage({ type: 'autiva:city-previews', previews: out }, location.origin);
 }
 
+/* ---- the business's real agents ----
+   One walker per real Agent row: born at a building in its own district, its
+   colour is its real status, and it is never removed or replaced by the city
+   itself. A new run after a failure shows up as that status changing. */
+var REALAG = {};
+var TONE = { RUNNING: 0x38d6ff, AWAITING_APPROVAL: 0xffc663, FAILED: 0xff5c5c, SUCCESS: 0x3ddc97, IDLE: 0x9fb3cf };
+var WORD = { RUNNING: 'working', AWAITING_APPROVAL: 'waiting for your OK', FAILED: 'failed', SUCCESS: 'done', IDLE: 'resting' };
+function syncRealAgents(list) {
+  list.forEach(function (a) {
+    if (!a || typeof a.id !== 'string' || typeof a.name !== 'string') return;
+    var R = REALAG[a.id];
+    if (!R) {
+      if (SIM.users.length >= USER_MAX) return;
+      var key = REAL_MAP[a.district] || 'core';
+      var di = 0;
+      for (var d = 0; d < DISTRICTS.length; d++) if (DISTRICTS[d].key === key) di = d;
+      var h = 0; for (var c = 0; c < a.id.length; c++) h = (h * 31 + a.id.charCodeAt(c)) >>> 0;
+      R = SIM.createUser(a.name.slice(0, 24), AVATARS[h % AVATARS.length].key, DISTRICTS[di].bias, VOICES[h % VOICES.length].key);
+      if (!R) return;
+      R.realId = a.id; R.homeD = di;
+      addUserBody(R);
+      REALAG[a.id] = R;
+    }
+    var st = TONE[a.status] != null ? a.status : 'IDLE';
+    R.hold = st === 'FAILED' || st === 'AWAITING_APPROVAL';
+    R.tone = new T.Color(TONE[st]);
+    R.thought = st === 'RUNNING' && a.step ? { text: String(a.step).slice(0, 90), mood: 'work' } : null;
+    var B = bodyOf[R.index];
+    if (B) {
+      B.el.textContent = R.name + ' · ' + WORD[st]; B.halo.material.color.copy(R.tone);
+      var hx = '#' + R.tone.getHexString();
+      B.el.style.color = hx; B.el.style.borderColor = hx; B.el.style.boxShadow = '0 0 18px ' + hx + '55';
+    }
+  });
+}
+
 /* ---- main loop ---- */
 var clock = new T.Clock();
 var frames = 0, fpsT = 0, fps = 60, uiT = 0;
@@ -3628,6 +3684,7 @@ function frame() {
   rig.update(dt, SIM);
   /* Wait a few seconds so the fleet has spread out before the photos. */
   if (SNAP.wanted && time > 4) { SNAP.wanted = false; snapDistricts(); }
+  if (PENDING_AGENTS) { var pa = PENDING_AGENTS; PENDING_AGENTS = null; syncRealAgents(pa); }
   syncLabels();
   syncInteriorLabels();
 

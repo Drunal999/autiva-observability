@@ -223,7 +223,7 @@ a.widget:hover { transform: translateY(-2px); }
 /* Explore: the widgets step aside and the city comes to the front with its own
    controls (follow an agent, look inside a tower). Esc or Back returns. */
 .exploreBtn { margin-top: 12px; height: 40px; padding: 0 18px; border-radius: 20px; font-size: 15px; font-weight: 600; color: var(--label); }
-.workspace > .exploreBack { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 61; height: 42px; padding: 0 20px; border-radius: 21px; font-size: 15px; font-weight: 600; color: var(--label); }
+.workspace > .exploreBack { position: fixed; top: 16px; left: 16px; z-index: 61; height: 42px; padding: 0 20px; border-radius: 21px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace[data-explore='true'] .stageCity { z-index: 60; }
 .workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack) { visibility: hidden; }
 
