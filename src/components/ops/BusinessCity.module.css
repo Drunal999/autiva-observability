@@ -184,6 +184,11 @@ a.widget:hover { transform: translateY(-2px); }
 .automation h3 { font-size: 17px; font-weight: 600; }
 .automationTop p { font-size: 15px; line-height: 1.45; color: var(--label-2); margin-top: 2px; max-width: 60ch; }
 .status { height: 26px; display: inline-flex; align-items: center; border-radius: 13px; padding: 0 10px; font-size: 12px; font-weight: 700; white-space: nowrap; background: rgba(235, 235, 245, 0.12); color: rgba(235, 235, 245, 0.8); }
+.status[data-status='Ready to set up'] { background: rgba(10, 132, 255, 0.2); color: #64b5ff; }
+.status[data-status='Planned'] { background: rgba(255, 255, 255, 0.08); color: rgba(235, 235, 245, 0.7); }
+.shelf { margin-top: 22px; }
+.shelfHead { font-size: 15px; font-weight: 600; color: var(--label-2); margin: 0 0 10px 2px; }
+.automation[data-catalog] dl { display: grid; gap: 6px; }
 .status[data-status='Running'] { background: rgba(48, 209, 88, 0.18); color: var(--green); }
 .status[data-status='Needs attention'] { background: rgba(255, 214, 10, 0.16); color: var(--yellow); }
 .automation dl { margin: 14px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 13px; line-height: 1.4; }

@@ -8,6 +8,8 @@ import {useEventListener} from '@/lib/realtime/client'
 import {CITY_FOCUS_EVENT,takeCityFocus} from '@/lib/ops/cityFocus'
 import {useWorkspaceMode} from './OpsShell'
 import {WorkflowEditor,hasWorkflow} from './WorkflowGraph'
+import {MarketplaceShelf} from './MarketplaceShelf'
+import {CATALOG} from '@/lib/ops/marketplaceCatalog'
 import {Agents,NeedsOk,Today,Brain,Automations} from './HomeBento'
 import {BoloOrb,useBolo,moodOf} from './BoloOrb'
 import {Welcome} from './Welcome'
@@ -100,6 +102,10 @@ export function BusinessCityView(){
  },[agentRows,modules])
  const selectedBuilding=BUILDINGS.find(b=>b.id===selected)!
  const visible=modules.filter(m=>query?`${m.displayName} ${moduleDetails(m).purpose}`.toLowerCase().includes(query.toLowerCase()):buildingFor(m.district)===selected)
+ // Catalogue items not already installed here (catalog keys may be dotted: marketing.content_studio).
+ const installed=new Set(modules.map(m=>m.key.toLowerCase().split('.').pop()!.replace(/_/g,'-')))
+ const offer=CATALOG.filter(c=>!installed.has(c.key))
+ const extra=offer.filter(c=>query?`${c.name} ${c.purpose}`.toLowerCase().includes(query.toLowerCase()):c.building===selected)
  const running=modules.filter(m=>moduleStatus(m)==='Running').length
  const bins=clock?runsByHour(modules,clock.at):[]
  const enter=()=>{setSheet(true);requestAnimationFrame(()=>details.current?.focus({preventScroll:true}))}
@@ -138,9 +144,9 @@ export function BusinessCityView(){
   <div role="dialog" aria-modal="true" aria-label="Marketplace" className={`liquid-glass ${styles.sheet}`} onClick={e=>e.stopPropagation()}>
   <section ref={details} tabIndex={-1} className={`liquid-glass ${styles.catalog}`} style={{'--c':industry||query?'#8e8e93':selectedBuilding.glow} as CSSProperties} aria-label="Building automations">
     <div className={styles.catalogHeader}><div><p className={styles.eyebrow}>{industry?'Industry district':query?'Your workspace':'Marketplace · inside the building'}</p><h2>{industry??(query?'Search results':selectedBuilding.name)}</h2><p>{industry?`A pack for ${industry.toLowerCase()} is on the way.`:selectedBuilding.purpose}</p></div><div className={styles.headTools}><label className={styles.search}><span>Search</span><input type="search" placeholder="Search automations" value={query} onChange={e=>{setQuery(e.target.value);setIndustry(null)}}/></label><button type="button" className={styles.sheetClose} onClick={()=>setSheet(false)}>Close</button></div></div>
-    <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}><span className={styles.shot} aria-hidden="true">{previews[b.id]?<img src={previews[b.id]} alt=""/>:<span>{b.id==='security'||b.id==='legal'?'No building yet':'Loading…'}</span>}</span><span className={styles.chipName}><span className={styles.chipDot} style={{background:b.glow}} aria-hidden="true"/>{b.name}</span><span className={styles.tileCount} aria-hidden="true">{!data||error?'\u00a0':(n=>n?`${n} automation${n===1?'':'s'}`:'Coming soon')(modules.filter(m=>buildingFor(m.district)===b.id).length)}</span></button>)}</div>
+    <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}><span className={styles.shot} aria-hidden="true">{previews[b.id]?<img src={previews[b.id]} alt=""/>:<span>{b.id==='security'||b.id==='legal'?'No building yet':'Loading…'}</span>}</span><span className={styles.chipName}><span className={styles.chipDot} style={{background:b.glow}} aria-hidden="true"/>{b.name}</span><span className={styles.tileCount} aria-hidden="true">{!data||error?'\u00a0':((n,m)=>n&&m?`${n} live · ${m} to add`:n?`${n} automation${n===1?'':'s'}`:m?`${m} to add`:'Coming soon')(modules.filter(m=>buildingFor(m.district)===b.id).length,offer.filter(c=>c.building===b.id).length)}</span></button>)}</div>
     
-    {industry?<div className={styles.empty}><h3>Coming soon</h3><p>It will appear here when it’s ready. Meanwhile, explore the buildings above.</p><button onClick={()=>choose('operations')}>Explore Operations</button></div>:error?<div role="alert" className={styles.empty}><h3>Couldn’t load your automations</h3><p>Nothing was changed. Check your connection and try again.</p><button disabled={isValidating} onClick={()=>void mutate()}>{isValidating?'Retrying…':'Try again'}</button></div>:!data?<div role="status" className={styles.empty}>Loading your automations…</div>:visible.length===0?<div className={styles.empty}><h3>{query?'No matching automations':'Coming soon'}</h3><p>{query?'Try another name or choose a building.':'Nothing here yet. New automations for this building are on the way.'}</p><button onClick={()=>{setQuery('');choose('operations')}}>Explore Operations</button></div>:<div className={styles.automationList}>{visible.map((automation,index)=>{
+    {industry?<div className={styles.empty}><h3>Coming soon</h3><p>It will appear here when it’s ready. Meanwhile, explore the buildings above.</p><button onClick={()=>choose('operations')}>Explore Operations</button></div>:error?<div role="alert" className={styles.empty}><h3>Couldn’t load your automations</h3><p>Nothing was changed. Check your connection and try again.</p><button disabled={isValidating} onClick={()=>void mutate()}>{isValidating?'Retrying…':'Try again'}</button></div>:!data?<div role="status" className={styles.empty}>Loading your automations…</div>:visible.length===0&&extra.length===0?<div className={styles.empty}><h3>{query?'No matching automations':'Coming soon'}</h3><p>{query?'Try another name or choose a building.':'Nothing here yet. New automations for this building are on the way.'}</p><button onClick={()=>{setQuery('');choose('operations')}}>Explore Operations</button></div>:<>{visible.length>0&&<div className={styles.automationList}>{visible.map((automation,index)=>{
       const status=moduleStatus(automation),info=moduleDetails(automation),open=expanded===automation.id
       return <article key={automation.id} className={styles.automation} data-wide={flow===automation.id}>
        <div className={styles.tile} data-lit={status==='Running'} aria-hidden="true"><b>{automation.displayName.charAt(0)}</b><span>F{visible.length-index}</span></div>
@@ -152,7 +158,7 @@ export function BusinessCityView(){
        {open&&<div id={`activity-${automation.id}`} className={styles.activity}><h4>Last 24 hours</h4>{automation.runs.length?automation.runs.map(run=><div key={run.id} className={styles.activityRow}><span>{({SUCCESS:'Completed',FAILED:'Failed',RUNNING:'In progress',AWAITING_APPROVAL:'Awaiting approval'} as Record<string,string>)[run.status]??'Status not reported'}</span><time dateTime={run.startedAt}>{new Date(run.startedAt).toLocaleString()}</time>{mode==='team'&&data.mode==='internal'&&<p>{run.summary??'No summary recorded.'}</p>}</div>):<p>Nothing ran in the last 24 hours. This does not mean it has never run.</p>}{mode==='team'&&data.mode==='internal'&&<Link href="/trace">Open detailed traces</Link>}</div>}
        </div>
       </article>
-    })}</div>}
+    })}</div>}<MarketplaceShelf items={extra} flow={flow} setFlow={setFlow}/></>}
   </section>
   <section className={`liquid-glass ${styles.industries}`} aria-label="Industry districts"><div><h3>Made for your industry</h3><p>Ready-made packs for your kind of business are coming soon.</p></div><div>{INDUSTRIES.map(name=><button key={name} aria-pressed={industry===name} onClick={()=>{setIndustry(name);setQuery('');enter()}}>{name}<span>Coming soon</span></button>)}</div></section>
   </div></div>}

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { WorkflowGraph, hasWorkflow, layersFor } from '../WorkflowGraph'
 import graphs from '@/lib/ops/workflowGraphs.json'
+import { CATALOG } from '@/lib/ops/marketplaceCatalog'
 
 type G = { nodes: unknown[]; edges: { from: number; to: number }[] }
 const REAL = graphs as unknown as Record<string, G[]>
@@ -29,5 +30,12 @@ describe('WorkflowGraph', () => {
   expect(hasWorkflow('payroll')).toBe(false)
   render(<WorkflowGraph moduleKey="payroll" running />)
   expect(screen.getByText(/hasn’t been mapped/)).toBeInTheDocument()
+ })
+ it('every marketplace item draws a workflow, and "ready" means real n8n', () => {
+  for (const item of CATALOG) {
+   const { graphs: g, blueprint } = layersFor(item.key)
+   expect(g.length, item.key).toBeGreaterThan(0)
+   expect(blueprint, item.key).toBe(item.stage === 'planned')
+  }
  })
 })

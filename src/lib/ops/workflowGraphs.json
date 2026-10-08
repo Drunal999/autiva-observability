@@ -453,5 +453,602 @@
     }
    ]
   }
+ ],
+ "content-studio": [
+  {
+   "source": "E4_content_draft_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "Trigger",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Load tenant modules",
+     "kind": "http",
+     "x": 200,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "One tenant",
+     "kind": "step",
+     "x": 400,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "Create run",
+     "kind": "http",
+     "x": 600,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Pick topic",
+     "kind": "code",
+     "x": 800,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Prior rejected drafts",
+     "kind": "http",
+     "x": 800,
+     "y": 180
+    },
+    {
+     "id": 6,
+     "name": "Research",
+     "kind": "http",
+     "x": 1020,
+     "y": 0
+    },
+    {
+     "id": 7,
+     "name": "Draft",
+     "kind": "http",
+     "x": 1240,
+     "y": 0
+    },
+    {
+     "id": 8,
+     "name": "Gate",
+     "kind": "code",
+     "x": 1460,
+     "y": 0
+    },
+    {
+     "id": 9,
+     "name": "Gate passed?",
+     "kind": "branch",
+     "x": 1580,
+     "y": 0
+    },
+    {
+     "id": 10,
+     "name": "Request approval",
+     "kind": "http",
+     "x": 1680,
+     "y": 0
+    },
+    {
+     "id": 11,
+     "name": "Save rejected draft",
+     "kind": "http",
+     "x": 1680,
+     "y": 140
+    },
+    {
+     "id": 12,
+     "name": "Create approval",
+     "kind": "http",
+     "x": 1900,
+     "y": 0
+    },
+    {
+     "id": 13,
+     "name": "Log run",
+     "kind": "http",
+     "x": 2120,
+     "y": 0
+    },
+    {
+     "id": 14,
+     "name": "Log failure",
+     "kind": "http",
+     "x": 1680,
+     "y": 220
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 2,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 4,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 6,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 6,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 7,
+     "to": 8,
+     "label": null
+    },
+    {
+     "from": 7,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 8,
+     "to": 9,
+     "label": null
+    },
+    {
+     "from": 8,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 9,
+     "to": 10,
+     "label": "yes"
+    },
+    {
+     "from": 9,
+     "to": 11,
+     "label": "no"
+    },
+    {
+     "from": 11,
+     "to": 13,
+     "label": null
+    },
+    {
+     "from": 11,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 10,
+     "to": 12,
+     "label": null
+    },
+    {
+     "from": 10,
+     "to": 14,
+     "label": null
+    },
+    {
+     "from": 12,
+     "to": 13,
+     "label": null
+    },
+    {
+     "from": 12,
+     "to": 14,
+     "label": null
+    }
+   ]
+  },
+  {
+   "source": "E4_content_publish_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "Trigger",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Find approved drafts",
+     "kind": "http",
+     "x": 220,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "Preflight publish",
+     "kind": "code",
+     "x": 440,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "Publish LinkedIn",
+     "kind": "send",
+     "x": 660,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Confirm publish",
+     "kind": "code",
+     "x": 880,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Mark published",
+     "kind": "http",
+     "x": 1100,
+     "y": 0
+    },
+    {
+     "id": 6,
+     "name": "Log failure",
+     "kind": "step",
+     "x": 660,
+     "y": 220
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 2,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 4,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": null
+    }
+   ]
+  }
+ ],
+ "menu-onboarding": [
+  {
+   "source": "E3_menu_onboarding_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "Menu received",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Create run",
+     "kind": "http",
+     "x": 220,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "Find cafe",
+     "kind": "http",
+     "x": 440,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "Cafe found?",
+     "kind": "branch",
+     "x": 660,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Read the menu",
+     "kind": "http",
+     "x": 880,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Normalise menu",
+     "kind": "code",
+     "x": 1100,
+     "y": 0
+    },
+    {
+     "id": 6,
+     "name": "Save items",
+     "kind": "http",
+     "x": 1320,
+     "y": 0
+    },
+    {
+     "id": 7,
+     "name": "Log run",
+     "kind": "http",
+     "x": 1540,
+     "y": 0
+    },
+    {
+     "id": 8,
+     "name": "Log failure",
+     "kind": "http",
+     "x": 1320,
+     "y": 220
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 2,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 8,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 4,
+     "label": "yes"
+    },
+    {
+     "from": 3,
+     "to": 8,
+     "label": "no"
+    },
+    {
+     "from": 4,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 8,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 8,
+     "label": null
+    },
+    {
+     "from": 6,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 6,
+     "to": 8,
+     "label": null
+    }
+   ]
+  }
+ ],
+ "feed-liveness": [
+  {
+   "source": "E6_feed_liveness_v1",
+   "nodes": [
+    {
+     "id": 0,
+     "name": "Every morning",
+     "kind": "trigger",
+     "x": 0,
+     "y": 0
+    },
+    {
+     "id": 1,
+     "name": "Create run",
+     "kind": "http",
+     "x": 220,
+     "y": 0
+    },
+    {
+     "id": 2,
+     "name": "Live cafes",
+     "kind": "http",
+     "x": 440,
+     "y": 0
+    },
+    {
+     "id": 3,
+     "name": "Recent posts",
+     "kind": "http",
+     "x": 660,
+     "y": 0
+    },
+    {
+     "id": 4,
+     "name": "Measure liveness",
+     "kind": "code",
+     "x": 880,
+     "y": 0
+    },
+    {
+     "id": 5,
+     "name": "Write events",
+     "kind": "http",
+     "x": 1100,
+     "y": 0
+    },
+    {
+     "id": 6,
+     "name": "Log run",
+     "kind": "http",
+     "x": 1320,
+     "y": 0
+    },
+    {
+     "id": 7,
+     "name": "Log failure",
+     "kind": "http",
+     "x": 1100,
+     "y": 220
+    }
+   ],
+   "edges": [
+    {
+     "from": 0,
+     "to": 1,
+     "label": null
+    },
+    {
+     "from": 1,
+     "to": 2,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 3,
+     "label": null
+    },
+    {
+     "from": 2,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 4,
+     "label": null
+    },
+    {
+     "from": 3,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 5,
+     "label": null
+    },
+    {
+     "from": 4,
+     "to": 7,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 6,
+     "label": null
+    },
+    {
+     "from": 5,
+     "to": 7,
+     "label": null
+    }
+   ]
+  }
  ]
 }

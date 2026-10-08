@@ -40,6 +40,9 @@ export function WorkflowGraph({ moduleKey, running, zoom = 1, layer = 0 }: { mod
  // connections are untouched, so the drawing is the same workflow, wrapped.
  const y0 = Math.min(...g.nodes.map(n => n.y)), band = Math.max(...g.nodes.map(n => n.y)) - y0 + H + 70
  const laid = g.nodes.map(n => { const c = Math.round(n.x / STEP); return { ...n, x: (c % PER_ROW) * STEP, y: Math.floor(c / PER_ROW) * band + (n.y - y0) } })
+ // n8n lets two nodes share a column at nearly the same height; push the lower one clear so cards never overlap.
+ const byCol = [...laid].sort((a, b) => a.x - b.x || a.y - b.y)
+ for (let i = 1; i < byCol.length; i++) { const p = byCol[i - 1], n = byCol[i]; if (n.x === p.x && n.y < p.y + H + 16) n.y = p.y + H + 16 }
  const minX = -PAD, minY = -PAD
  const width = Math.max(...laid.map(n => n.x)) + W + 2 * PAD, height = Math.max(...laid.map(n => n.y)) + H + 2 * PAD
  const at = (id: number) => laid[id]
