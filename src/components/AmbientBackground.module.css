@@ -28,3 +28,11 @@
   .c { width: 110vw; height: 32vh; left: 20%; top: 66%; }
   .d { width: 90vw; height: 46vh; left: 45%; top: 22%; }
 }
+
+/* Dark: the city wallpaper. A long, gentle drift makes it feel alive without
+   costing a WebGL context on every page. */
+.city { position: absolute; inset: -4%; background: url('/brand/city-wall.jpg') center / cover no-repeat;
+  filter: blur(5px) saturate(1.15) brightness(0.72); animation: drift 60s ease-in-out infinite alternate; }
+:global(html[data-theme='light']) .city { display: none; }
+@keyframes drift { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.1) translate(-2%, -1.5%); } }
+@media (prefers-reduced-motion: reduce) { .city { animation: none; } }

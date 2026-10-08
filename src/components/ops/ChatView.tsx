@@ -219,10 +219,10 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-baseline gap-3 border-b border-white/[0.06] px-5 py-3">
-        <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
-          Team room
+    <div className="liquid-glass relative m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[30px] md:m-4">
+      <div className="flex shrink-0 items-baseline gap-3 border-b border-white/[0.08] px-5 py-4">
+        <h1 className="text-[34px] font-bold leading-none tracking-[-0.02em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.35)]">
+          Messages
         </h1>
         <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
           EVERYONE ON THE DASHBOARD SEES THIS
@@ -261,7 +261,7 @@ export function ChatView({ currentUserId }: { currentUserId?: string }) {
 
         {data && messages.length === 0 && (
           <div className="m-auto max-w-[46ch] text-center">
-            <p className="text-[14px] text-white/45">Nothing here yet.</p>
+            <p className="text-[17px] font-semibold text-white/85">Nothing here yet.</p>
             <p className="mt-1 text-[13px] leading-relaxed text-white/30">
               This room is shared by everyone with access. Mention someone with
               @their-github-handle and they get a notification.
