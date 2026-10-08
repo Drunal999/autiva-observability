@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { usePrefs, type Palette } from '@/lib/ops/prefs'
 import styles from './BoloOrb.module.css'
 
 /**
@@ -33,8 +34,9 @@ export function moodOf(status: string, active: boolean) {
  return 'thinking'
 }
 
-export function BoloOrb({ size = 64, mood = 'idle' }: { size?: number; mood?: string }) {
- return <span className={styles.orb} data-mood={mood} style={{ width: size, height: size }} aria-hidden="true">
+export function BoloOrb({ size = 64, mood = 'idle', palette }: { size?: number; mood?: string; palette?: Palette }) {
+ const prefs = usePrefs()
+ return <span className={styles.orb} data-mood={mood} data-palette={palette ?? prefs.palette} style={{ width: size, height: size }} aria-hidden="true">
   <span className={styles.swirl} /><span className={styles.core} /><span className={styles.shine} />
  </span>
 }

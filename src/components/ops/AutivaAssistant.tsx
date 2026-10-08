@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { BoloOrb, BOLO_STATE, BOLO_TOGGLE, moodOf } from './BoloOrb'
 import { requestCityFocus } from '@/lib/ops/cityFocus'
+import { usePrefs } from '@/lib/ops/prefs'
 
 // The ElevenLabs voice, run by AUTIVA's brain/server.mjs. The Brain section mirrors this same session.
 const VOICE = 'http://127.0.0.1:8095'
@@ -13,6 +14,7 @@ interface Approval { id: string; summary: string }
 
 export function AutivaAssistant() {
   const frame = useRef<HTMLIFrameElement>(null)
+  const name = usePrefs().assistantName
   const [local, setLocal] = useState(false)
   const [ready, setReady] = useState(false)
   const [active, setActive] = useState(false)
@@ -89,19 +91,19 @@ export function AutivaAssistant() {
   if (!local) return null
   const home = pathname === '/city' || pathname === '/'
   return <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2 max-[700px]:bottom-28">
-    {approvals.map(a => <div key={a.id} role="alertdialog" aria-label="Bolo asks for permission" className="liquid-glass relative w-80 rounded-3xl p-4 text-sm text-white">
-      <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Bolo asks</p>
-      <p className="mt-1 break-words font-medium">Allow Bolo to {a.summary}?</p>
+    {approvals.map(a => <div key={a.id} role="alertdialog" aria-label={`${name} asks for permission`} className="liquid-glass relative w-80 rounded-3xl p-4 text-sm text-white">
+      <p className="text-xs font-semibold uppercase tracking-wide text-white/60">{name} asks</p>
+      <p className="mt-1 break-words font-medium">Allow {name} to {a.summary}?</p>
       <div className="mt-3 flex flex-wrap gap-2">
         <button type="button" onClick={() => decide(a.id, 'once')} className="h-9 rounded-full bg-white px-4 text-xs font-semibold text-black focus-visible:ring-2 focus-visible:ring-white">Allow once</button>
         <button type="button" onClick={() => decide(a.id, 'always')} className="h-9 rounded-full border border-white/25 bg-white/10 px-4 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Always allow</button>
         <button type="button" onClick={() => decide(a.id, 'deny')} className="h-9 rounded-full border border-white/25 bg-white/10 px-4 text-xs font-semibold focus-visible:ring-2 focus-visible:ring-white">Deny</button>
       </div>
     </div>)}
-    {!home && <button type="button" disabled={!ready} aria-label={active ? 'Mute Bolo' : 'Talk to Bolo'} aria-pressed={active} onClick={toggle}
+    {!home && <button type="button" disabled={!ready} aria-label={active ? `Mute ${name}` : `Talk to ${name}`} aria-pressed={active} onClick={toggle}
       className="liquid-glass relative flex h-14 items-center gap-3 rounded-full py-2 pl-2 pr-5 text-left text-white focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60 max-[700px]:hidden">
       <BoloOrb size={40} mood={moodOf(status, active)} />
-      <span><b className="block text-sm font-semibold leading-tight">Bolo</b><small className="block text-xs text-white/65">{active ? `${status} · tap to stop` : ready ? 'Tap to talk' : status}</small></span>
+      <span><b className="block text-sm font-semibold leading-tight">{name}</b><small className="block text-xs text-white/65">{active ? `${status} · tap to stop` : ready ? 'Tap to talk' : status}</small></span>
     </button>}
     <iframe ref={frame} title="AUTIVA audio connection" src={`${VOICE}/?voiceBridge=1`} allow="microphone; autoplay" aria-hidden="true" tabIndex={-1} className="pointer-events-none absolute h-px w-px opacity-0" />
   </div>

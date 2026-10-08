@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { BoloOrb } from './BoloOrb'
+import { usePrefs } from '@/lib/ops/prefs'
 import styles from './Welcome.module.css'
 
 /**
@@ -17,6 +18,7 @@ const STEPS = [
 
 export function Welcome({ previews }: { previews: Record<string, string> }) {
  const [step, setStep] = useState(-1)
+ const name = usePrefs().assistantName
  const primary = useRef<HTMLButtonElement>(null)
  useEffect(() => { try { if (!localStorage.getItem(KEY)) setStep(0) } catch { /* no storage: just don't show it */ } }, [])
  useEffect(() => {
@@ -28,7 +30,8 @@ export function Welcome({ previews }: { previews: Record<string, string> }) {
  }, [step])
  function done() { setStep(-1); try { localStorage.setItem(KEY, '1') } catch { /* ignore */ } }
  if (step < 0) return null
- const s = STEPS[step], last = step === STEPS.length - 1
+ const base = STEPS[step], last = step === STEPS.length - 1
+ const s = step === 2 ? { ...base, kicker: `Meet ${name}`, body: base.body.replace('Bolo', name) } : base
  const shots = Object.values(previews).slice(0, 3)
  return <div className={styles.backdrop}>
   <div role="dialog" aria-modal="true" aria-labelledby="welcome-title" className={`liquid-glass ${styles.card}`}>

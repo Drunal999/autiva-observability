@@ -7,7 +7,7 @@
 .card header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .card h3 { font-size: 17px; font-weight: 700; }
 .count { font-size: 13px; color: var(--label-2); }
-.link { font-size: 13px; font-weight: 600; color: #ff9f0a; }
+.link { font-size: 13px; font-weight: 600; color: var(--accent, #ff9f0a); }
 .link:disabled { opacity: 0.5; }
 .muted { font-size: 13px; line-height: 1.5; color: var(--label-2); }
 .note { font-size: 13px; color: var(--label-2); margin-top: 8px; }

@@ -11,17 +11,19 @@ import {WorkflowEditor,hasWorkflow} from './WorkflowGraph'
 import {Agents,NeedsOk,Today,Brain,Automations} from './HomeBento'
 import {BoloOrb,useBolo,moodOf} from './BoloOrb'
 import {Welcome} from './Welcome'
+import {SettingsSheet} from './SettingsSheet'
+import {usePrefs} from '@/lib/ops/prefs'
 import styles from './BusinessCity.module.css'
 const LegacyCity=dynamic(()=>import('./ImmersiveCityView').then(m=>m.ImmersiveCityView),{loading:()=> <p className="p-6">Loading 3D city…</p>})
 const greeting=(hour:number)=>hour<5?'Working late':hour<12?'Good morning':hour<17?'Good afternoon':'Good evening'
 /** Bolo on Home: one big orb that starts the same voice session as anywhere else, and three
  *  shortcuts to real places. No language list: Bolo answers in whatever language it is spoken to. */
 function BoloCard({onBrowse}:{onBrowse:()=>void}){
- const b=useBolo()
- return <section className={`liquid-glass ${styles.widget} ${styles.hBolo} ${styles.bolo}`} aria-label="Bolo">
-  <button type="button" className={styles.boloOrb} onClick={b.toggle} disabled={!b.ready} aria-pressed={b.active} aria-label={b.active?'Stop talking to Bolo':'Talk to Bolo'}><BoloOrb size={88} mood={moodOf(b.status,b.active)}/></button>
+ const b=useBolo(),name=usePrefs().assistantName
+ return <section className={`liquid-glass ${styles.widget} ${styles.hBolo} ${styles.bolo}`} aria-label={name}>
+  <button type="button" className={styles.boloOrb} onClick={b.toggle} disabled={!b.ready} aria-pressed={b.active} aria-label={b.active?`Stop talking to ${name}`:`Talk to ${name}`}><BoloOrb size={88} mood={moodOf(b.status,b.active)}/></button>
   <div className={styles.boloText}>
-   <p className={styles.kicker}>Bolo</p>
+   <p className={styles.kicker}>{name}</p>
    <h2>{b.active?b.status:'What should we do today?'}</h2>
    <p className={styles.boloHint}>{b.active?'Tap the orb to stop.':b.ready?'Tap the orb and just talk.':b.status}</p>
    <div className={styles.boloChips}><Link href="/approvals">What needs my OK?</Link><Link href="/calendar">Today’s plan</Link><button type="button" onClick={onBrowse}>Browse automations</button></div>
@@ -78,6 +80,8 @@ export function BusinessCityView(){
  const [explore,setExplore]=useState(false)
  const [previews,setPreviews]=useState<Record<string,string>>({})
  const [sheet,setSheet]=useState(false)
+ const [custom,setCustom]=useState(false)
+ const prefs=usePrefs(),show=(c:string)=>!prefs.hidden.includes(c as never)
  useEffect(()=>{if(!sheet)return;const esc=(e:KeyboardEvent)=>{if(e.key==='Escape')setSheet(false)};window.addEventListener('keydown',esc);return()=>window.removeEventListener('keydown',esc)},[sheet])
  useEffect(()=>{if(!explore)return;const esc=(e:KeyboardEvent)=>{if(e.key==='Escape')setExplore(false)};window.addEventListener('keydown',esc);return()=>window.removeEventListener('keydown',esc)},[explore])
  const [legacy,setLegacy]=useState(false)
@@ -104,6 +108,7 @@ export function BusinessCityView(){
  return <section className={styles.workspace} data-explore={explore}>
   {explore&&<button className={`liquid-glass ${styles.exploreBack}`} onClick={()=>setExplore(false)}>← Back to home</button>}
   <Welcome previews={previews}/>
+  {custom&&<SettingsSheet onClose={()=>setCustom(false)}/>}
   <div className={styles.stageCity}><GlowCity data={error?undefined:data} agents={realAgents} onSelect={choose} explore={explore} onPreviews={p=>setPreviews(p)}/></div>
   <section className={styles.home} aria-label="Workspace summary">
    <header className={`${styles.top} ${styles.hGreet}`}>
@@ -111,6 +116,7 @@ export function BusinessCityView(){
     <div className={styles.greetActions}>
      <button className={`liquid-glass ${styles.exploreBtn}`} onClick={()=>setExplore(true)}>Explore the city</button>
      <button className={`liquid-glass ${styles.exploreBtn}`} onClick={()=>enter()}>Marketplace</button>
+     <button className={`liquid-glass ${styles.exploreBtn}`} onClick={()=>setCustom(true)}>Customise</button>
      {mode==='team'&&<button className={`liquid-glass ${styles.exploreBtn}`} onClick={()=>setLegacy(true)}>Original 3D view</button>}
     </div>
    </header>
@@ -122,11 +128,11 @@ export function BusinessCityView(){
     {!error&&data&&clock&&<p className={styles.sparkNote}>{bins.reduce((n,v)=>n+v,0)} run{bins.reduce((n,v)=>n+v,0)===1?'':'s'} started in the last 24 hours · {modules.length} in your workspace</p>}
     <p className={styles.note}>{error?'No records were changed.':!data?'':data.sample?'Sample workspace · These are example records.':'Based on recorded workspace activity.'}</p>
    </section>
-   <div className={styles.hAgents}><Agents/></div>
-   <div className={styles.hOk}><NeedsOk/></div>
-   <div className={styles.hToday}><Today/></div>
-   <div className={styles.hBrain}><Brain/></div>
-   <div className={styles.hAutos}><Automations modules={modules}/></div>
+   {show('agents')&&<div className={styles.hAgents}><Agents/></div>}
+   {show('ok')&&<div className={styles.hOk}><NeedsOk/></div>}
+   {show('today')&&<div className={styles.hToday}><Today/></div>}
+   {show('brain')&&<div className={styles.hBrain}><Brain/></div>}
+   {show('autos')&&<div className={styles.hAutos}><Automations modules={modules}/></div>}
   </section>
   {sheet&&<div className={styles.sheetBackdrop} onClick={()=>setSheet(false)}>
   <div role="dialog" aria-modal="true" aria-label="Marketplace" className={`liquid-glass ${styles.sheet}`} onClick={e=>e.stopPropagation()}>
