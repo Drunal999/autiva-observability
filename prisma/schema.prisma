@@ -25,6 +25,8 @@ model User {
   avatarUrl  String?
   email      String?  @unique
   muteSounds Boolean  @default(false)
+  /// Workspace look and assistant settings (see src/lib/ops/prefsShape.ts). Null until first saved.
+  prefs      Json?
   tasks      Task[]
   decisions  Approval[]
   comments   Comment[]

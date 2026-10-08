@@ -51,3 +51,5 @@
 .backdrop .sheet { background: linear-gradient(160deg, rgba(44, 46, 58, 0.88), rgba(18, 20, 28, 0.94));
   -webkit-backdrop-filter: blur(40px) saturate(1.4); backdrop-filter: blur(40px) saturate(1.4); }
 :global(html[data-theme='light']) .backdrop .sheet { background: rgba(255, 255, 255, 0.82); }
+
+.foot span[data-state='error'] { color: #ff6961; text-align: right; max-width: 60%; }

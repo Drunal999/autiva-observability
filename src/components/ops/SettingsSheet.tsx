@@ -23,7 +23,9 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   window.addEventListener('keydown', esc)
   return () => window.removeEventListener('keydown', esc)
  }, [onClose])
- const set = (patch: Partial<Prefs>) => savePrefs({ ...prefs, ...patch })
+ const [saved, setSaved] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+ const store = (next: Prefs) => { setSaved('saving'); savePrefs(next).then(() => setSaved('saved'), () => setSaved('error')) }
+ const set = (patch: Partial<Prefs>) => store({ ...prefs, ...patch })
 
  return <div className={styles.backdrop} onClick={onClose}>
   <div role="dialog" aria-modal="true" aria-labelledby="settings-title" className={`liquid-glass ${styles.sheet}`} onClick={e => e.stopPropagation()}>
@@ -71,8 +73,8 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
    </section>}
 
    <footer className={styles.foot}>
-    <button type="button" className={styles.reset} onClick={() => savePrefs(DEFAULT_PREFS)}>Reset to default</button>
-    <span>Saved on this device</span>
+    <button type="button" className={styles.reset} onClick={() => store(DEFAULT_PREFS)}>Reset to default</button>
+    <span role="status" data-state={saved}>{saved === 'saving' ? 'Saving…' : saved === 'error' ? 'Not saved to your account. It still applies here.' : 'Saved to your account'}</span>
    </footer>
   </div>
  </div>
