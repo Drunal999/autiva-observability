@@ -53,7 +53,7 @@ function DiffBlock({ line }: { line: LogLine }) {
         <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/65">{line.text}</span>
         <span className="font-mono text-[12px] text-white/35">{line.meta}</span>
       </div>
-      <div className="bg-black/25 py-1">
+      <div className="bg-black/15 py-1">
         {line.lines.map((d, i) => {
           const sign = d[0]
           const bg = sign === '+' ? 'rgba(52,211,153,0.10)' : sign === '-' ? 'rgba(248,113,113,0.10)' : 'transparent'
@@ -142,11 +142,11 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
   const streaming = shown < all.length
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="liquid-glass m-2 flex h-[calc(100%-1rem)] min-h-0 overflow-hidden rounded-[30px] md:m-4 md:h-[calc(100%-2rem)]">
       {/* ── terminal ── */}
       <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="text-[26px] font-bold leading-none tracking-[-0.02em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.35)]">
             Terminal
           </span>
           <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/45">
@@ -290,7 +290,7 @@ export function TerminalView({ runRef = 'r-91ab' }: { runRef?: string }) {
         <div className="min-h-0 flex-1 overflow-auto">
           {selected && selected.diff.length > 0 ? (
             <>
-              <div className="sticky top-0 flex items-center gap-2 bg-[#0a1020]/95 px-4 py-2 backdrop-blur">
+              <div className="sticky top-0 flex items-center gap-2 bg-white/[0.06] px-4 py-2 backdrop-blur-xl">
                 <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white/55">
                   {selected.path}
                 </span>

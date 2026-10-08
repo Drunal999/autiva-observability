@@ -59,7 +59,7 @@ function NodeCard({
     <button
       type="button"
       onClick={onFocus}
-      className="absolute overflow-hidden rounded-[13px] border bg-[#0e0e12]/85 p-2.5 text-left backdrop-blur transition"
+      className="absolute overflow-hidden rounded-[13px] border bg-white/[0.07] p-2.5 text-left backdrop-blur-xl transition"
       style={{
         left: node.x,
         top: node.y,
