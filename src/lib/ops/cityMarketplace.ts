@@ -36,4 +36,4 @@ const DETAILS:Record<string,{purpose:string;audience:string}>={
  'weekly-digest':{purpose:'Bring weekly activity together in one summary.',audience:'Owners and team leads'},
 }
 export function moduleDetails(module:CityModule){return DETAILS[module.key]??{purpose:'This automation is in your workspace; its description has not been added yet.',audience:'Not documented yet'}}
-export const INDUSTRIES=['Cafes','Clinics','Real estate','Retail'] as const
+export const INDUSTRIES=['CA firms','Cafes','Clinics','Real estate','Retail'] as const

@@ -7,10 +7,10 @@ import styles from './BusinessCity.module.css'
 const STAGE = { ready: 'Ready to set up', planned: 'Planned' } as const
 
 /** "More for this building": automations this workspace can add. Shows the workflow, never a fake buy. */
-export function MarketplaceShelf({ items, flow, setFlow }: { items: CatalogItem[]; flow: string | null; setFlow: (id: string | null) => void }) {
+export function MarketplaceShelf({ items, flow, setFlow, title = 'More for this building' }: { items: CatalogItem[]; flow: string | null; setFlow: (id: string | null) => void; title?: string }) {
  if (!items.length) return null
  return <div className={styles.shelf}>
-  <h3 className={styles.shelfHead}>More for this building</h3>
+  <h3 className={styles.shelfHead}>{title}</h3>
   <div className={styles.automationList}>{items.map(item => {
    const id = `catalog:${item.key}`, b = BUILDINGS.find(x => x.id === item.building)!
    return <article key={item.key} className={styles.automation} data-wide={flow === id} data-catalog>

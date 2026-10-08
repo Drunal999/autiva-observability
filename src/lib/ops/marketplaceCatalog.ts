@@ -10,9 +10,23 @@ import type { BuildingId } from './cityMarketplace'
 export type CatalogItem = {
   key: string; name: string; building: BuildingId; stage: 'ready' | 'planned'
   purpose: string; audience: string; needs: string; guard?: string
+  /** Industry packs this item belongs to (the "Made for your industry" row). */
+  industries?: string[]
 }
 
 export const CATALOG: CatalogItem[] = [
+  { key: 'ca-compliance-reminders', name: 'Compliance Reminders', building: 'finance', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Tracks each client’s GST, ITR, TDS and ROC due dates and reminds them at 7, 3 and 1 days, on the day and after.',
+    audience: 'CA firms with many filing clients', needs: 'Google Sheets or your client list, email, WhatsApp Business API',
+    guard: 'Overdue past 3 days goes to a partner, not another automatic nudge.' },
+  { key: 'ca-document-chaser', name: 'Document Chaser', building: 'finance', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Asks clients for the documents a filing needs, tracks what is pending and follows up every 3 days.',
+    audience: 'CA firms collecting papers every quarter', needs: 'Google Sheets, email, WhatsApp Business API',
+    guard: 'After the third follow-up, a partner takes over.' },
+  { key: 'ca-client-desk', name: 'Client Desk', building: 'support', stage: 'planned', industries: ['CA firms'],
+    purpose: 'Answers client questions on WhatsApp and email with their own filing status, and qualifies new enquiries.',
+    audience: 'CA firms answering the same questions daily', needs: 'Claude, Gmail, WhatsApp Business API',
+    guard: 'Only replies to people who wrote first; tax advice goes to a partner.' },
   { key: 'content-studio', name: 'Content Studio', building: 'marketing', stage: 'ready',
     purpose: 'Researches a topic, drafts a post, waits for your OK, then publishes through the official LinkedIn API.',
     audience: 'Owners who want to post regularly', needs: 'Claude, LinkedIn API',

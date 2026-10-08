@@ -67,6 +67,19 @@ export const BLUEPRINTS: Record<string, Graph> = {
     ['You call your number', 'trigger', 0], ['Your assistant answers', 'http', 1], ["Read today's status", 'code', 2],
     ['What needs your OK', 'step', 3], ['Note it as a task', 'step', 4],
   ], [[0, 1], [1, 2], [2, 3], [3, 4]]),
+  'ca-compliance-reminders': plan('ca-compliance-reminders blueprint', [
+    ['Every morning', 'trigger', 0], ['Read due dates', 'http', 1], ['Days left?', 'branch', 2],
+    ['Remind client', 'send', 3, -1], ['Overdue 3+ days?', 'branch', 3, 1], ['Alert a partner', 'send', 4, 1], ['Log reminder', 'step', 5],
+  ], [[0, 1], [1, 2], [2, 3, 'yes'], [2, 4, 'no'], [4, 5, 'yes'], [3, 6], [5, 6]]),
+  'ca-document-chaser': plan('ca-document-chaser blueprint', [
+    ['Filing starts', 'trigger', 0], ['List documents needed', 'code', 1], ['Request from client', 'send', 2],
+    ['Still pending after 3 days?', 'branch', 3], ['Follow up', 'send', 4, -1], ['Partner takes over', 'step', 5, -1], ['Mark received', 'step', 4, 1],
+  ], [[0, 1], [1, 2], [2, 3], [3, 4, 'yes'], [4, 5], [3, 6, 'no']]),
+  'ca-client-desk': plan('ca-client-desk blueprint', [
+    ['Client writes in', 'trigger', 0], ['Known client?', 'branch', 1], ['Look up their status', 'http', 2, -1],
+    ['Draft answer', 'code', 3, -1], ['Tax advice?', 'branch', 4, -1], ['Reply', 'send', 5, -1], ['Partner answers', 'step', 5, 0],
+    ['Qualify the enquiry', 'code', 2, 1], ['Add to leads', 'step', 3, 1],
+  ], [[0, 1], [1, 2, 'yes'], [2, 3], [3, 4], [4, 5, 'no'], [4, 6, 'yes'], [1, 7, 'no'], [7, 8]]),
   'market-trends': plan('market-trends blueprint', [
     ['Every week', 'trigger', 0], ['Fetch search trends', 'http', 1], ['Spot rising topics', 'code', 2],
     ['Save to the brain', 'step', 3],
