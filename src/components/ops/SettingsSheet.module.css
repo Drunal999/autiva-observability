@@ -1,0 +1,63 @@
+.backdrop { position: fixed; inset: 0; z-index: 75; display: grid; place-items: center end; padding: 18px;
+  background: rgba(0, 0, 0, 0.3); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: fade 0.25s ease both; }
+.sheet { position: relative; width: min(420px, 100%); max-height: calc(100dvh - 36px); overflow: auto; border-radius: 32px; padding: 20px; color: var(--label);
+  animation: slide 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; scrollbar-width: none; }
+.head { display: flex; align-items: flex-start; justify-content: space-between; }
+.kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--label-2); }
+.head h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+.done { height: 36px; padding: 0 16px; border-radius: 18px; font-size: 14px; font-weight: 600; background: var(--invert); color: var(--on-invert); }
+.tabs { display: flex; gap: 2px; margin: 16px 0 6px; padding: 3px; border-radius: 14px; background: rgba(255, 255, 255, 0.08); border: 0.5px solid rgba(255, 255, 255, 0.14); }
+.tabs button { flex: 1; height: 34px; border-radius: 11px; font-size: 14px; font-weight: 600; color: var(--label-2); }
+.tabs button[aria-selected='true'] { background: rgba(255, 255, 255, 0.18); color: var(--label); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.panel { padding: 8px 0 4px; }
+.preview { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 22px; background: rgba(255, 255, 255, 0.06); border: 0.5px solid rgba(255, 255, 255, 0.14); }
+.preview b { display: block; font-size: 20px; font-weight: 600; }
+.preview small { font-size: 13px; color: var(--label-2); }
+.field { display: block; margin-top: 14px; }
+.field span, .label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--label-2); margin: 14px 0 8px; }
+.field span { margin-top: 0; }
+.field input { width: 100%; height: 44px; padding: 0 14px; border-radius: 14px; font: inherit; font-size: 16px; color: var(--label); outline: none;
+  background: rgba(255, 255, 255, 0.08); border: 0.5px solid rgba(255, 255, 255, 0.18); }
+.field input:focus { border-color: var(--accent, #ff9f0a); }
+.orbs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.orbs button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 2px 8px; border-radius: 16px; border: 0.5px solid transparent; font-size: 11.5px; color: var(--label-2); }
+.orbs button[aria-checked='true'] { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.3); color: var(--label); }
+.swatches { display: flex; gap: 12px; }
+.swatches button { width: 38px; height: 38px; border-radius: 50%; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); transition: transform 0.15s ease; }
+.swatches button[aria-checked='true'] { outline: 2px solid var(--label); outline-offset: 3px; transform: scale(1.06); }
+.segment { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.segment button { text-align: left; padding: 12px; border-radius: 16px; background: rgba(255, 255, 255, 0.06); border: 0.5px solid rgba(255, 255, 255, 0.14); }
+.segment button[aria-checked='true'] { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.34); }
+.segment b { display: block; font-size: 14px; font-weight: 600; }
+.segment small { display: block; font-size: 12px; color: var(--label-2); margin-top: 3px; line-height: 1.35; }
+.toggle { display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 4px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.1); font-size: 15px; font-weight: 500; cursor: pointer; }
+/* An iOS switch drawn from the checkbox itself. */
+.toggle input { appearance: none; width: 46px; height: 28px; border-radius: 14px; background: rgba(120, 120, 128, 0.4); position: relative; cursor: pointer; transition: background 0.2s ease; }
+.toggle input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); transition: transform 0.2s ease; }
+.toggle input:checked { background: var(--accent, #30d158); }
+.toggle input:checked::after { transform: translateX(18px); }
+.toggle input:focus-visible { outline: 2px solid var(--label); outline-offset: 2px; }
+.hint { font-size: 12.5px; color: var(--label-2); line-height: 1.5; margin-top: 12px; }
+.foot { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 0.5px solid rgba(255, 255, 255, 0.12); font-size: 12px; color: var(--label-2); }
+.reset { height: 32px; padding: 0 12px; border-radius: 16px; font-size: 13px; font-weight: 600; color: var(--label); background: rgba(255, 255, 255, 0.08); }
+.sheet button:focus-visible { outline: 2px solid var(--label); outline-offset: 2px; }
+@keyframes fade { from { opacity: 0; } }
+@keyframes slide { from { opacity: 0; transform: translateX(24px); } }
+@media (max-width: 700px) { .backdrop { place-items: end center; padding: 0; } .sheet { width: 100%; border-radius: 30px 30px 0 0; max-height: 86dvh; animation-name: up; } }
+@keyframes up { from { transform: translateY(40px); opacity: 0; } }
+
+/* A sheet sits over busy content, so it is always heavily frosted, whatever
+   the Glass setting: the page behind must never be readable through it. */
+.backdrop .sheet { background: linear-gradient(160deg, rgba(44, 46, 58, 0.88), rgba(18, 20, 28, 0.94));
+  -webkit-backdrop-filter: blur(40px) saturate(1.4); backdrop-filter: blur(40px) saturate(1.4); }
+:global(html[data-theme='light']) .backdrop .sheet { background: rgba(255, 255, 255, 0.82); }
+
+.foot span[data-state='error'] { color: #ff6961; text-align: right; max-width: 60%; }
+
+/* Keep settings responsive over the paused city. */
+.backdrop { -webkit-backdrop-filter:none;backdrop-filter:none;animation-duration:100ms; }
+.backdrop .sheet { background:linear-gradient(160deg,#292d3a,#111823);-webkit-backdrop-filter:none;backdrop-filter:none;animation-duration:150ms; }
+:global(html[data-glass='frosted']) .backdrop .sheet { -webkit-backdrop-filter:none;backdrop-filter:none; }
+:global(html[data-theme='light']) .backdrop .sheet { background:#f5f8fc; }
+.sheet button,.sheet input { touch-action:manipulation; }
+@media (prefers-reduced-motion:reduce) { .backdrop,.sheet { animation:none; } }

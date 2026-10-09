@@ -268,7 +268,7 @@ export function FleetView({
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-5">
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline gap-3">
-          <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <h1 className="text-[34px] font-bold leading-none tracking-[-0.02em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.35)]">
             Fleet
           </h1>
           {state === 'ready' && (

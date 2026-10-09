@@ -109,11 +109,11 @@ export function TraceView({ runRef = 'r-8f2c' }: { runRef?: string }) {
   const ticks = [0, 0.25, 0.5, 0.75, 1]
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="liquid-glass m-2 flex h-[calc(100%-1rem)] min-h-0 overflow-hidden rounded-[30px] md:m-4 md:h-[calc(100%-2rem)]">
       {/* ── waterfall ── */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="text-[26px] font-bold leading-none tracking-[-0.02em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.35)]">
             Trace
           </span>
           <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/45">

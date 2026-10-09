@@ -70,8 +70,8 @@ body {
   --blue: #0a84ff;
   --green: #30d158;
   --yellow: #ffd60a;
-  --lg-fill: rgba(32, 32, 36, 0.52);
-  --lg-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.12), 0 16px 44px rgba(0, 0, 0, 0.45);
+  --lg-fill: linear-gradient(155deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 40%, rgba(8, 10, 18, 0.3));
+  --lg-shadow: inset 0 1px 0.5px rgba(255, 255, 255, 0.28), inset 0 -1px 0.5px rgba(255, 255, 255, 0.06), 0 18px 48px rgba(0, 0, 0, 0.32);
   --lg-rim: linear-gradient(140deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.12) 24%, rgba(255, 255, 255, 0.04) 58%, rgba(255, 255, 255, 0.16));
   --wall: #050506;
   --smoke: rgba(255, 255, 255, 0.2);
@@ -121,9 +121,19 @@ html[data-theme='light'] {
    to sit on it. */
 .liquid-glass {
   background: var(--lg-fill);
-  -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  backdrop-filter: blur(28px) saturate(1.6);
+  /* High saturation is what makes the glass pick up the colour of whatever
+     moves behind it (the city's neon), instead of reading as a grey box. */
+  -webkit-backdrop-filter: blur(22px) saturate(1.7);
+  backdrop-filter: blur(22px) saturate(1.7);
   box-shadow: var(--lg-shadow);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+}
+html[data-theme='light'] .liquid-glass { text-shadow: none; }
+/* Customise → Glass: Frosted. Calmer and easier to read; the city still glows through. */
+html[data-glass='frosted']:not([data-theme='light']) .liquid-glass {
+  background: linear-gradient(155deg, rgba(48, 50, 62, 0.62), rgba(20, 22, 30, 0.7));
+  -webkit-backdrop-filter: blur(36px) saturate(1.3);
+  backdrop-filter: blur(36px) saturate(1.3);
 }
 .liquid-glass::before {
   content: '';
@@ -233,3 +243,17 @@ html[data-theme='light'] {
     background: transparent;
   }
 }
+
+/* Inside pages are built from bordered, rounded Tailwind boxes with a faint
+   fill. Over the city wallpaper, blur + saturation turns each into glass that
+   picks up the city's colour. Controls (buttons, inputs, links) are left alone. */
+html:not([data-theme='light']) #workspace-content :is(div, section, article, li, aside, form)[class*='rounded-['][class*='border'] {
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* Over the city wallpaper, faint text needs help: lift the faintest whites and
+   give inside-page text a soft shadow so it never dissolves into the lights. */
+html:not([data-theme='light']) #workspace-content { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+html:not([data-theme='light']) #workspace-content :is([class*='text-white/2'], [class*='text-white/3'], [class*='text-white/4']) { color: rgba(255, 255, 255, 0.62) !important; }

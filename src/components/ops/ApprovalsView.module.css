@@ -1,0 +1,34 @@
+/* Approval card after the Payrix "Incoming transaction" card: a dark glass
+   card, the request's kind in a ringed icon, the stake shown big and thin in
+   an inset panel, and the decision as two pills at the foot. */
+.card { position: relative; border-radius: 28px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.card[data-risk='high'] { box-shadow: var(--lg-shadow), 0 0 0 1px rgba(248, 113, 113, 0.35); }
+.head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ring { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 18px;
+  border: 1.5px solid currentColor; box-shadow: 0 0 16px color-mix(in srgb, currentColor 35%, transparent); }
+.head h2 { font-size: 17px; font-weight: 600; line-height: 1.3; color: var(--label); }
+.sub { font-size: 13px; color: var(--label-2); margin-top: 2px; overflow-wrap: anywhere; }
+.age { margin-left: auto; flex: none; align-self: flex-start; font-size: 12px; font-variant-numeric: tabular-nums; }
+.panel { border-radius: 20px; padding: 16px 18px; background: rgba(255, 255, 255, 0.06); border: 0.5px solid rgba(255, 255, 255, 0.1); }
+.amount { font-size: 44px; font-weight: 200; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--label); }
+.amountLabel { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--label-2); margin-bottom: 6px; }
+.detail { font-size: 14.5px; line-height: 1.6; color: var(--label-2); max-width: 70ch; }
+.amount + .detail { margin-top: 10px; }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* The two pills. Approve is the light one, as in the reference; both stay a
+   two-step commit (see DecideControls). */
+.pill { height: 44px; padding: 0 22px; border-radius: 22px; font-size: 15px; font-weight: 600; flex: 1; min-width: 120px; transition: transform 0.15s ease, opacity 0.15s ease; }
+.pill:active { transform: scale(0.98); }
+.pill:disabled { opacity: 0.4; }
+.pill:focus-visible { outline: 2px solid var(--label); outline-offset: 2px; }
+.dark { background: rgba(255, 255, 255, 0.08); color: var(--label); border: 0.5px solid rgba(255, 255, 255, 0.14); }
+.light { background: #f5f5f7; color: #111; }
+.confirmGreen { background: #34d399; color: #052e1c; }
+.confirmRed { background: #f87171; color: #3b0a0a; }
+.decideRow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
+.confirmText { flex-basis: 100%; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--label-2); }
+.reason { flex-basis: 100%; height: 44px; border-radius: 14px; padding: 0 14px; font-size: 15px; color: var(--label);
+  background: rgba(255, 255, 255, 0.06); border: 0.5px solid rgba(255, 255, 255, 0.14); outline: none; }
+.reason:focus { border-color: rgba(248, 113, 113, 0.6); }
+.extras { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

@@ -4,19 +4,19 @@
    today's date, a lit building). */
 .workspace {
   color: var(--label);
-  padding: 8px clamp(16px, 2.4vw, 32px) 120px;
+  padding: 8px clamp(16px, 2.4vw, 32px) 16px;
   min-height: calc(100dvh - 76px);
 }
 .industries, .catalog, .returnBar, .widget { position: relative; }
 
-.top { padding: 6px 6px 0; animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.top { padding: 6px 6px 0; animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
 .date { font-size: 15px; font-weight: 600; color: var(--label-2); }
 .top h1 { font-size: clamp(34px, 4vw, 48px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 2px; }
 
 .widget {
   border-radius: 30px; padding: 18px; min-width: 0; color: var(--label);
   display: flex; flex-direction: column;
-  animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: rise-in 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 @keyframes rise-in { from { opacity: 0; transform: translateY(12px) scale(0.985); } to { opacity: 1; transform: none; } }
 a.widget { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
@@ -24,35 +24,44 @@ a.widget:hover { transform: translateY(-2px); }
 .kicker { font-size: 13px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--label-2); }
 .note { font-size: 13px; color: var(--label-2); margin-top: auto; padding-top: 10px; }
 
-/* City hero stage. The city sits in the grid's full area underneath; the
-   widgets are placed in the corners above it. */
-.stage {
-  position: relative; margin-top: 8px; display: grid; gap: 14px; padding: clamp(14px, 2vw, 22px);
-  min-height: max(660px, calc(100dvh - 110px));
-  grid-template-columns: minmax(150px, 185px) minmax(150px, 185px) 1fr minmax(260px, 300px);
-  grid-template-rows: auto auto 1fr auto;
-  grid-template-areas:
-    "greet greet . now"
-    "bolo  bolo  . now"
-    ".     .     . brain"
-    "needs autos . cal";
-}
-.stageCity { grid-row: 1 / -1; grid-column: 1 / -1; position: relative; z-index: 0; margin: calc(-1 * clamp(14px, 2vw, 22px)); min-height: 0; }
-.stageCity > [role='group'] { height: 100%; }
-.stage > :not(.stageCity) { position: relative; z-index: 1; }
-.aGreet { grid-area: greet; } .aBolo { grid-area: bolo; } .aNow { grid-area: now; align-self: start; }
-.aBrain { grid-area: brain; align-self: end; }
-.aNeeds { grid-area: needs; } .aAuto { grid-area: autos; } .aCal { grid-area: cal; }
-.aGreet, .aCal { min-width: 0; }
-.aGreet h1 { text-shadow: 0 2px 20px rgba(0, 0, 0, 0.25); }
+/* One screen, like the 6 Oct prototype: greeting, Bolo and Right now across
+   the top; Agents, Needs your OK and Today in the middle; Brain and Automations
+   at the foot. The glowing city is the fixed wallpaper behind all of it (it
+   shows through the glass), "Explore the city" brings it forward, and the
+   marketplace opens as a sheet instead of a long section below. */
+.stageCity { position: fixed; inset: 0; z-index: 0; }
+.glowCity { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; background: #03060d; }
+.home { position: relative; z-index: 1; display: grid; gap: 14px; margin-top: 6px;
+  height: calc(100dvh - 110px); min-height: 620px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "greet bolo now" "agents ok today" "brain brain autos"; pointer-events: none; }
+.home > * { pointer-events: auto; min-height: 0; min-width: 0; }
+.home > div > section { height: 100%; overflow: auto; scrollbar-width: none; }
+.home > div > section::-webkit-scrollbar { display: none; }
+.hGreet { grid-area: greet; } .hBolo { grid-area: bolo; } .hNow { grid-area: now; }
+.hAgents { grid-area: agents; } .hOk { grid-area: ok; } .hToday { grid-area: today; }
+.hBrain { grid-area: brain; } .hAutos { grid-area: autos; }
+.hGreet h1 { text-shadow: 0 2px 20px rgba(0, 0, 0, 0.35); }
+.cityNote { font-size: 12px; line-height: 1.45; color: var(--label-2); margin-top: 8px; max-width: 46ch; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6); }
+.greetActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.greetActions .exploreBtn { margin-top: 0; }
 @media (max-width: 1100px) {
-  .stage { grid-template-columns: repeat(2, minmax(0, 1fr)) 1fr; grid-template-areas: "greet greet greet" "bolo bolo now" ". . brain" "needs autos cal"; }
+  .home { height: auto; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none;
+    grid-template-areas: "greet greet" "bolo now" "agents ok" "today autos" "brain brain"; }
+  .home > div > section { height: auto; }
 }
-@media (max-width: 850px) {
-  .stage { min-height: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none;
-    grid-template-areas: "greet greet" "city city" "bolo bolo" "now now" "brain brain" "needs autos" "cal cal"; }
-  .stageCity { grid-area: city; margin: 0; height: 380px; }
+@media (max-width: 700px) {
+  .home { grid-template-columns: 1fr; grid-template-areas: "greet" "bolo" "now" "ok" "today" "agents" "autos" "brain"; }
 }
+
+/* Marketplace sheet */
+.sheetBackdrop { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 24px;
+  background: rgba(0, 0, 0, 0.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sheet { position: relative; width: min(1180px, 100%); max-height: calc(100dvh - 48px); overflow: auto; border-radius: 34px; padding: 18px; scrollbar-width: thin; }
+.sheetClose { position: sticky; top: 0; float: right; z-index: 3; height: 36px; padding: 0 14px; border-radius: 18px; font-size: 14px; font-weight: 600;
+  color: var(--label); background: rgba(255, 255, 255, 0.12); border: 0.5px solid rgba(255, 255, 255, 0.2); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.sheet .industries { margin-top: 0; }
+@media (max-width: 700px) { .sheetBackdrop { padding: 0; } .sheet { max-height: 100dvh; border-radius: 0; } }
 
 /* Bolo: the Google-widget pattern. A pill to ask, a row of round actions. */
 .ask {
@@ -81,9 +90,17 @@ a.widget:hover { transform: translateY(-2px); }
 .quick a:hover { background: var(--pill-2); }
 
 /* Right now: the live hook, counted from the records. */
-.liveNum { font-size: 64px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.liveNum { font-size: 72px; font-weight: 200; letter-spacing: -0.05em; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
+/* Aura-style stats: a big thin numeral, and beside it the shape of the day. */
+.liveRow { display: flex; align-items: flex-end; gap: 14px; }
+.spark { flex: 1; height: 44px; min-width: 0; margin-bottom: 6px; overflow: visible; }
+.sparkLine { fill: none; stroke: var(--label); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: 0.9; }
+.sparkFill { fill: color-mix(in srgb, var(--label) 14%, transparent); stroke: none; }
+.sparkNote { font-size: 12px; color: var(--label-2); margin-top: 6px; }
+.meter { height: 4px; border-radius: 2px; background: var(--fill); margin-top: 12px; overflow: hidden; }
+.meter > i { display: block; height: 100%; border-radius: 2px; background: var(--green); box-shadow: 0 0 10px var(--green); }
 .liveText { font-size: 17px; font-weight: 600; margin-top: 4px; }
-.stat { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; margin-top: 10px; font-variant-numeric: tabular-nums; }
+.stat { font-size: 56px; font-weight: 200; letter-spacing: -0.05em; line-height: 1; margin-top: 10px; font-variant-numeric: tabular-nums; }
 .stat[data-alert='true'] { color: var(--red); }
 .statLabel { font-size: 15px; font-weight: 600; margin-top: 4px; }
 
@@ -106,9 +123,19 @@ a.widget:hover { transform: translateY(-2px); }
 .dow { color: var(--label-2); font-size: 11px; }
 .days > span[data-today='true'] { background: var(--red); border-radius: 50%; width: 22px; margin: 0 auto; }
 
-.mapFoot { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13px; color: var(--label-2); margin: 10px 4px 0; line-height: 1.5; }
+.mapFoot { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13px; color: var(--label-2); margin: 10px 0 0; line-height: 1.5;
+  padding: 10px 14px; border-radius: 16px; background: rgba(0, 0, 0, 0.5); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .mapFoot button { flex-shrink: 0; color: var(--blue); font-weight: 600; }
-.mobileBuildings { display: none; }
+.mobileBuildings { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; margin: 16px 0; }
+/* Each category is a tile with a real photo of its district in the live city. */
+.mobileBuildings button { display: flex; flex-direction: column; gap: 8px; padding: 6px 6px 10px; border-radius: 20px; text-align: left;
+  background: var(--pill); border: 0.5px solid var(--sep); font-size: 14px; font-weight: 600; color: var(--label); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.mobileBuildings button:hover { transform: translateY(-2px); }
+.mobileBuildings button[aria-pressed='true'] { background: var(--invert); color: var(--on-invert); border-color: transparent; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35); }
+.shot { display: grid; place-items: center; aspect-ratio: 16 / 11; border-radius: 15px; overflow: hidden; background: #03060d; }
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shot > span { font-size: 11px; font-weight: 600; color: rgba(235, 235, 245, 0.45); }
+.chipName { display: flex; align-items: center; gap: 7px; padding: 0 6px; line-height: 1.25; }
 
 .industries { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 24px 0; padding: 18px 20px; border-radius: 30px; }
 .industries h3 { font-size: 17px; font-weight: 700; }
@@ -131,21 +158,42 @@ a.widget:hover { transform: translateY(-2px); }
 .empty p { font-size: 15px; line-height: 1.5; max-width: 64ch; color: var(--label-2); margin-top: 6px; }
 .empty button { font-size: 15px; font-weight: 600; margin-top: 14px; color: var(--blue); }
 
-/* The building's automations read as a tower: one floor per automation,
-   the top floor first. A floor's windows are lit only while it is Running. */
-.automationList { display: flex; flex-direction: column; gap: 6px; }
-.automation { background: var(--fill); border: 0.5px solid var(--sep); display: flex; padding: 0; border-radius: 18px; overflow: hidden; min-width: 0; }
-.floor {
-  width: 58px; flex: none; display: flex; align-items: center; justify-content: center;
-  background: var(--fill); background-image: repeating-linear-gradient(0deg, transparent 0 12px, var(--sep) 12px 14px);
-}
-.floor[data-lit='true'] { background-image: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255, 206, 130, 0.7) 9px 12px); }
-.floor > span { font-size: 13px; font-weight: 800; background: rgba(0, 0, 0, 0.72); padding: 4px 7px; border-radius: 7px; font-variant-numeric: tabular-nums; }
-.floorBody { flex: 1; min-width: 0; padding: 16px 18px; }
+/* Marketplace, after the Aura "Explore" pattern: the chosen building's colour
+   lights the panel, chips carry each building's colour, and automations are a
+   card grid. Each card keeps its floor number; its tile glows only while Running. */
+.catalog { --c: #8e8e93; overflow: hidden; }
+.catalog::after { content: ''; position: absolute; top: -260px; left: -160px; width: min(900px, 120%); height: 620px; pointer-events: none; z-index: 0;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 62%, transparent), transparent 75%); transition: background 0.5s ease; }
+.catalog > * { position: relative; z-index: 1; }
+.catalogHeader h2 { font-size: clamp(30px, 4vw, 46px); font-weight: 600; letter-spacing: -1px; line-height: 1.05; }
+.catalog .mobileBuildings { margin: 0 0 20px; }
+.chipDot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: 0 0 10px currentColor; }
+.automationList { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.automation { background: var(--fill); border: 0.5px solid var(--sep); border-radius: 24px; padding: 18px; min-width: 0; display: flex; flex-direction: column; gap: 14px;
+  transition: transform 0.25s ease, border-color 0.25s ease; }
+.automation:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c) 45%, transparent); }
+.tile { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; position: relative; flex: none;
+  background: linear-gradient(145deg, color-mix(in srgb, var(--c) 55%, #1c1c1e), #1c1c1e); border: 0.5px solid var(--sep); }
+.tile > b { font-size: 22px; font-weight: 700; color: #fff; }
+.tile > span { position: absolute; bottom: -6px; right: -8px; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.78); color: #fff; font-variant-numeric: tabular-nums; }
+.tile[data-lit='true'] { box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 70%, transparent), 0 0 26px color-mix(in srgb, var(--c) 60%, transparent); }
+.floorBody { display: contents; }
+.automation[data-wide='true'] { grid-column: 1 / -1; }
 .automationTop { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; }
 .automation h3 { font-size: 17px; font-weight: 600; }
 .automationTop p { font-size: 15px; line-height: 1.45; color: var(--label-2); margin-top: 2px; max-width: 60ch; }
 .status { height: 26px; display: inline-flex; align-items: center; border-radius: 13px; padding: 0 10px; font-size: 12px; font-weight: 700; white-space: nowrap; background: rgba(235, 235, 245, 0.12); color: rgba(235, 235, 245, 0.8); }
+.status[data-status='Ready to set up'] { background: rgba(10, 132, 255, 0.2); color: #64b5ff; }
+.status[data-status='Planned'] { background: rgba(255, 255, 255, 0.08); color: rgba(235, 235, 245, 0.7); }
+.shelf { margin-top: 22px; }
+.packages { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; margin-bottom: 22px; }
+.package { border-radius: 24px; padding: 18px; display: grid; gap: 12px; align-content: start; }
+.parts { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.parts li { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 0.5px solid rgba(255, 255, 255, 0.14); color: #f2f2f7; }
+.partsNote { font-size: 12px; color: var(--label-2); margin: 0; }
+.shelfHead { font-size: 15px; font-weight: 600; color: var(--label-2); margin: 0 0 10px 2px; }
+.automation[data-catalog] dl { display: grid; gap: 6px; }
 .status[data-status='Running'] { background: rgba(48, 209, 88, 0.18); color: var(--green); }
 .status[data-status='Needs attention'] { background: rgba(255, 214, 10, 0.16); color: var(--yellow); }
 .automation dl { margin: 14px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 13px; line-height: 1.4; }
@@ -173,15 +221,117 @@ a.widget:hover { transform: translateY(-2px); }
 @media (max-width: 850px) {
   .catalogHeader { align-items: stretch; flex-direction: column; }
   .search input { width: 100%; box-sizing: border-box; }
-  .mobileBuildings { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
-  .mobileBuildings button { height: 36px; padding: 0 14px; border-radius: 18px; background: var(--pill); border: 0.5px solid var(--sep); font-size: 15px; font-weight: 600; color: var(--label); }
-  .mobileBuildings button[aria-pressed='true'] { background: var(--invert); color: var(--on-invert); border-color: transparent; }
   .catalog { padding: 16px; }
   .mapFoot { flex-direction: column; gap: 8px; }
   .automationTop { flex-direction: column; }
-  .floor { width: 46px; }
   .industries > div:last-child { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
 }
 @media (max-width: 850px) {
 }
 @media (prefers-reduced-motion: reduce) { .top, .widget, .orb { animation: none; } }
+
+/* Explore: the widgets step aside and the city comes to the front with its own
+   controls (follow an agent, look inside a tower). Esc or Back returns. */
+.exploreBtn { margin-top: 12px; height: 40px; padding: 0 18px; border-radius: 20px; font-size: 15px; font-weight: 600; color: var(--label); }
+.workspace > .exploreBack { position: fixed; top: 16px; left: 16px; z-index: 61; height: 42px; padding: 0 20px; border-radius: 21px; font-size: 15px; font-weight: 600; color: var(--label); }
+.workspace[data-explore='true'] .stageCity { z-index: 60; }
+.workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack) { visibility: hidden; }
+
+/* Glass everywhere in the marketplace: translucent fill, blur, and a lit top edge. */
+.automation, .mobileBuildings button:not([aria-pressed='true']), .search input, .industries button, .empty {
+  background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+.automationActions > button:not(.primary), .automationActions > a:not(.primary) { background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16); }
+.tile { background: linear-gradient(150deg, rgba(255, 255, 255, 0.24), color-mix(in srgb, var(--c) 22%, transparent)); border: 0.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+
+/* Bolo card: the orb is the button. */
+.bolo { flex-direction: row; align-items: center; gap: 20px; }
+.boloOrb { flex: none; border-radius: 50%; padding: 0; background: none; border: 0; cursor: pointer; transition: transform 0.2s ease; }
+.boloOrb:hover:not(:disabled) { transform: scale(1.04); }
+.boloOrb:disabled { cursor: default; opacity: 0.85; }
+.boloOrb:focus-visible { outline: 2px solid var(--label); outline-offset: 4px; }
+.boloText { min-width: 0; }
+.boloText h2 { font-size: clamp(19px, 1.6vw, 23px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin-top: 2px; }
+.boloHint { font-size: 13px; color: var(--label-2); margin-top: 4px; }
+.boloChips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.boloChips > * { height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 16px; font-size: 13px; font-weight: 600; color: var(--label);
+  background: rgba(255, 255, 255, 0.1); border: 0.5px solid rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16); transition: background 0.2s ease; }
+.boloChips > *:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* Marketplace sheet, product pass: tools in the header, one row of buildings, industries last. */
+.headTools { display: flex; align-items: flex-end; gap: 10px; }
+.headTools .sheetClose { position: static; float: none; height: 40px; }
+.sheet .industries { margin: 16px 0 0; }
+@media (min-width: 1101px) { .catalog .mobileBuildings { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+@media (min-width: 701px) and (max-width: 1100px) { .catalog .mobileBuildings { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tileCount { padding: 0 6px; font-size: 11.5px; font-weight: 500; opacity: 0.7; }
+
+.boloChips > *:first-child { color: var(--accent, #ff9f0a); }
+
+/* Same rule for the marketplace sheet: frosted enough that Home never reads through it. */
+.sheetBackdrop .sheet { background: linear-gradient(160deg, rgba(40, 42, 54, 0.74), rgba(16, 18, 26, 0.84));
+  -webkit-backdrop-filter: blur(40px) saturate(1.4); backdrop-filter: blur(40px) saturate(1.4); }
+
+/* Phone city: restrained neon, readable controls, no background WebGL on entry. */
+.phoneCity,.districtDock { display: none; }
+@media (max-width: 700px) {
+ .workspace { padding: 12px 14px calc(110px + env(safe-area-inset-bottom)); }
+ .stageCity { display: none; }
+ .phoneCity { display: block; position: relative; overflow: hidden; margin-bottom: 20px; padding: 22px; border-radius: 24px; background: radial-gradient(ellipse at 90% 10%,#182746,transparent 65%),#080d19; color: #edf4ff; border: 1px solid #30425e; }
+ .phoneCityHead { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+ .phoneCityHead p { font: 600 11px ui-monospace,monospace; letter-spacing: .14em; color: #aabdd8; }
+ .phoneCityHead span { font-size: 11px; color: #a8e9d4; }
+ .phoneCity h2 { font-size: clamp(30px,9vw,40px); letter-spacing: -.04em; line-height: 1.1; margin: 20px 0 12px; }
+ .phoneCity h2 span { color: #79e8ff; }
+ .phoneCity > p { font-size: 14px; line-height: 1.6; max-width: 30ch; color: #b7c7de; }
+ .citySkyline { display: flex; justify-content: center; align-items: flex-end; gap: 10px; height: 130px; margin: 18px 0; border-bottom: 1px solid #395371; background: linear-gradient(transparent,#11243a); }
+ .citySkyline > span { height: var(--tower-height); width: 34px; border: 1px solid var(--district); border-bottom: 0; background: linear-gradient(90deg,#0b1424,#182c42); box-shadow: 0 0 16px color-mix(in srgb,var(--district) 15%,transparent); display: grid; align-content: start; gap: 9px; padding: 12px 7px; }
+ .citySkyline i { display: block; height: 3px; background: var(--district); opacity: .75; }
+ .cityLaunch { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; font-weight: 700; background: #8aeeff; color: #07111b; }
+ .phoneCity .phoneCityNote { font-size: 11px; max-width: none; margin-top: 10px; color: #a7bad3; }
+ .home { gap: 14px; grid-template-areas: "greet" "ok" "now" "bolo" "today" "autos" "agents" "brain"; }
+ .home > div > section { overflow: visible; height: auto; }
+ .home .widget,.home > div > section { border-radius: 20px; }
+ .top h1 { font-size: 28px; }
+ .greetActions { gap: 8px; }
+ .exploreBtn,.boloChips > *, .automationActions > button,.automationActions > a { min-height: 44px; height: auto; }
+ .bolo { gap: 12px; padding: 16px; }
+ .boloOrb svg { max-width: 64px; max-height: 64px; }
+ .sheetBackdrop { align-items: end; padding: max(76px,env(safe-area-inset-top)) 0 0; }
+ .sheetBackdrop .sheet { width: 100%; max-height: calc(100dvh - 76px); border-radius: 24px 24px 0 0; padding: 0 0 calc(20px + env(safe-area-inset-bottom)); background: #101827; border: 1px solid #30425e; color: #edf4ff; --label:#edf4ff; --label-2:#b7c7de; --fill:#1b293e; --pill:#1b293e; --sep:#34445e; --invert:#eaf4ff; --on-invert:#101827; }
+ .sheet .catalogHeader { position: sticky; top: 0; z-index: 5; padding: 16px 0; background: #101827; margin-bottom: 12px; }
+ .headTools { align-items: center; }
+ .headTools .search { flex: 1; min-width: 0; }
+ .search input { width: 100%; min-height: 44px; font-size: 16px; }
+ .headTools .sheetClose { min-height: 44px; flex-shrink: 0; }
+ .catalog .mobileBuildings { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+ .catalog .mobileBuildings button { min-width: 0; min-height: 44px; }
+ .automationList { grid-template-columns: minmax(0,1fr); }
+ .workspace[data-explore='true'] .stageCity { display: block; position: fixed; inset: 0; }
+ .workspace[data-explore='true'] > .districtDock { display: flex; visibility: visible; position: fixed; z-index: 62; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); gap: 8px; overflow-x: auto; padding: 10px; border-radius: 16px; background: #091322ee; border: 1px solid #30425e; }
+ .districtDock button { flex-shrink: 0; min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--district); color: #eaf4ff; background: #132136; font-size: 13px; font-weight: 600; }
+ .workspace > .exploreBack { top: max(16px,env(safe-area-inset-top)); min-height: 44px; background: #101827; color: #edf4ff; border: 1px solid #45617e; }
+}
+
+.agentDesks { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,200px),1fr)); gap: 10px; margin: 12px 0 20px; }
+.agentDesk { border: 1px solid var(--sep); border-radius: 14px; padding: 14px; background: var(--fill); overflow-wrap: anywhere; }
+.agentDesk strong { display: block; font-size: 14px; color: var(--label); }
+.agentDesk > span { display: block; margin-top: 6px; font-size: 12px; color: var(--label-2); }
+
+/* Fast interaction surfaces: preserve glass rims without stacking GPU blurs. */
+.sheetBackdrop { -webkit-backdrop-filter:none;backdrop-filter:none; }
+.sheetBackdrop .sheet { background:linear-gradient(160deg,#242837,#101722);-webkit-backdrop-filter:none;backdrop-filter:none; }
+.sheet :global(.liquid-glass),.sheet .automation,.sheet .mobileBuildings button,.sheet .search input,.sheet .industries button,.sheet .empty,.sheet .sheetClose {
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+:global(html[data-glass='frosted']) .sheetBackdrop .sheet,:global(html[data-glass='frosted']) .sheet :global(.liquid-glass) { -webkit-backdrop-filter:none;backdrop-filter:none; }
+:global(html[data-theme='light']) .sheetBackdrop .sheet { background:linear-gradient(160deg,#f7f9fd,#e6edf6); }
+.workspace button,.workspace a { touch-action:manipulation; }
+.workspace button:active:not(:disabled),.workspace a:active { opacity:.8; }
+.mobileBuildings button { transition:background-color 100ms ease,border-color 100ms ease; }
+.shot img { object-fit:cover; }
+
+.workspace[data-covered='true'] .home { pointer-events:none; }
+.workspace[data-covered='true'] .home *,.workspace[data-covered='true'] .home *::before,.workspace[data-covered='true'] .home *::after { animation-play-state:paused; }

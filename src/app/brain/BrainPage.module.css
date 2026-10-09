@@ -8,7 +8,7 @@
 .segment button[aria-pressed='true'] { background: var(--pill-2); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
 .hint { font-size: 15px; color: var(--label-2); padding: 0 6px; }
 .frame { position: relative; border-radius: 30px; padding: 8px; }
-.frame iframe { display: block; width: 100%; height: calc(100dvh - 300px); min-height: 460px; border: 0; border-radius: 24px; }
+.frame iframe { display: block; width: 100%; height: calc(100dvh - 300px); min-height: 460px; border: 0; border-radius: 24px; background: transparent; color-scheme: dark; }
 .offline { position: relative; border-radius: 30px; padding: 22px; }
 .offline h2 { font-size: 17px; font-weight: 700; }
 .offline p { font-size: 15px; color: var(--label-2); margin-top: 6px; line-height: 1.5; }

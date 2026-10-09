@@ -9,6 +9,7 @@ import { EmptyState } from './Panel'
 import { ThreadToggle, useThreadBadges } from './Thread'
 import { CallButton } from './CallButton'
 import type { Approval, ApprovalsResponse, ApprovalRisk } from '@/types/approvals'
+import styles from './ApprovalsView.module.css'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -31,25 +32,12 @@ function ageTone(iso: string): string {
   return T(0.4)
 }
 
-function RiskChip({ risk }: { risk: ApprovalRisk }) {
-  const r = RISK[risk]
-  return (
-    <span
-      className="flex items-center gap-1 rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold uppercase tracking-[0.06em]"
-      style={{ color: r.tone, background: `${r.tone}1f` }}
-    >
-      <span aria-hidden="true">{r.glyph}</span>
-      {r.label}
-    </span>
-  )
-}
-
 /**
  * Two-step commit. The first click arms the action and the second confirms it —
  * this is the one screen where a misclick costs money, and an undo after the
  * money has moved is not an undo. Escape disarms.
  */
-function DecideControls({
+export function DecideControls({
   approval,
   busy,
   onDecide,
@@ -73,22 +61,12 @@ function DecideControls({
 
   if (!arming) {
     return (
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => setArming('APPROVED')}
-          className="h-8 rounded-[9px] border border-emerald-400/40 bg-emerald-400/10 px-3 text-[14px] font-bold text-emerald-300 transition hover:bg-emerald-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 disabled:opacity-40"
-        >
-          Approve
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => setArming('REJECTED')}
-          className="h-8 rounded-[9px] border border-red-400/40 bg-red-400/10 px-3 text-[14px] font-bold text-red-300 transition hover:bg-red-400/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400/60 disabled:opacity-40"
-        >
+      <div className={styles.decideRow}>
+        <button type="button" disabled={busy} onClick={() => setArming('REJECTED')} className={`${styles.pill} ${styles.dark}`}>
           Reject
+        </button>
+        <button type="button" disabled={busy} onClick={() => setArming('APPROVED')} className={`${styles.pill} ${styles.light}`}>
+          Approve
         </button>
       </div>
     )
@@ -98,7 +76,7 @@ function DecideControls({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2"
+      className={styles.decideRow}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.stopPropagation()
@@ -106,6 +84,13 @@ function DecideControls({
         }
       }}
     >
+      <span className={styles.confirmText}>
+        {approving
+          ? approval.amountInr
+            ? `Confirm — ${inr(approval.amountInr)} will be paid`
+            : 'Confirm this action'
+          : 'Confirm rejection'}
+      </span>
       {!approving && (
         <input
           ref={reasonRef}
@@ -114,39 +99,22 @@ function DecideControls({
           onChange={(e) => setReason(e.target.value)}
           placeholder="Reason for rejecting (required)"
           aria-label="Reason for rejecting"
-          className="h-8 min-w-[220px] flex-1 rounded-[9px] border border-white/10 bg-white/5 px-2.5 text-[14px] text-white/85 outline-none placeholder:text-white/25 focus:border-red-400/50"
+          className={styles.reason}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && reason.trim()) onDecide('REJECTED', reason.trim())
           }}
         />
       )}
-
-      <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-white/45">
-        {approving
-          ? approval.amountInr
-            ? `Confirm — ${inr(approval.amountInr)} will be paid`
-            : 'Confirm this action'
-          : 'Confirm rejection'}
-      </span>
-
+      <button type="button" onClick={disarm} className={`${styles.pill} ${styles.dark}`}>
+        Cancel
+      </button>
       <button
         type="button"
         disabled={busy || (!approving && !reason.trim())}
         onClick={() => onDecide(arming, reason.trim())}
-        className={`h-8 rounded-[9px] px-3 text-[14px] font-bold transition focus:outline-none focus-visible:ring-2 disabled:opacity-40 ${
-          approving
-            ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300 focus-visible:ring-emerald-400/60'
-            : 'bg-red-400 text-red-950 hover:bg-red-300 focus-visible:ring-red-400/60'
-        }`}
+        className={`${styles.pill} ${approving ? styles.confirmGreen : styles.confirmRed}`}
       >
         {busy ? 'Working…' : approving ? 'Yes, approve' : 'Yes, reject'}
-      </button>
-      <button
-        type="button"
-        onClick={disarm}
-        className="h-8 rounded-[9px] border border-white/10 px-3 text-[14px] font-semibold text-white/55 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-      >
-        Cancel
       </button>
     </div>
   )
@@ -208,7 +176,7 @@ export function ApprovalsView() {
   return (
     <div className="relative flex h-full flex-col gap-5 overflow-y-auto p-3 md:p-5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
+        <h1 className="text-[34px] font-bold leading-none tracking-[-0.02em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.35)]">
           Approvals
         </h1>
         <span className="font-mono text-[12px] tracking-[0.06em] text-white/30">
@@ -276,49 +244,40 @@ export function ApprovalsView() {
         {pending.map((a, i) => (
           <article
             key={a.id}
-            className="rounded-[16px] border bg-white/[0.03] p-3 md:p-4"
-            style={{
-              borderColor: a.risk === 'MONEY' || a.risk === 'DATA_DELETE'
-                ? 'rgba(248,113,113,0.30)'
-                : 'rgba(255,255,255,0.06)',
-              animation: `enter 160ms cubic-bezier(0.16,1,0.3,1) ${Math.min(i, 8) * 0.018}s both`,
-            }}
+            className={`liquid-glass ${styles.card}`}
+            data-risk={a.risk === 'MONEY' || a.risk === 'DATA_DELETE' ? 'high' : undefined}
+            style={{ animation: `enter 160ms cubic-bezier(0.16,1,0.3,1) ${Math.min(i, 8) * 0.018}s both` }}
           >
-            <div className="flex flex-wrap items-center gap-2">
-              <RiskChip risk={a.risk} />
-              {a.module && (
-                <span className="font-mono text-[12px] text-white/45">{a.module.displayName}</span>
-              )}
-              {a.run && (
-                <span className="font-mono text-[12px] text-white/25">
-                  {a.run.ref} · {a.run.agent.name}
-                </span>
-              )}
-              <span className="flex-1" />
-              <span
-                className="font-mono text-[12px] tabular-nums"
-                style={{ color: ageTone(a.requestedAt) }}
-                title={absolute(a.requestedAt)}
-              >
+            <div className={styles.head}>
+              <span className={styles.ring} style={{ color: RISK[a.risk].tone }} title={RISK[a.risk].label} aria-hidden="true">
+                {RISK[a.risk].glyph}
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <h2>{a.action}</h2>
+                <p className={styles.sub}>
+                  {RISK[a.risk].label}
+                  {a.module ? ` · ${a.module.displayName}` : ''}
+                  {a.run ? ` · ${a.run.ref} · ${a.run.agent.name}` : ''}
+                </p>
+              </div>
+              <span className={styles.age} style={{ color: ageTone(a.requestedAt) }} title={absolute(a.requestedAt)}>
                 waiting {relative(a.requestedAt).replace(' ago', '')}
               </span>
             </div>
 
-            <h2 className="mt-2 text-[17px] font-semibold leading-snug text-white/92">{a.action}</h2>
-
-            {a.amountInr != null && (
-              <p className="mt-1 font-mono text-[20px] font-bold tabular-nums text-red-300">
-                {inr(a.amountInr)}
-              </p>
+            {(a.amountInr != null || a.detail) && (
+              <div className={styles.panel}>
+                {a.amountInr != null && (
+                  <>
+                    <p className={styles.amountLabel}>Amount</p>
+                    <p className={styles.amount}>{inr(a.amountInr)}</p>
+                  </>
+                )}
+                {a.detail && <p className={styles.detail}>{a.detail}</p>}
+              </div>
             )}
 
-            {a.detail && (
-              <p className="mt-1.5 max-w-[70ch] text-[14.5px] leading-[1.6] text-white/55">
-                {a.detail}
-              </p>
-            )}
-
-            <div className="mt-3">
+            <div className={styles.foot}>
               <DecideControls
                 approval={a}
                 busy={busyId === a.id}
@@ -326,7 +285,7 @@ export function ApprovalsView() {
               />
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className={styles.extras}>
               <ThreadToggle
                 subjectType="APPROVAL"
                 subjectId={a.id}

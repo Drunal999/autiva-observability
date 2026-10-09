@@ -108,7 +108,7 @@ export function MissionControlView() {
   const task = all.find((t) => t.id === selected) ?? null
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="liquid-glass m-2 flex h-[calc(100%-1rem)] min-h-0 overflow-hidden rounded-[30px] md:m-4 md:h-[calc(100%-2rem)]">
       {/* saved views */}
       <aside className="hidden w-[212px] shrink-0 flex-col gap-1 border-r border-white/5 p-3 lg:flex">
         <p className="mb-1 px-1 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-white/28">
@@ -140,7 +140,7 @@ export function MissionControlView() {
       {/* board */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-3 border-b border-white/5 px-5 py-3">
-          <span className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-white/45">
+          <span className="text-[26px] font-bold leading-none tracking-[-0.02em] text-white [text-shadow:0_2px_16px_rgba(0,0,0,0.35)]">
             Team Board
           </span>
           <span className="font-mono text-[12px] text-white/30">
@@ -264,7 +264,7 @@ export function MissionControlView() {
 
       {/* detail slide-over — never a centered modal, board context survives */}
       {task && (
-        <aside className="flex w-[380px] shrink-0 flex-col border-l border-white/5 bg-[#0e0e12]/85 backdrop-blur">
+        <aside className="flex w-[380px] shrink-0 flex-col border-l border-white/10 bg-white/[0.04] backdrop-blur-xl">
           <div className="flex items-center gap-2 border-b border-white/5 px-4 py-3">
             <span className="rounded-[5px] border border-white/[0.08] px-1.5 py-[2px] font-mono text-[12px] text-white/45">
               {refOf(task)}
