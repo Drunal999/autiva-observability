@@ -1,8 +1,8 @@
 'use client'
 import { useState, type CSSProperties } from 'react'
-import graphs from '@/lib/ops/workflowGraphs.json'
 import { TOOLS } from '@/lib/ops/connections'
-import { BLUEPRINTS, type Graph } from '@/lib/ops/workflowBlueprints'
+import {layersFor,hasWorkflow} from '@/lib/ops/workflowDefinitions'
+export {layersFor,hasWorkflow} from '@/lib/ops/workflowDefinitions'
 import styles from './WorkflowGraph.module.css'
 
 /**
@@ -12,15 +12,6 @@ import styles from './WorkflowGraph.module.css'
  * the automation is Running, so motion always means something real.
  * A module with no n8n workflow yet shows its labelled blueprint, never pulsing.
  */
-const REAL = graphs as Record<string, Graph[]>
-// `marketing.seo_audit` (AUTIVA's catalog) and `seo-audit` (this seed) are the same module.
-const norm = (key: string) => key.toLowerCase().split('.').pop()!.replace(/_/g, '-')
-/** The module's workflow layers, and whether they are a blueprint rather than real n8n. */
-export function layersFor(key: string): { graphs: Graph[]; blueprint: boolean } {
- const k = norm(key)
- if (REAL[k]) return { graphs: REAL[k], blueprint: false }
- return BLUEPRINTS[k] ? { graphs: [BLUEPRINTS[k]], blueprint: true } : { graphs: [], blueprint: false }
-}
 const W = 168, H = 58, PAD = 40, STEP = 240, PER_ROW = 5
 const GLYPH: Record<string, string> = {
  trigger: 'M13 2L4 14h7l-1 8 9-12h-7z', http: 'M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18',
@@ -28,7 +19,6 @@ const GLYPH: Record<string, string> = {
  send: 'M22 2L11 13M22 2l-7 20-4-9-9-4z', step: 'M5 12h14',
 }
 
-export const hasWorkflow = (key: string) => layersFor(key).graphs.length > 0
 
 export function WorkflowGraph({ moduleKey, running, zoom = 1, layer = 0 }: { moduleKey: string; running: boolean; zoom?: number; layer?: number }) {
  const { graphs: gs, blueprint } = layersFor(moduleKey)

@@ -1,13 +1,15 @@
 'use client'
+import { memo } from 'react'
 import { BUILDINGS } from '@/lib/ops/cityMarketplace'
 import { CATALOG, PACKAGES, type CatalogItem } from '@/lib/ops/marketplaceCatalog'
-import { WorkflowEditor } from './WorkflowGraph'
+import dynamic from 'next/dynamic'
+const WorkflowEditor=dynamic(()=>import('./WorkflowGraph').then(m=>m.WorkflowEditor),{loading:()=> <p role="status">Opening workflow…</p>})
 import styles from './BusinessCity.module.css'
 
 const STAGE = { ready: 'Ready to set up', planned: 'Planned' } as const
 
 /** "More for this building": automations this workspace can add. Shows the workflow, never a fake buy. */
-export function MarketplaceShelf({ items, flow, setFlow, title = 'More for this building' }: { items: CatalogItem[]; flow: string | null; setFlow: (id: string | null) => void; title?: string }) {
+function MarketplaceShelfView({ items, flow, setFlow, title = 'More for this building' }: { items: CatalogItem[]; flow: string | null; setFlow: (id: string | null) => void; title?: string }) {
  if (!items.length) return null
  const here = new Set(items.map(i => i.key))
  const packs = PACKAGES.filter(p => p.keys.some(k => here.has(k)))
@@ -39,3 +41,5 @@ export function MarketplaceShelf({ items, flow, setFlow, title = 'More for this 
   })}</div>
  </div>
 }
+
+export const MarketplaceShelf=memo(MarketplaceShelfView)

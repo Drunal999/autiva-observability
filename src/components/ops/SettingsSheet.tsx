@@ -52,6 +52,14 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
    </section>}
 
    {tab === 'Look' && <section className={styles.panel}>
+    <p className={styles.label}>Dashboard theme</p>
+    <div className={styles.segment} role="radiogroup" aria-label="Dashboard theme">{(['system','light','dark'] as const).map(value=><button key={value} role="radio" aria-checked={prefs.appearance===value} onClick={()=>set({appearance:value})}><b>{value==='system'?'Auto':value==='dark'?'Dark mode':'Light mode'}</b></button>)}</div>
+    <p className={styles.label}>City climate</p>
+    <div className={styles.segment} role="radiogroup" aria-label="City climate">{(['auto','night','day'] as const).map(value=><button key={value} role="radio" aria-checked={prefs.cityClimate===value} onClick={()=>set({cityClimate:value})}><b>{value==='auto'?'Auto climate':value==='night'?'Night mode':'Day mode'}</b></button>)}</div>
+    <p className={styles.hint}>Auto follows your device clock with illustrative weather. Night and Day keep the sky clear. These controls do not use live weather or change recorded work.</p>
+
+    <label className={styles.toggle}><span>Click sounds</span><input type="checkbox" role="switch" checked={prefs.sounds} onChange={()=>set({sounds:!prefs.sounds})}/></label>
+    <p className={styles.hint}>Quiet Minimal clicks. Turn off anytime; no background or hover sounds.</p>
     <p className={styles.label}>Accent colour</p>
     <div className={styles.swatches} role="radiogroup" aria-label="Accent colour">
      {(Object.keys(ACCENTS) as Accent[]).map(a => <button key={a} type="button" role="radio" aria-checked={prefs.accent === a} aria-label={a} style={{ background: ACCENTS[a] }} onClick={() => set({ accent: a })} />)}

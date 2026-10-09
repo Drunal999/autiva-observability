@@ -13,7 +13,7 @@ export const BUILDINGS = [
 export type BuildingId = typeof BUILDINGS[number]['id']
 export interface CityModule {
  id:string; key:string; displayName:string; district:District; pendingApprovals:number
- agents:{id:string;status:string}[]
+ agents:{id:string;status:string;name?:string}[]
  runs:{id:string;ref:string;status:string;summary:string|null;startedAt:string;project:string|null}[]
 }
 export interface MarketplaceData {districts:CityModule[];sample:boolean;mode?:'internal'|'client'}

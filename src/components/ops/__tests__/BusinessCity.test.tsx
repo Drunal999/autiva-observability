@@ -4,6 +4,11 @@ import useSWR from 'swr'
 import {BusinessCityView} from '../BusinessCityView'
 import {OpsShell} from '../OpsShell'
 import {moduleStatus,buildingFor,type CityModule} from '@/lib/ops/cityMarketplace'
+const renderCounts=vi.hoisted(()=>({automations:0}))
+vi.mock('../HomeBento',async importOriginal=>{
+ const actual=await importOriginal<typeof import('../HomeBento')>()
+ return {...actual,Automations:(props:Parameters<typeof actual.Automations>[0])=>{renderCounts.automations++;return <actual.Automations {...props}/>}}
+})
 vi.mock('swr',()=>({default:vi.fn()}))
 vi.mock('next/navigation',()=>({usePathname:()=>'/city'}))
 vi.mock('@/lib/realtime/client',()=>({useEventListener:vi.fn()}))
@@ -14,8 +19,36 @@ const automation:CityModule={id:'m1',key:'lead-followup',displayName:'Lead Follo
 // The home bento also lists automations; marketplace assertions look inside the marketplace only.
 const catalog=()=>within(screen.getByRole('region',{name:'Building automations'}))
 const stub=(data:unknown,error?:Error)=>vi.mocked(useSWR).mockReturnValue({data,error,mutate:vi.fn(),isValidating:false,isLoading:false} as ReturnType<typeof useSWR>)
-beforeEach(()=>{vi.clearAllMocks();localStorage.clear();stub({districts:[automation],sample:true})})
+beforeEach(()=>{vi.clearAllMocks();Object.defineProperty(window,'matchMedia',{configurable:true,value:vi.fn(()=>({matches:false,addEventListener:vi.fn(),removeEventListener:vi.fn()}))});localStorage.clear();stub({districts:[automation],sample:true})})
 describe('Business city',()=>{
+ it('pauses before opening Marketplace and avoids rendering Home widgets again on building clicks',()=>{
+  render(<BusinessCityView/>)
+  const count=renderCounts.automations
+  const pause=vi.fn(()=>expect(screen.queryByRole('dialog',{name:'Marketplace'})).not.toBeInTheDocument())
+  window.addEventListener('autiva:city-pause',pause,{once:true})
+  fireEvent.click(screen.getByRole('button',{name:'Marketplace'}))
+  expect(pause).toHaveBeenCalledOnce()
+  fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
+  fireEvent.click(screen.getByRole('button',{name:'Sales & Leads'}))
+  expect(catalog().getByText('Lead Follow-up')).toBeInTheDocument()
+  expect(renderCounts.automations).toBe(count)
+ })
+
+ it('loads the city only on request on a phone and keeps building navigation available',()=>{
+  vi.mocked(window.matchMedia).mockReturnValue({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()} as unknown as MediaQueryList)
+  render(<BusinessCityView/>)
+  expect(screen.queryByTitle('Your business city: tap a building to open its marketplace')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:/Enter your city/}))
+  expect(screen.getByTitle('Your business city: tap a building to open its marketplace')).toBeInTheDocument()
+  const districts=within(screen.getByRole('navigation',{name:'City districts'}))
+  fireEvent.click(districts.getByRole('button',{name:'Sales & Leads'}))
+  expect(screen.queryByRole('navigation',{name:'City districts'})).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Your business city: tap a building to open its marketplace')).not.toBeInTheDocument()
+  expect(screen.getByRole('dialog',{name:'Marketplace'})).toBeInTheDocument()
+  fireEvent.keyDown(window,{key:'Escape'})
+  expect(screen.queryByRole('dialog',{name:'Marketplace'})).not.toBeInTheDocument()
+ })
+
  it('keeps unknown categories visible and never invents paused or available status',()=>{
   expect(buildingFor('new-department')).toBe('operations')
   expect(moduleStatus(automation)).toBe('Not running')
@@ -41,6 +74,9 @@ describe('Business city',()=>{
   // No connection requirement is claimed for an automation whose catalog entry does not document one.
   expect(screen.queryByText(/connection/i)).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'View activity'}))
+  expect(screen.getByRole('heading',{name:'Agent desks'})).toBeInTheDocument()
+  expect(screen.getByText('No current step reported.')).toBeInTheDocument()
+  expect(screen.getByText('Idle')).toBeInTheDocument()
   expect(screen.getByText(/does not mean it has never run/)).toBeInTheDocument()
  })
  it('does not present stale data or zero as healthy after a request fails',()=>{

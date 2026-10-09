@@ -1,0 +1,12 @@
+# 013 — Fast city interactions and optional sound
+
+Marketplace and Customise pause the city before their opening state update. Home widgets and the city iframe use React memoization so browsing does not re-render unrelated work. Marketplace and settings surfaces use opaque gradients and glass rims instead of nested backdrop blurs. Workflow editor rendering code loads on expansion with an immediate loading status. Preview capture is cached per iframe session and spaced across frames. Building selection and marketplace opening remain local interactions and do not wait for API or audio responses.
+
+Click sounds are opt-in in Customise → Look, stored with account preferences, default off. UI SFX 0.4.0 is dynamically imported only when enabled. Minimal press/forward cues use low volume, at most two voices, and a cooldown; no hover, background loops or inferred success sounds. A trusted click unlocks Web Audio. Mute/unmount stops sounds and destroys the player. Audio failures surface visibly without preventing navigation.
+
+Resource: https://github.com/romainsimon/uisfx ; registry version 0.4.0. Checked 2026-10-08: code MIT (LICENSE); audio CC0 1.0 (LICENSE-AUDIO). No recurring service costs. No database migration or external audio request. The npm dependency contains asset packs, but the client imports only the synthesis runtime.
+
+Validation and limits: component tests check local entry, pause ordering and Home render isolation; preference and audio lifecycle tests cover opt-in and mute behavior. TypeScript and embedded script syntax checks apply. Actual device click-to-paint latency and frame rates require browser/device measurement; this change does not claim measured FPS or eliminate first-time Next dev route compilation.
+
+
+Follow-up: continued user-reported flicker exposed a canvas timing bug. Adaptive quality called resize after final compositing, clearing the visible canvas until the next frame. Resizes now only queue a flag; the frame applies drawing-buffer and bloom allocation before rendering. One drawing-buffer allocation replaces the previous pixel-ratio plus size double reset. Hidden/resumed clocks exclude paused time so moving scene elements do not jump forward. A timestamp gate caps Home wallpaper at 30 FPS and Explore at 60 FPS on high-refresh displays, normalizing quality samples to the selected target. The whole Home no longer toggles visibility behind dialogs; its animations are paused instead. Device latency and flicker still need user/browser observation.

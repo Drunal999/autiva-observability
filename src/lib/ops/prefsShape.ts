@@ -6,9 +6,9 @@
 export type Palette = 'orca' | 'aurora' | 'sunset' | 'ocean' | 'mint' | 'mono'
 export type Accent = 'amber' | 'blue' | 'violet' | 'green' | 'pink'
 export type HomeCard = 'agents' | 'ok' | 'today' | 'brain' | 'autos'
-export interface Prefs { assistantName: string; palette: Palette; accent: Accent; glass: 'clear' | 'frosted'; hidden: HomeCard[] }
+export interface Prefs { assistantName: string; palette: Palette; accent: Accent; glass: 'clear' | 'frosted'; hidden: HomeCard[]; appearance:'system'|'light'|'dark'; cityClimate:'auto'|'night'|'day'; sounds:boolean }
 
-export const DEFAULT_PREFS: Prefs = { assistantName: 'Bolo', palette: 'orca', accent: 'amber', glass: 'clear', hidden: [] }
+export const DEFAULT_PREFS: Prefs = { assistantName: 'Bolo', palette: 'orca', accent: 'amber', glass: 'clear', hidden: [], appearance:'system', cityClimate:'auto', sounds:false }
 export const ACCENTS: Record<Accent, string> = { amber: '#ff9f0a', blue: '#0a84ff', violet: '#bf5af2', green: '#30d158', pink: '#ff375f' }
 export const PALETTES: Palette[] = ['orca', 'aurora', 'sunset', 'ocean', 'mint', 'mono']
 export const CARDS: { id: HomeCard; label: string }[] = [
@@ -24,6 +24,9 @@ export function clean(raw: unknown): Prefs {
   palette: PALETTES.includes(r.palette as Palette) ? r.palette as Palette : DEFAULT_PREFS.palette,
   accent: r.accent && r.accent in ACCENTS ? r.accent : DEFAULT_PREFS.accent,
   glass: r.glass === 'frosted' ? 'frosted' : 'clear',
+  appearance: r.appearance==='light'||r.appearance==='dark'?r.appearance:'system',
+  cityClimate: r.cityClimate==='night'||r.cityClimate==='day'?r.cityClimate:'auto',
+  sounds: r.sounds === true,
   hidden: Array.isArray(r.hidden) ? r.hidden.filter((c): c is HomeCard => CARDS.some(x => x.id === c)) : [],
  }
 }

@@ -53,3 +53,11 @@
 :global(html[data-theme='light']) .backdrop .sheet { background: rgba(255, 255, 255, 0.82); }
 
 .foot span[data-state='error'] { color: #ff6961; text-align: right; max-width: 60%; }
+
+/* Keep settings responsive over the paused city. */
+.backdrop { -webkit-backdrop-filter:none;backdrop-filter:none;animation-duration:100ms; }
+.backdrop .sheet { background:linear-gradient(160deg,#292d3a,#111823);-webkit-backdrop-filter:none;backdrop-filter:none;animation-duration:150ms; }
+:global(html[data-glass='frosted']) .backdrop .sheet { -webkit-backdrop-filter:none;backdrop-filter:none; }
+:global(html[data-theme='light']) .backdrop .sheet { background:#f5f8fc; }
+.sheet button,.sheet input { touch-action:manipulation; }
+@media (prefers-reduced-motion:reduce) { .backdrop,.sheet { animation:none; } }

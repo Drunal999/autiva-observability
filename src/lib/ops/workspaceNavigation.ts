@@ -6,6 +6,7 @@ export const SIMPLE_NAV = [
   {label:'Approvals', short:'Approvals', href:'/approvals', glyph:'✓'},
   {label:'Calendar', short:'Calendar', href:'/calendar', glyph:'▦'},
   {label:'Brain', short:'Brain', href:'/brain', glyph:'✺'},
+  {label:'Job Hunt', short:'Jobs', href:'/job-hunt', glyph:'▤'},
 ] as const
 /** The Brain page, where Bolo (the voice assistant) also lives. On a phone it is the round Bolo button beside the tab bar, not a tab. */
 export const ASSISTANT_HREF = '/brain'
