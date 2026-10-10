@@ -67,6 +67,15 @@ describe('Business city',()=>{
   expect(screen.getByRole('heading',{name:'Clinics'})).toBeInTheDocument()
   expect(screen.queryByRole('button',{name:/install|buy/i})).not.toBeInTheDocument()
  })
+ it('shows the shop window, labels the AI video, and opens the advertised workflow',async()=>{
+  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}))
+  expect(screen.getByRole('heading',{name:'Your phone, answered'})).toBeInTheDocument()
+  expect(screen.getByText('AI-generated video')).toBeInTheDocument()
+  expect(screen.getByText(/Coming soon · Customer Support/)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:'See how it works'}))
+  expect(catalog().getByRole('heading',{name:'Customer Support'})).toBeInTheDocument()
+  expect(await screen.findByText('Blueprint',{},{timeout:3000})).toBeInTheDocument()
+ })
  it('searches across buildings and exposes actual records without inventing connections',()=>{
   render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}));fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Lead'}})
