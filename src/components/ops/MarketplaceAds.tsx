@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { BuildingId } from '@/lib/ops/cityMarketplace'
 import styles from './BusinessCity.module.css'
 
@@ -18,19 +18,36 @@ const ADS: Ad[] = [
     note: 'AI-generated video', open: { building: 'support', key: 'voice-receptionist' } },
 ]
 
-function Clip({ ad }: { ad: Ad }) {
+function Clip({ ad, active }: { ad: Ad; active: boolean }) {
   const ref = useRef<HTMLVideoElement>(null)
+  const [onScreen, setOnScreen] = useState(false)
+  // Decoding video is not free: one clip costs the marketplace little, two at once
+  // dropped it from ~50 to ~30 fps. So only the active clip plays, only while on
+  // screen, and never under reduced motion; the others show their poster.
   useEffect(() => {
     const v = ref.current
-    if (v && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) v.pause()
+    if (!v) return
+    if (typeof IntersectionObserver === 'undefined') { setOnScreen(true); return }
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting), { threshold: 0.25 })
+    io.observe(v)
+    return () => io.disconnect()
   }, [])
-  return <video ref={ref} className={styles.adVideo} src={ad.video} poster={ad.poster} autoPlay muted loop playsInline preload="metadata" aria-hidden="true" />
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (active && onScreen && !still) { try { void v.play()?.catch(() => {}) } catch { /* autoplay refused: the poster stays */ } }
+    else v.pause()
+  }, [active, onScreen])
+  return <video ref={ref} className={styles.adVideo} src={ad.video} poster={ad.poster} muted loop playsInline preload="metadata" aria-hidden="true" />
 }
 
 export function MarketplaceAds({ onOpen }: { onOpen: (building: BuildingId, key: string) => void }) {
+  // The automation ad plays first; pointing at or focusing another card hands playback to it.
+  const [active, setActive] = useState('voice')
   return <div className={styles.ads} aria-label="Featured automations">
-    {ADS.map(ad => <article key={ad.id} className={styles.ad}>
-      <Clip ad={ad} />
+    {ADS.map(ad => <article key={ad.id} className={styles.ad} onPointerEnter={() => setActive(ad.id)} onFocusCapture={() => setActive(ad.id)}>
+      <Clip ad={ad} active={active === ad.id} />
       <div className={styles.adText}>
         <p className={styles.adEyebrow}>{ad.eyebrow}</p>
         <h3>{ad.title}</h3>
