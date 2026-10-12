@@ -440,6 +440,7 @@ window.addEventListener('message', function (event) {
   if (event.data.type === 'autiva:city-mode') {
     if (event.data.explore) delete document.documentElement.dataset.hero;
     else document.documentElement.dataset.hero = 'true';
+    if (typeof RESIZE_PENDING !== 'undefined') RESIZE_PENDING = true;
   }
   if (event.data.type === 'autiva:city-climate' && ['auto','night','day'].indexOf(event.data.mode)>=0) CITY_CLIMATE=event.data.mode;
   if (event.data.type === 'autiva:city-previews') {
@@ -2895,7 +2896,10 @@ function CameraRig(camera, dom) {
    ===================================================================== */
 var stage = document.getElementById('stage');
 var renderer = new T.WebGLRenderer({ antialias: false, powerPreference: MOBILE ? 'default' : 'high-performance', stencil: false });
-renderer.setPixelRatio(RENDER_POLICY.pixelRatio(innerWidth,innerHeight));
+// Home shows the city behind glass cards, so it renders at 75%; Explore gets full resolution.
+var HERO_SCALE=0.75;
+function heroScale(){return document.documentElement.dataset.hero?HERO_SCALE:1;}
+renderer.setPixelRatio(RENDER_POLICY.pixelRatio(innerWidth,innerHeight)*heroScale());
 renderer.setSize(innerWidth, innerHeight);
 renderer.autoClear = false;
 stage.appendChild(renderer.domElement);
@@ -3566,7 +3570,7 @@ var lastW=0,lastH=0,lastPr=0,RESIZE_PENDING=true;
 function resize() {
  var w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);
  camera.aspect=w/h;camera.updateProjectionMatrix();
- var pr=Math.min(RENDER_POLICY.pixelRatio(w,h),renderer.capabilities.maxTextureSize/Math.max(w,h));
+ var pr=Math.min(RENDER_POLICY.pixelRatio(w,h)*heroScale(),renderer.capabilities.maxTextureSize/Math.max(w,h));
  if(w===lastW&&h===lastH&&Math.abs(pr-lastPr)<0.001)return;
  if(w!==lastW||h!==lastH){renderer.domElement.style.width=w+'px';renderer.domElement.style.height=h+'px';}
  lastW=w;lastH=h;lastPr=pr;

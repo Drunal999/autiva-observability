@@ -77,7 +77,7 @@ function GlowCityView({data,agents,onSelect,explore,active,climate,onPreviews}:{
  useEffect(()=>{frame.current?.contentWindow?.postMessage({type:'autiva:city-previews'},location.origin)},[])
  // 'ready' can fire before this component listens; load always comes after the city's script ran.
  const hello=()=>{const w=frame.current?.contentWindow;w?.postMessage({type:'autiva:city-climate',mode:climateRef.current},location.origin);w?.postMessage({type:'autiva:city-mode',explore:exploring.current},location.origin);w?.postMessage({type:'autiva:city-previews'},location.origin)}
- return <iframe ref={frame} onLoad={hello} src="/city/agentic-city.html?dashboard=1&hero=1&v=20261008-render2" title="Your business city: tap a building to open its marketplace" className={styles.glowCity}/>
+ return <iframe ref={frame} onLoad={hello} src="/city/agentic-city.html?dashboard=1&hero=1&v=20261012-hero75" title="Your business city: tap a building to open its marketplace" className={styles.glowCity}/>
 }
 const GlowCity=memo(GlowCityView)
 /** Runs that STARTED in each 2-hour slot of the last 24 hours, oldest first. Built only from recorded runs. */
@@ -120,6 +120,8 @@ export function BusinessCityView(){
  },[])
  const [previews,setPreviews]=useState<Record<string,string>>({})
  const [sheet,setSheet]=useState(false)
+ // Warm the workflow editor's code as soon as the marketplace opens, so "How it works" opens at once.
+ useEffect(()=>{if(sheet)void import('./WorkflowGraph')},[sheet])
  const [custom,setCustom]=useState(false)
  const prefs=usePrefs(),show=(c:string)=>!prefs.hidden.includes(c as never)
  useEffect(()=>{
