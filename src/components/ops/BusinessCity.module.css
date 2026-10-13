@@ -206,6 +206,22 @@ a.widget:hover { transform: translateY(-2px); }
 .adEyebrow { font-size: 12px !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8fd3ff !important; }
 .adText button { justify-self: start; margin-top: 6px; height: 34px; padding: 0 14px; border-radius: 17px; font-weight: 600; font-size: 13px; color: #0b1220; background: #fff; border: 0; cursor: pointer; }
 .adNote { position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px; color: #fff; background: rgba(0, 0, 0, 0.6); }
+/* Inside the building: film on the left, the tappable still on the right. */
+.tour { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 12px; margin: 4px 0 16px; }
+.tour .ad { min-height: 0; aspect-ratio: 16 / 9; align-self: start; }
+/* The still keeps its own shape, so the spot percentages land on what they point at. */
+.tourStill { position: relative; margin: 0; border-radius: 22px; overflow: hidden; border: 0.5px solid rgba(255, 255, 255, 0.16); background: #0b1220; }
+.tourPic { position: relative; }
+.tourStill img { display: block; width: 100%; aspect-ratio: 1344 / 752; object-fit: cover; }
+.spot { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; padding: 3px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(255, 255, 255, 0.92); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45); }
+.spot b, .spotList b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #0b1220; color: #fff; font-size: 12px; font-weight: 700; }
+.spot b { animation: spot-pulse 2.4s ease-in-out infinite; }
+.spot:hover, .spot:focus-visible { background: #fff; transform: translate(-50%, -50%) scale(1.12); }
+.spotList { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
+.spotList button { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px; border: 0; cursor: pointer; font-size: 13px; font-weight: 600; color: #0b1220; background: rgba(255, 255, 255, 0.92); }
+.spotList button:hover, .spotList button:focus-visible { background: #fff; }
+@keyframes spot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(143, 211, 255, 0.7); } 50% { box-shadow: 0 0 0 7px rgba(143, 211, 255, 0); } }
+@media (prefers-reduced-motion: reduce) { .spot b { animation: none; } }
 .packages { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; margin-bottom: 22px; }
 .package { border-radius: 24px; padding: 18px; display: grid; gap: 12px; align-content: start; }
 .parts { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }

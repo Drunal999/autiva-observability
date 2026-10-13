@@ -78,6 +78,16 @@ describe('Business city',()=>{
   expect(catalog().getByRole('heading',{name:'Customer Support'})).toBeInTheDocument()
   expect(await screen.findByText('Blueprint',{},{timeout:3000})).toBeInTheDocument()
  })
+ it('shows the inside of Finance and each part of the picture opens its automation',async()=>{
+  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}))
+  fireEvent.click(screen.getByRole('button',{name:'Finance & Billing'}))
+  expect(screen.getByRole('heading',{name:'Inside Finance'})).toBeInTheDocument()
+  expect(screen.queryByRole('heading',{name:'Your phone, answered'})).not.toBeInTheDocument() // one film at a time
+  expect(screen.getByRole('img',{name:/Finance building/})).toBeInTheDocument()
+  expect(screen.getAllByRole('button',{name:/: see how it works$/})).toHaveLength(4)
+  fireEvent.click(screen.getByRole('button',{name:'GST bills matched: see how it works'}))
+  expect(await screen.findByText('Blueprint',{},{timeout:3000})).toBeInTheDocument()
+ })
  it('searches across buildings and exposes actual records without inventing connections',()=>{
   render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}));fireEvent.click(screen.getByRole('button',{name:'Marketing'}))
   fireEvent.change(screen.getByRole('searchbox'),{target:{value:'Lead'}})

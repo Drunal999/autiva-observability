@@ -29,7 +29,7 @@ function MarketplaceShelfView({ items, flow, setFlow, title = 'More for this bui
   <h3 className={styles.shelfHead}>{title}</h3>
   <div className={styles.automationList}>{items.map(item => {
    const id = `catalog:${item.key}`, b = BUILDINGS.find(x => x.id === item.building)!
-   return <article key={item.key} className={styles.automation} data-wide={flow === id} data-catalog>
+   return <article key={item.key} id={`catalog-${item.key}`} className={styles.automation} data-wide={flow === id} data-catalog>
     <div className={styles.tile} aria-hidden="true"><b>{item.name.charAt(0)}</b><span>{item.stage === 'ready' ? 'N8N' : 'PLAN'}</span></div>
     <div className={styles.floorBody}>
      <div className={styles.automationTop}><div><h3>{item.name}</h3><p>{item.purpose}</p></div><span className={styles.status} data-status={STAGE[item.stage]}>{STAGE[item.stage]}</span></div>
