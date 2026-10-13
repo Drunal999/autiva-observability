@@ -12,6 +12,7 @@ const WorkflowEditor=dynamic(()=>import('./WorkflowGraph').then(m=>m.WorkflowEdi
 import {MarketplaceShelf} from './MarketplaceShelf'
 import {MarketplaceAds} from './MarketplaceAds'
 import {BuildingTour,BuildingPeek,hasTour} from './BuildingTour'
+import {MyPlanBar} from './MyPlan'
 import {CATALOG} from '@/lib/ops/marketplaceCatalog'
 import {Agents as AgentsWidget,NeedsOk as NeedsOkWidget,Today as TodayWidget,Brain as BrainWidget,Automations as AutomationsWidget} from './HomeBento'
 import {BoloOrb,useBolo,moodOf} from './BoloOrb'
@@ -192,6 +193,7 @@ export function BusinessCityView(){
    <p className={styles.phoneCityNote}>3D loads when you enter. Status comes from workspace records.</p>
   </section>
   {explore&&peek&&!sheet&&<BuildingPeek building={peek} live={modules.filter(m=>buildingFor(m.district)===peek)} offer={offer.filter(c=>c.building===peek)} onOpenLive={id=>openFromPeek(peek,id)} onOpenItem={key=>openFromPeek(peek,'catalog:'+key)} onOpenAll={()=>openFromPeek(peek,null)} onClose={()=>setPeek(null)}/>}
+  {(explore||sheet)&&<MyPlanBar/>}
   {explore&&<nav className={styles.districtDock} aria-label="City districts">{BUILDINGS.map(b=><button key={b.id} onClick={()=>setPeek(b.id)} style={{'--district':b.glow} as CSSProperties}>{b.name}</button>)}</nav>}
   <section className={styles.home} aria-label="Workspace summary">
    <header className={`${styles.top} ${styles.hGreet}`}>

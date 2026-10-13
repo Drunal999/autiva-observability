@@ -43,5 +43,6 @@ export const config = {
     '/api/calendar/subscribe',
     '/api/notifications/:path*',
     '/api/batch',
+    '/api/setup-requests',
   ],
 }

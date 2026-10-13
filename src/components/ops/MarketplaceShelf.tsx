@@ -5,10 +5,11 @@ import { CATALOG, PACKAGES, type CatalogItem } from '@/lib/ops/marketplaceCatalo
 import dynamic from 'next/dynamic'
 const WorkflowEditor=dynamic(()=>import('./WorkflowGraph').then(m=>m.WorkflowEditor),{loading:()=> <p role="status">Opening workflow…</p>})
 import styles from './BusinessCity.module.css'
+import { PlanToggle } from './MyPlan'
 
 const STAGE = { ready: 'Ready to set up', planned: 'Planned' } as const
 
-/** "More for this building": automations this workspace can add. Shows the workflow, never a fake buy. */
+/** "More for this building": automations this workspace can add. Shows the workflow; "Add to my plan" / "Reserve" leads to a setup request, never a payment. */
 function MarketplaceShelfView({ items, flow, setFlow, title = 'More for this building' }: { items: CatalogItem[]; flow: string | null; setFlow: (id: string | null) => void; title?: string }) {
  if (!items.length) return null
  const here = new Set(items.map(i => i.key))
@@ -34,7 +35,7 @@ function MarketplaceShelfView({ items, flow, setFlow, title = 'More for this bui
     <div className={styles.floorBody}>
      <div className={styles.automationTop}><div><h3>{item.name}</h3><p>{item.purpose}</p></div><span className={styles.status} data-status={STAGE[item.stage]}>{STAGE[item.stage]}</span></div>
      <dl><div><dt>Good for</dt><dd>{item.audience}</dd></div><div><dt>Needs</dt><dd>{item.needs}</dd></div>{item.guard && <div><dt>Safeguard</dt><dd>{item.guard}</dd></div>}</dl>
-     <div className={styles.automationActions}><button aria-expanded={flow === id} onClick={() => setFlow(flow === id ? null : id)}>{flow === id ? 'Hide how it works' : 'How it works'}</button></div>
+     <div className={styles.automationActions}><button aria-expanded={flow === id} onClick={() => setFlow(flow === id ? null : id)}>{flow === id ? 'Hide how it works' : 'How it works'}</button><PlanToggle item={{ key: item.key, name: item.name, building: item.building, ready: item.stage === 'ready' }} /></div>
      {flow === id && <WorkflowEditor name={item.name} moduleKey={item.key} building={b.name} glow={b.glow} running={false} runs={[]} />}
     </div>
    </article>

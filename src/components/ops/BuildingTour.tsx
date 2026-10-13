@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { BUILDINGS, moduleStatus, type BuildingId, type CityModule } from '@/lib/ops/cityMarketplace'
 import type { CatalogItem } from '@/lib/ops/marketplaceCatalog'
 import { LoopVideo } from './MarketplaceAds'
+import { PlanToggle, BuildingPrice } from './MyPlan'
 import styles from './BusinessCity.module.css'
 
 /**
@@ -87,11 +88,15 @@ export function BuildingPeek({ building, live, offer, onOpenLive, onOpenItem, on
       <button type="button" className={styles.peekClose} onClick={onClose} aria-label="Close building card">✕</button>
     </header>
     {tour && <div className={styles.peekDrift}><TourPicture tour={tour} offered={new Set(offer.map(c => c.key))} onOpen={onOpenItem} /></div>}
+    {offer.length > 0 && <BuildingPrice />}
     <h3>What it can do for you</h3>
     {live.length + offer.length === 0 ? <p className={styles.peekEmpty}>Nothing here yet. New automations for this building are on the way.</p>
       : <ul className={styles.peekList}>
         {live.map(m => <li key={m.id}><button type="button" onClick={() => onOpenLive(m.id)}><span>{m.displayName}</span><em>{moduleStatus(m)}</em></button></li>)}
-        {offer.map(c => <li key={c.key}><button type="button" onClick={() => onOpenItem(c.key)}><span>{c.name}<small>{c.purpose}</small></span><em>{c.stage === 'ready' ? 'Ready to set up' : 'Coming soon'}</em></button></li>)}
+        {offer.map(c => <li key={c.key} className={styles.peekRow}>
+          <button type="button" onClick={() => onOpenItem(c.key)}><span>{c.name}<small>{c.purpose}</small></span><em>{c.stage === 'ready' ? 'Ready to set up' : 'Coming soon'}</em></button>
+          <PlanToggle item={{ key: c.key, name: c.name, building: c.building, ready: c.stage === 'ready' }} />
+        </li>)}
       </ul>}
     <button type="button" className={styles.peekAll} onClick={onOpenAll}>See everything in {b.name}</button>
   </aside>
