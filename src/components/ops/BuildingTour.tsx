@@ -19,14 +19,15 @@ type Tour = { video: string; poster: string; still: string; alt: string; title: 
 const TOURS: Partial<Record<BuildingId, Tour>> = {
   finance: {
     video: '/buildings/finance.mp4', poster: '/buildings/finance-poster.jpg', still: '/buildings/finance.jpg',
-    alt: 'The Finance building: bills go into a machine and come out as receipts, a reminder goes out on a phone, and rupees flow into the vault.',
+    // Rendered from the city's own Finance district, so tapping the building in the city leads to the same place, closer.
+    alt: 'The Finance building in your city: robot agents feed bills into a machine, a reminder goes out on a phone, and rupees flow into the vault.',
     title: 'Inside Finance',
     line: 'Bills, reminders and payments get handled while you work. Tap a part of the building to see what does it.',
     spots: [
-      { key: 'ca-compliance-reminders', label: 'Reminders sent for you', x: 77, y: 47 },
-      { key: 'ca-document-chaser', label: 'Missing papers collected', x: 40, y: 32 },
-      { key: 'ca-bank-ledger', label: 'Bank statement into your books', x: 37, y: 57 },
-      { key: 'ca-gst-recon', label: 'GST bills matched', x: 64, y: 45 },
+      { key: 'ca-compliance-reminders', label: 'Reminders sent for you', x: 66, y: 62 },
+      { key: 'ca-document-chaser', label: 'Missing papers collected', x: 43, y: 30 },
+      { key: 'ca-bank-ledger', label: 'Bank statement into your books', x: 56, y: 45 },
+      { key: 'ca-gst-recon', label: 'GST bills matched', x: 58, y: 60 },
     ],
   },
 }
