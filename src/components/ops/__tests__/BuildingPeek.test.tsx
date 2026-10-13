@@ -25,12 +25,11 @@ describe('Explore: the card for a tapped building', () => {
   fireEvent.click(within(card).getByRole('button', { name: 'Close building card' }))
   expect(h.onClose).toHaveBeenCalled()
  })
- it('shows the picture first and the film only on request', () => {
+ it('shows a picture, never a film, over the running city', () => {
   render(<BuildingPeek building="finance" live={[]} offer={offer} onOpenLive={vi.fn()} onOpenItem={vi.fn()} onOpenAll={vi.fn()} onClose={vi.fn()} />)
   expect(screen.getByRole('img', { name: /Finance building/ })).toBeInTheDocument()
   expect(document.querySelector('video')).toBeNull()
-  fireEvent.click(screen.getByRole('button', { name: '▶ Watch it work' }))
-  expect(document.querySelector('video')).not.toBeNull()
+  expect(screen.queryByRole('button', { name: /Watch it work/ })).toBeNull()
  })
  it('works for a building with no film yet', () => {
   render(<BuildingPeek building="security" live={[]} offer={[]} onOpenLive={vi.fn()} onOpenItem={vi.fn()} onOpenAll={vi.fn()} onClose={vi.fn()} />)

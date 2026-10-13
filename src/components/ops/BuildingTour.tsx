@@ -1,5 +1,5 @@
 'use client'
-import { useState, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { BUILDINGS, moduleStatus, type BuildingId, type CityModule } from '@/lib/ops/cityMarketplace'
 import type { CatalogItem } from '@/lib/ops/marketplaceCatalog'
 import { LoopVideo } from './MarketplaceAds'
@@ -35,21 +35,17 @@ const TOURS: Partial<Record<BuildingId, Tour>> = {
 export const hasTour = (building: BuildingId) => Boolean(TOURS[building])
 
 /** The still with numbered spots, and the spots' names listed under it. */
-function TourPicture({ tour, offered, onOpen, film = false }: { tour: Tour; offered: Set<string>; onOpen: (key: string) => void; film?: boolean }) {
+function TourPicture({ tour, offered, onOpen }: { tour: Tour; offered: Set<string>; onOpen: (key: string) => void }) {
   const spots = tour.spots.filter(s => offered.has(s.key))
   return <figure className={styles.tourStill}>
     {/* The spots are placed against the picture alone, not the picture plus the list under it. */}
     <div className={styles.tourPic}>
-      {film
-        ? <LoopVideo src={tour.video} poster={tour.poster} active className={styles.tourFilm} />
-        : <>
-          {/* eslint-disable-next-line @next/next/no-img-element -- a static local render */}
-          <img src={tour.still} alt={tour.alt} />
-          {/* Numbers on the picture, names in the list below: labels on the picture covered each other. */}
-          {spots.map((s, i) => <button key={s.key} type="button" className={styles.spot} style={{ left: `${s.x}%`, top: `${s.y}%` }} onClick={() => onOpen(s.key)} aria-label={`${s.label}: see how it works`}>
-            <b aria-hidden="true">{i + 1}</b>
-          </button>)}
-        </>}
+      {/* eslint-disable-next-line @next/next/no-img-element -- a static local render */}
+      <img src={tour.still} alt={tour.alt} />
+      {/* Numbers on the picture, names in the list below: labels on the picture covered each other. */}
+      {spots.map((s, i) => <button key={s.key} type="button" className={styles.spot} style={{ left: `${s.x}%`, top: `${s.y}%` }} onClick={() => onOpen(s.key)} aria-label={`${s.label}: see how it works`}>
+        <b aria-hidden="true">{i + 1}</b>
+      </button>)}
     </div>
     <figcaption className={styles.spotList}>{spots.map((s, i) => <button key={s.key} type="button" onClick={() => onOpen(s.key)}><b aria-hidden="true">{i + 1}</b>{s.label}</button>)}</figcaption>
   </figure>
@@ -76,8 +72,8 @@ export function BuildingTour({ building, offered, onOpen }: { building: Building
 /**
  * Explore the city: tap a building and this card opens beside it while the city
  * keeps moving. It answers "what is this building and what can it do for me" in
- * plain words, and every line leads into the marketplace. The still is shown by
- * default (no video decoding over a running city); "Watch it work" swaps in the film.
+ * plain words, and every line leads into the marketplace. A still with a slow drift,
+ * never a film: nothing to decode over a running city, and the still's text is clean.
  */
 export function BuildingPeek({ building, live, offer, onOpenLive, onOpenItem, onOpenAll, onClose }: {
   building: BuildingId; live: CityModule[]; offer: CatalogItem[]
@@ -85,16 +81,12 @@ export function BuildingPeek({ building, live, offer, onOpenLive, onOpenItem, on
 }) {
   const b = BUILDINGS.find(x => x.id === building)!
   const tour = TOURS[building]
-  const [film, setFilm] = useState(false)
   return <aside className={styles.peek} aria-label={`${b.name} building`} style={{ '--c': b.glow } as CSSProperties}>
     <header>
       <div><p className={styles.eyebrow}>You tapped</p><h2>{b.name}</h2><p>{b.purpose}</p></div>
       <button type="button" className={styles.peekClose} onClick={onClose} aria-label="Close building card">✕</button>
     </header>
-    {tour && <>
-      <TourPicture tour={tour} offered={new Set(offer.map(c => c.key))} onOpen={onOpenItem} film={film} />
-      <button type="button" className={styles.peekWatch} onClick={() => setFilm(!film)} aria-pressed={film}>{film ? 'Show the picture' : '▶ Watch it work'}</button>
-    </>}
+    {tour && <div className={styles.peekDrift}><TourPicture tour={tour} offered={new Set(offer.map(c => c.key))} onOpen={onOpenItem} /></div>}
     <h3>What it can do for you</h3>
     {live.length + offer.length === 0 ? <p className={styles.peekEmpty}>Nothing here yet. New automations for this building are on the way.</p>
       : <ul className={styles.peekList}>
