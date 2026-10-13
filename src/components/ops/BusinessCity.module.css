@@ -189,7 +189,11 @@ a.widget:hover { transform: translateY(-2px); }
 /* Behind the marketplace or Customise sheet the Home cards are hidden, but their
    backdrop blur still re-renders every frame (measured: 12 layers, about 25 fps).
    Drop it while covered; nothing visible changes and there is no visibility toggle to flicker. */
-.workspace[data-covered='true'] .home :global(.liquid-glass) { -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Home's cards are tinted, not live-blurred. Every backdrop blur re-reads the
+   moving city on every frame: the eight cards took Home from 59 to 40 fps on
+   this laptop, and the blur radius made no difference, only the count. The
+   header and sidebar keep real glass; the city still shows around the cards. */
+.home :global(.liquid-glass) { -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--lg-solid); }
 .shelf { margin-top: 22px; }
 /* Shop window: featured automations as looping video cards. */
 .ads { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; margin: 4px 0 16px; }
