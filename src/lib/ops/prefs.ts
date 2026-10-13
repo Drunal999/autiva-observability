@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
  */
 export * from './prefsShape'
 import { clean, ACCENTS, DEFAULT_PREFS, type Prefs } from './prefsShape'
+import { batchedGet } from './swrBatch'
 
 const KEY = 'autiva.prefs.v1'
 const EVENT = 'autiva:prefs'
@@ -43,9 +44,8 @@ async function syncFromAccount() {
  if (synced) return
  synced = true
  try {
-  const r = await fetch('/api/user/prefs', { cache: 'no-store' })
-  if (!r.ok) return
-  const body = (await r.json()) as { prefs: unknown | null }
+  // Rides the same round trip as the rest of the opening reads (see swrBatch).
+  const body = (await batchedGet('/api/user/prefs')) as { prefs: unknown | null }
   if (body.prefs) local(clean(body.prefs))
   else if (localStorage.getItem(KEY)) await savePrefs(read())
  } catch { synced = false /* offline: try again on the next mount */ }
