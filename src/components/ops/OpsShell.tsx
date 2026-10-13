@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { signOut, useSession } from 'next-auth/react'
 import useSWR from 'swr'
 import type { FleetResponse } from '@/types/agentOps'
 import type { ApprovalsResponse } from '@/types/approvals'
@@ -27,6 +28,7 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
   const pathname=usePathname()
   const [mode,setMode]=useState<WorkspaceMode>('simple')
   const [menu,setMenu]=useState(false)
+  const who=useSession().data?.user?.name
   const prefs=usePrefs()
   const appearance:Appearance=prefs.appearance
   const [appearanceError,setAppearanceError]=useState(false)
@@ -76,6 +78,8 @@ export function OpsShell({ children }: { children: React.ReactNode }) {
         </div>
         <p className={styles.footLabel}>Appearance</p>
         <div className={styles.mode} role="group" aria-label="Appearance">{(['system','light','dark'] as const).map(v=><button key={v} aria-pressed={appearance===v} onClick={()=>changeAppearance(v)}>{v==='system'?'Auto':v==='light'?'Light':'Dark'}</button>)}</div>
+        {/* Signing out of here does not sign the browser out of GitHub; the sign-in page says so. */}
+        <div className={styles.account}><span title={who??undefined}>{who?`Signed in as ${who}`:'Signed in'}</span><button type="button" onClick={()=>void signOut({callbackUrl:'/signin'})}>Sign out</button></div>
       </div>
     </aside>
     <main id="workspace-content" tabIndex={-1} className={styles.main}>{children}</main>

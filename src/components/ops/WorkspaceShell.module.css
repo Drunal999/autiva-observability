@@ -48,6 +48,10 @@
 .teamNav { margin-top: 18px; border-top: 0.5px solid var(--sep); padding-top: 14px; }
 .teamNav > p { font-size: 12px; font-weight: 600; color: var(--label-2); margin: 0 12px 8px; text-transform: uppercase; letter-spacing: 0.3px; }
 .sidebarFoot { margin-top: auto; padding: 20px 4px 2px; display: flex; flex-direction: column; gap: 6px; }
+.account { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 4px 0; padding-top: 10px; border-top: 1px solid var(--separator, rgba(255,255,255,0.1)); font-size: 12.5px; color: var(--label-2); }
+.account span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account button { flex: none; padding: 6px 12px; border-radius: 999px; background: var(--fill); color: var(--label); font-weight: 600; }
+.account button:hover { background: var(--fill-2); }
 .footLabel { font-size: 12px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: 0.3px; margin: 6px 8px 0; }
 .context { font-size: 13px; margin-top: 18px; padding: 12px; border-radius: 14px; background: var(--fill); color: var(--label-2); }
 .context button { color: var(--blue); margin-top: 6px; }
