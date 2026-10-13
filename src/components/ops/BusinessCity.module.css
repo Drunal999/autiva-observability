@@ -206,6 +206,61 @@ a.widget:hover { transform: translateY(-2px); }
 .adEyebrow { font-size: 12px !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #8fd3ff !important; }
 .adText button { justify-self: start; margin-top: 6px; height: 34px; padding: 0 14px; border-radius: 17px; font-weight: 600; font-size: 13px; color: #0b1220; background: #fff; border: 0; cursor: pointer; }
 .adNote { position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px; color: #fff; background: rgba(0, 0, 0, 0.6); }
+/* Inside the building: film on the left, the tappable still on the right. */
+.tour { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 12px; margin: 4px 0 16px; }
+.tour .ad { min-height: 0; aspect-ratio: 16 / 9; align-self: start; }
+/* The still keeps its own shape, so the spot percentages land on what they point at. */
+.tourStill { position: relative; margin: 0; border-radius: 22px; overflow: hidden; border: 0.5px solid rgba(255, 255, 255, 0.16); background: #0b1220; }
+.tourPic { position: relative; }
+/* Explore: the card for the building tapped in the moving city. Tinted, not blurred, so the
+   city behind keeps its frame rate. Right side on a desktop, a bottom sheet on a phone. */
+.peek { position: fixed; z-index: 63; top: 76px; right: 16px; bottom: 16px; width: min(400px, calc(100vw - 32px)); overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 24px; color: #f2f2f7;
+  /* Glossy glass without a backdrop blur: a top sheen, a lit rim and a tint of the building's colour. */
+  background:
+    linear-gradient(170deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 22%, transparent 48%),
+    radial-gradient(120% 60% at 100% 0%, color-mix(in srgb, var(--c) 22%, transparent), transparent 60%),
+    linear-gradient(155deg, rgba(30, 34, 50, 0.96), rgba(10, 12, 20, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent), 0 24px 70px rgba(0, 0, 0, 0.55), 0 0 40px color-mix(in srgb, var(--c) 18%, transparent);
+  animation: peek-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/* The picture breathes: a slow push-in and back. The spots ride with it (same layer), and a
+   transform is composited, so the city's frame rate does not pay for it. */
+.peekDrift .tourPic { animation: peek-drift 16s ease-in-out infinite alternate; transform-origin: 55% 40%; }
+@keyframes peek-drift { from { transform: scale(1); } to { transform: scale(1.07); } }
+@media (prefers-reduced-motion: reduce) { .peekDrift .tourPic { animation: none; } }
+/* A long list must scroll the card, not squash the picture. */
+.peek > * { flex-shrink: 0; }
+.peek header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.peek h2 { margin: 2px 0 4px; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.peek header p:not(.eyebrow) { margin: 0; font-size: 14px; color: rgba(242, 242, 247, 0.75); }
+.peek h3 { margin: 4px 0 0; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(242, 242, 247, 0.6); }
+.peek .tourStill { border-radius: 16px; }
+.peekClose { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer; font-size: 15px; color: #f2f2f7; background: rgba(255, 255, 255, 0.12); }
+.peekList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.peekList button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; padding: 10px 12px; border-radius: 14px; border: 0; cursor: pointer; color: #f2f2f7; background: rgba(255, 255, 255, 0.07); }
+.peekList button:hover, .peekList button:focus-visible { background: rgba(255, 255, 255, 0.13); }
+.peekList span { display: grid; gap: 2px; font-size: 14.5px; font-weight: 600; min-width: 0; }
+.peekList small { font-size: 12.5px; font-weight: 400; color: rgba(242, 242, 247, 0.65); }
+.peekList em { flex: none; font-style: normal; font-size: 12px; font-weight: 600; color: var(--c); }
+.peekEmpty { margin: 0; font-size: 14px; color: rgba(242, 242, 247, 0.7); }
+.peekAll { margin-top: auto; min-height: 44px; border-radius: 22px; border: 0; cursor: pointer; font-size: 15px; font-weight: 700; color: #0b1220; background: #fff; }
+@keyframes peek-in { from { opacity: 0; transform: translateX(24px); } }
+@media (max-width: 700px) {
+  .peek { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: 72dvh; border-radius: 22px; }
+  @keyframes peek-in { from { opacity: 0; transform: translateY(32px); } }
+}
+@media (prefers-reduced-motion: reduce) { .peek { animation: none; } }
+.tourStill img { display: block; width: 100%; aspect-ratio: 1344 / 752; object-fit: cover; }
+.spot { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; padding: 3px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(255, 255, 255, 0.92); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45); }
+.spot b, .spotList b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #0b1220; color: #fff; font-size: 12px; font-weight: 700; }
+.spot b { animation: spot-pulse 2.4s ease-in-out infinite; }
+.spot:hover, .spot:focus-visible { background: #fff; transform: translate(-50%, -50%) scale(1.12); }
+.spotList { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
+.spotList button { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px; border: 0; cursor: pointer; font-size: 13px; font-weight: 600; color: #0b1220; background: rgba(255, 255, 255, 0.92); }
+.spotList button:hover, .spotList button:focus-visible { background: #fff; }
+@keyframes spot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(143, 211, 255, 0.7); } 50% { box-shadow: 0 0 0 7px rgba(143, 211, 255, 0); } }
+@media (prefers-reduced-motion: reduce) { .spot b { animation: none; } }
 .packages { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; margin-bottom: 22px; }
 .package { border-radius: 24px; padding: 18px; display: grid; gap: 12px; align-content: start; }
 .parts { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
@@ -254,7 +309,7 @@ a.widget:hover { transform: translateY(-2px); }
 .exploreBtn { position: relative; margin-top: 12px; height: 40px; padding: 0 18px; border-radius: 20px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace > .exploreBack { position: fixed; top: 16px; left: 16px; z-index: 61; height: 42px; padding: 0 20px; border-radius: 21px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace[data-explore='true'] .stageCity { z-index: 60; }
-.workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack) { visibility: hidden; }
+.workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack):not(.peek):not(.sheetBackdrop):not(.planBar) { visibility: hidden; }
 
 /* Glass everywhere in the marketplace: translucent fill, blur, and a lit top edge. */
 .automation, .mobileBuildings button:not([aria-pressed='true']), .search input, .industries button, .empty {
@@ -354,3 +409,29 @@ a.widget:hover { transform: translateY(-2px); }
 
 .workspace[data-covered='true'] .home { pointer-events:none; }
 .workspace[data-covered='true'] .home *,.workspace[data-covered='true'] .home *::before,.workspace[data-covered='true'] .home *::after { animation-play-state:paused; }
+/* My plan: Add / Reserve on each automation, the building's launch price, and the plan bar. */
+.peekRow { display: grid; gap: 6px; }
+.peekList .planToggle, .planToggle { justify-self: end; width: auto; height: 32px; padding: 0 14px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.28); cursor: pointer; font-size: 13px; font-weight: 700; color: #0b1220; background: #fff; }
+.planToggle[data-on='true'], .peekList .planToggle[data-on='true'] { color: #eafff3; background: rgba(52, 199, 89, 0.22); border-color: rgba(52, 199, 89, 0.6); }
+.buildingPrice { margin: 0; display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--c) 14%, rgba(255, 255, 255, 0.05)); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
+.buildingPrice b { font-size: 16px; }
+.buildingPrice span { font-size: 12.5px; color: rgba(242, 242, 247, 0.7); }
+.planBar { position: fixed; z-index: 75; left: 16px; bottom: 16px; width: min(360px, calc(100vw - 32px)); display: grid; gap: 8px; color: #f2f2f7; }
+.planPill { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 0 18px; border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.22); cursor: pointer; color: #0b1220; background: #fff; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45); font-size: 14px; }
+.planPill span { font-weight: 600; color: #3a3f4b; }
+.planPanel { order: -1; display: grid; gap: 10px; max-height: 60dvh; overflow: auto; padding: 16px; border-radius: 20px; background: linear-gradient(170deg, rgba(255, 255, 255, 0.12), transparent 30%), linear-gradient(155deg, rgba(30, 34, 50, 0.97), rgba(10, 12, 20, 0.98)); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 20px 60px rgba(0, 0, 0, 0.55); }
+.planPanel h4 { margin: 0 0 4px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(242, 242, 247, 0.6); }
+.planPanel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.planPanel li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.planPanel li em { font-style: normal; color: rgba(242, 242, 247, 0.55); }
+.planPanel li button { width: 26px; height: 26px; border-radius: 50%; border: 0; cursor: pointer; color: #f2f2f7; background: rgba(255, 255, 255, 0.1); }
+.planTotal p { margin: 0; font-size: 14px; line-height: 1.5; }
+.planTotal strong { font-size: 20px; }
+.planTotal small { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #8fd3ff; }
+.planSetup, .planNote { margin: 0; font-size: 12.5px; color: rgba(242, 242, 247, 0.7); }
+.planError { margin: 0; font-size: 13px; color: #ff8a80; }
+.planRequest { min-height: 46px; border-radius: 23px; border: 0; cursor: pointer; font-size: 15px; font-weight: 700; color: #0b1220; background: #fff; }
+.planRequest:disabled { opacity: 0.6; cursor: default; }
+.planSent { margin: 0; padding: 14px 44px 14px 16px; border-radius: 18px; font-size: 14px; color: #eafff3; background: rgba(20, 60, 40, 0.95); border: 1px solid rgba(52, 199, 89, 0.6); }
+.planClose { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border-radius: 50%; border: 0; cursor: pointer; color: #fff; background: rgba(255, 255, 255, 0.12); }
+@media (max-width: 700px) { .planBar { top: calc(70px + env(safe-area-inset-top)); bottom: auto; left: 8px; right: 8px; width: auto; } .planPanel { order: 1; } }

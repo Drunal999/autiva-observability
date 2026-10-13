@@ -4,6 +4,12 @@ html[data-hero="true"] .metrics,
 html[data-hero="true"] .rail,
 html[data-hero="true"] .fps,
 html[data-hero="true"] .log {display:none!important}
+/* Inside the dashboard, Explore too: agent and user name tags, thought bubbles (raw task text
+   such as commands) and the fps counter read as developer noise to a customer. District names stay. */
+html[data-dashboard="true"] #labels .tlab,
+html[data-dashboard="true"] #labels .ulab,
+html[data-dashboard="true"] #labels .think,
+html[data-dashboard="true"] .fps {display:none!important}
 html[data-dashboard="true"] .dlab .m,
 html[data-dashboard="true"] .dlab .b {display:none!important}
 /* Home hero: the city is the marketplace. Its own controls step aside for the
@@ -14,10 +20,7 @@ html[data-hero="true"] .caption,
 html[data-hero="true"] #gate,
 html[data-hero="true"] #maker,
 html[data-hero="true"] #labels .dlab,
-html[data-hero="true"] #labels .think,
-/* Agent and user name tags read as clutter behind Home's cards; Explore keeps them. */
-html[data-hero="true"] #labels .tlab,
-html[data-hero="true"] #labels .ulab {display:none!important}
+html[data-hero="true"] #labels .think {display:none!important}
 /* Inside the dashboard the city shows real agents: no toy agent maker, and no log of the decorative crowd. */
 html[data-dashboard="true"] .log,
 html[data-dashboard="true"] .dock .cta {display:none!important}
@@ -428,6 +431,10 @@ if (document.documentElement.dataset.dashboard)
 function openShop(D) {
   if (!document.documentElement.dataset.dashboard || !D) return;
   parent.postMessage({ type: 'autiva:city-select', building: SHOP[D.key] }, location.origin);
+}
+function peekShop(D) {
+  if (!document.documentElement.dataset.dashboard || !D) return;
+  parent.postMessage({ type: 'autiva:city-peek', building: SHOP[D.key] }, location.origin);
 }
 function districtAt(x, z) {
   var best = null, bd = Infinity;
@@ -3079,7 +3086,9 @@ renderer.domElement.addEventListener('pointerup', function (e) {
        there is work to report inside. */
     pickState.box = bi;
     UIBUS.selectSite && UIBUS.selectSite(pickState.site, bi);
-    if (document.documentElement.dataset.hero) openShop(box.site != null ? DISTRICTS[cityData.sites[box.site].district] : districtAt(box.x, box.z));
+    var D = box.site != null ? DISTRICTS[cityData.sites[box.site].district] : districtAt(box.x, box.z);
+    /* Home opens the marketplace; Explore keeps the city and shows a card for the building beside it. */
+    if (document.documentElement.dataset.hero) openShop(D); else peekShop(D);
   }
 });
 

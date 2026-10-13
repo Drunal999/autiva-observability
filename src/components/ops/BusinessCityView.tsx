@@ -11,6 +11,8 @@ import {hasWorkflow} from '@/lib/ops/workflowDefinitions'
 const WorkflowEditor=dynamic(()=>import('./WorkflowGraph').then(m=>m.WorkflowEditor),{loading:()=> <p role="status">Opening workflow…</p>})
 import {MarketplaceShelf} from './MarketplaceShelf'
 import {MarketplaceAds} from './MarketplaceAds'
+import {BuildingTour,BuildingPeek,hasTour} from './BuildingTour'
+import {MyPlanBar} from './MyPlan'
 import {CATALOG} from '@/lib/ops/marketplaceCatalog'
 import {Agents as AgentsWidget,NeedsOk as NeedsOkWidget,Today as TodayWidget,Brain as BrainWidget,Automations as AutomationsWidget} from './HomeBento'
 import {BoloOrb,useBolo,moodOf} from './BoloOrb'
@@ -41,9 +43,10 @@ function BoloCard({onBrowse}:{onBrowse:()=>void}){
  *  district is real (a run in the last 30 minutes). Tapping a building or label opens its category. */
 type RealAgent={id:string;name:string;district:string;status:string;step:string|null}
 const MemoBoloCard=memo(BoloCard)
-function GlowCityView({data,agents,onSelect,explore,active,climate,onPreviews}:{data:MarketplaceData|undefined;agents:RealAgent[];onSelect:(id:BuildingId)=>void;explore:boolean;active:boolean;climate:'auto'|'night'|'day';onPreviews:(p:Record<string,string>)=>void}){
+function GlowCityView({data,agents,onSelect,onPeek,explore,active,climate,onPreviews}:{data:MarketplaceData|undefined;agents:RealAgent[];onSelect:(id:BuildingId)=>void;onPeek:(id:BuildingId)=>void;explore:boolean;active:boolean;climate:'auto'|'night'|'day';onPreviews:(p:Record<string,string>)=>void}){
  const frame=useRef<HTMLIFrameElement>(null)
  const pick=useRef(onSelect);pick.current=onSelect
+ const peekAt=useRef(onPeek);peekAt.current=onPeek
  const shots=useRef(onPreviews);shots.current=onPreviews
  const exploring=useRef(explore);exploring.current=explore
  const activeRef=useRef(active);activeRef.current=active
@@ -67,6 +70,7 @@ function GlowCityView({data,agents,onSelect,explore,active,climate,onPreviews}:{
    if(event.origin!==location.origin||event.source!==frame.current?.contentWindow)return
    if(event.data?.type==='autiva:city-ready'){send();post({type:'autiva:city-visibility',visible:activeRef.current&&!document.hidden});post({type:'autiva:city-mode',explore:exploring.current});post({type:'autiva:city-previews'})}
    if(event.data?.type==='autiva:city-select'&&BUILDINGS.some(b=>b.id===event.data.building))pick.current(event.data.building)
+   if(event.data?.type==='autiva:city-peek'&&BUILDINGS.some(b=>b.id===event.data.building))peekAt.current(event.data.building)
    if(event.data?.type==='autiva:city-previews'&&event.data.previews&&typeof event.data.previews==='object')shots.current(event.data.previews)
   }
   window.addEventListener('message',listen);send()
@@ -77,7 +81,7 @@ function GlowCityView({data,agents,onSelect,explore,active,climate,onPreviews}:{
  useEffect(()=>{frame.current?.contentWindow?.postMessage({type:'autiva:city-previews'},location.origin)},[])
  // 'ready' can fire before this component listens; load always comes after the city's script ran.
  const hello=()=>{const w=frame.current?.contentWindow;w?.postMessage({type:'autiva:city-climate',mode:climateRef.current},location.origin);w?.postMessage({type:'autiva:city-mode',explore:exploring.current},location.origin);w?.postMessage({type:'autiva:city-previews'},location.origin)}
- return <iframe ref={frame} onLoad={hello} src="/city/agentic-city.html?dashboard=1&hero=1&v=20261013-notags" title="Your business city: tap a building to open its marketplace" className={styles.glowCity}/>
+ return <iframe ref={frame} onLoad={hello} src="/city/agentic-city.html?dashboard=1&hero=1&v=20261013-clean" title="Your business city: tap a building to open its marketplace" className={styles.glowCity}/>
 }
 const GlowCity=memo(GlowCityView)
 /** Runs that STARTED in each 2-hour slot of the last 24 hours, oldest first. Built only from recorded runs. */
@@ -103,6 +107,9 @@ export function BusinessCityView(){
  const [explore,setExplore]=useState(false)
  const [isPhone,setIsPhone]=useState<boolean|null>(null)
  const [cityLoaded,setCityLoaded]=useState(false)
+ // Explore: the building tapped in the moving city, shown as a card beside it.
+ const [peek,setPeek]=useState<BuildingId|null>(null)
+ useEffect(()=>{if(!explore)setPeek(null)},[explore])
  useEffect(()=>{
   const mq=window.matchMedia('(max-width: 700px)')
   const sync=()=>setIsPhone(mq.matches)
@@ -142,7 +149,8 @@ export function BusinessCityView(){
   window.addEventListener('keydown',esc)
   return()=>{document.body.style.overflow=oldOverflow;window.removeEventListener('keydown',esc);before?.focus()}
  },[sheet])
- useEffect(()=>{if(!explore)return;const esc=(e:KeyboardEvent)=>{if(e.key==='Escape')setExplore(false)};window.addEventListener('keydown',esc);return()=>window.removeEventListener('keydown',esc)},[explore])
+ // Escape closes the building card first, then leaves Explore. Not while the marketplace sheet owns Escape.
+ useEffect(()=>{if(!explore||sheet)return;const esc=(e:KeyboardEvent)=>{if(e.key==='Escape'){if(peek)setPeek(null);else setExplore(false)}};window.addEventListener('keydown',esc);return()=>window.removeEventListener('keydown',esc)},[explore,peek,sheet])
  const [legacy,setLegacy]=useState(false)
  const [clock,setClock]=useState<{label:string;night:boolean;hour:number;day:string;at:number}|null>(null)
  const [requestedModule,setRequestedModule]=useState<string|null>(null)
@@ -167,13 +175,15 @@ export function BusinessCityView(){
  const bins=clock?runsByHour(modules,clock.at):[]
  const enter=useCallback(()=>{pauseCity();setSheet(true)},[])
  const choose=useCallback((id:BuildingId)=>{setExplore(false);setSelected(id);setQuery('');setIndustry(null);setExpanded(null);enter()},[enter])
+ // From the Explore card: the marketplace opens over the city and closing it returns to the city.
+ const openFromPeek=(id:BuildingId,open:string|null)=>{setSelected(id);setQuery('');setIndustry(null);setExpanded(null);setFlow(open);enter();if(open?.startsWith('catalog:'))setTimeout(()=>document.getElementById(`catalog-${open.slice(8)}`)?.scrollIntoView({behavior:'smooth',block:'start'}),120)}
  const customise=()=>{pauseCity();setCustom(true)}
  if(legacy)return <><div className={`liquid-glass ${styles.returnBar}`}><button onClick={()=>setLegacy(false)}>Back to your business city</button><span>Original 3D view</span></div><LegacyCity/></>
  return <section className={styles.workspace} data-explore={explore} data-covered={sheet||custom}>
   {explore&&<button className={`liquid-glass ${styles.exploreBack}`} onClick={()=>setExplore(false)}>← Back to home</button>}
   <Welcome previews={previews}/>
   {custom&&<SettingsSheet onClose={()=>setCustom(false)}/>}
-  <div className={styles.stageCity}>{(isPhone===false||(cityLoaded&&explore))&&<GlowCity data={error?undefined:data} agents={realAgents} active={!sheet&&!custom} climate={prefs.cityClimate} onSelect={choose} explore={explore} onPreviews={setPreviews}/>}</div>
+  <div className={styles.stageCity}>{(isPhone===false||(cityLoaded&&explore))&&<GlowCity data={error?undefined:data} agents={realAgents} active={!sheet&&!custom} climate={prefs.cityClimate} onSelect={choose} onPeek={setPeek} explore={explore} onPreviews={setPreviews}/>}</div>
   <section className={styles.phoneCity} aria-label="Business city overview">
    <div className={styles.phoneCityHead}><p>AUTIVA / CITY</p><span>{error?'Offline':!data?'Connecting':data.sample?'Demo workspace':'Workspace connected'}</span></div>
    <h2>Your business.<br/><span>Your city.</span></h2>
@@ -182,7 +192,9 @@ export function BusinessCityView(){
    <button className={styles.cityLaunch} onClick={openCity}>Enter your city <span aria-hidden="true">↗</span></button>
    <p className={styles.phoneCityNote}>3D loads when you enter. Status comes from workspace records.</p>
   </section>
-  {explore&&<nav className={styles.districtDock} aria-label="City districts">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} style={{'--district':b.glow} as CSSProperties}>{b.name}</button>)}</nav>}
+  {explore&&peek&&!sheet&&<BuildingPeek building={peek} live={modules.filter(m=>buildingFor(m.district)===peek)} offer={offer.filter(c=>c.building===peek)} onOpenLive={id=>openFromPeek(peek,id)} onOpenItem={key=>openFromPeek(peek,'catalog:'+key)} onOpenAll={()=>openFromPeek(peek,null)} onClose={()=>setPeek(null)}/>}
+  {(explore||sheet)&&<MyPlanBar/>}
+  {explore&&<nav className={styles.districtDock} aria-label="City districts">{BUILDINGS.map(b=><button key={b.id} onClick={()=>setPeek(b.id)} style={{'--district':b.glow} as CSSProperties}>{b.name}</button>)}</nav>}
   <section className={styles.home} aria-label="Workspace summary">
    <header className={`${styles.top} ${styles.hGreet}`}>
     <p className={styles.date}>{clock?.day??'\u00a0'}</p><h1>{clock?greeting(clock.hour):'Welcome back'}</h1>
@@ -211,7 +223,8 @@ export function BusinessCityView(){
   <div role="dialog" aria-modal="true" aria-label="Marketplace" tabIndex={-1} className={`liquid-glass ${styles.sheet}`} onClick={e=>e.stopPropagation()}>
   <section ref={details} tabIndex={-1} className={`liquid-glass ${styles.catalog}`} style={{'--c':industry||query?'#8e8e93':selectedBuilding.glow} as CSSProperties} aria-label="Building automations">
     <div className={styles.catalogHeader}><div><p className={styles.eyebrow}>{industry?'Industry district':query?'Your workspace':'Marketplace · inside the building'}</p><h2>{industry??(query?'Search results':selectedBuilding.name)}</h2><p>{industry?pack(industry).length?`Automations designed for ${industry}.`:`A pack for ${industry.toLowerCase()} is on the way.`:selectedBuilding.purpose}</p></div><div className={styles.headTools}><label className={styles.search}><span>Search</span><input type="search" placeholder="Search automations" value={query} onChange={e=>{setQuery(e.target.value);setIndustry(null)}}/></label><button type="button" className={styles.sheetClose} onClick={()=>setSheet(false)}>Close</button></div></div>
-    {!industry&&!query&&<MarketplaceAds onOpen={(building,key)=>{choose(building);setFlow('catalog:'+key)}}/>}
+    {/* A building with a tour shows it instead of the ads: one film at a time keeps the sheet smooth. */}
+    {!industry&&!query&&(hasTour(selected)?<BuildingTour building={selected} offered={new Set(extra.map(c=>c.key))} onOpen={key=>{setFlow('catalog:'+key);requestAnimationFrame(()=>document.getElementById(`catalog-${key}`)?.scrollIntoView({behavior:'smooth',block:'start'}))}}/>:<MarketplaceAds onOpen={(building,key)=>{choose(building);setFlow('catalog:'+key)}}/>)}
     <div className={styles.mobileBuildings} role="group" aria-label="Choose a building">{BUILDINGS.map(b=><button key={b.id} onClick={()=>choose(b.id)} aria-pressed={!industry&&selected===b.id}><span className={styles.shot} aria-hidden="true">{previews[b.id]?<img src={previews[b.id]} alt=""/>:<span>{b.id==='security'||b.id==='legal'?'No building yet':'Loading…'}</span>}</span><span className={styles.chipName}><span className={styles.chipDot} style={{background:b.glow}} aria-hidden="true"/>{b.name}</span><span className={styles.tileCount} aria-hidden="true">{!data||error?'\u00a0':((n,m)=>n&&m?`${n} live · ${m} to add`:n?`${n} automation${n===1?'':'s'}`:m?`${m} to add`:'Coming soon')(modules.filter(m=>buildingFor(m.district)===b.id).length,offer.filter(c=>c.building===b.id).length)}</span></button>)}</div>
     
     {industry&&pack(industry).length?<MarketplaceShelf items={pack(industry)} flow={flow} setFlow={setFlow} title={`Made for ${industry}`}/>:industry?<div className={styles.empty}><h3>Coming soon</h3><p>It will appear here when it’s ready. Meanwhile, explore the buildings above.</p><button onClick={()=>choose('operations')}>Explore Operations</button></div>:error?<div role="alert" className={styles.empty}><h3>Couldn’t load your automations</h3><p>Nothing was changed. Check your connection and try again.</p><button disabled={isValidating} onClick={()=>void mutate()}>{isValidating?'Retrying…':'Try again'}</button></div>:!data?<div role="status" className={styles.empty}>Loading your automations…</div>:visible.length===0&&extra.length===0?<div className={styles.empty}><h3>{query?'No matching automations':'Coming soon'}</h3><p>{query?'Try another name or choose a building.':'Nothing here yet. New automations for this building are on the way.'}</p><button onClick={()=>{setQuery('');choose('operations')}}>Explore Operations</button></div>:<>{visible.length>0&&<div className={styles.automationList}>{visible.map(automation=>{

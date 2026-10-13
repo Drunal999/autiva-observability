@@ -18,7 +18,8 @@ const ADS: Ad[] = [
     note: 'AI-generated video', open: { building: 'support', key: 'voice-receptionist' } },
 ]
 
-function Clip({ ad, active }: { ad: Ad; active: boolean }) {
+/** A muted looping clip that plays only while active, on screen and motion is allowed. */
+export function LoopVideo({ src, poster, active, className = styles.adVideo }: { src: string; poster: string; active: boolean; className?: string }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [onScreen, setOnScreen] = useState(false)
   // Decoding video is not free: one clip costs the marketplace little, two at once
@@ -39,7 +40,7 @@ function Clip({ ad, active }: { ad: Ad; active: boolean }) {
     if (active && onScreen && !still) { try { void v.play()?.catch(() => {}) } catch { /* autoplay refused: the poster stays */ } }
     else v.pause()
   }, [active, onScreen])
-  return <video ref={ref} className={styles.adVideo} src={ad.video} poster={ad.poster} muted loop playsInline preload="metadata" aria-hidden="true" />
+  return <video ref={ref} className={className} src={src} poster={poster} muted loop playsInline preload="metadata" aria-hidden="true" />
 }
 
 export function MarketplaceAds({ onOpen }: { onOpen: (building: BuildingId, key: string) => void }) {
@@ -47,7 +48,7 @@ export function MarketplaceAds({ onOpen }: { onOpen: (building: BuildingId, key:
   const [active, setActive] = useState('voice')
   return <div className={styles.ads} aria-label="Featured automations">
     {ADS.map(ad => <article key={ad.id} className={styles.ad} onPointerEnter={() => setActive(ad.id)} onFocusCapture={() => setActive(ad.id)}>
-      <Clip ad={ad} active={active === ad.id} />
+      <LoopVideo src={ad.video} poster={ad.poster} active={active === ad.id} />
       <div className={styles.adText}>
         <p className={styles.adEyebrow}>{ad.eyebrow}</p>
         <h3>{ad.title}</h3>

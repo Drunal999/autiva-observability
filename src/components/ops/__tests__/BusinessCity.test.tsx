@@ -43,12 +43,21 @@ describe('Business city',()=>{
   fireEvent.click(screen.getByRole('button',{name:/Enter your city/}))
   expect(screen.getByTitle('Your business city: tap a building to open its marketplace')).toBeInTheDocument()
   const districts=within(screen.getByRole('navigation',{name:'City districts'}))
+  // A district opens its card over the city; the city stays.
   fireEvent.click(districts.getByRole('button',{name:'Sales & Leads'}))
-  expect(screen.queryByRole('navigation',{name:'City districts'})).not.toBeInTheDocument()
-  expect(screen.queryByTitle('Your business city: tap a building to open its marketplace')).not.toBeInTheDocument()
+  const card=screen.getByRole('complementary',{name:'Sales & Leads building'})
+  expect(screen.getByTitle('Your business city: tap a building to open its marketplace')).toBeInTheDocument()
+  // From the card, the marketplace opens over the city, and closing it returns to the city.
+  fireEvent.click(within(card).getByRole('button',{name:'See everything in Sales & Leads'}))
   expect(screen.getByRole('dialog',{name:'Marketplace'})).toBeInTheDocument()
   fireEvent.keyDown(window,{key:'Escape'})
   expect(screen.queryByRole('dialog',{name:'Marketplace'})).not.toBeInTheDocument()
+  expect(screen.getByRole('navigation',{name:'City districts'})).toBeInTheDocument()
+  // Escape closes the card first, then leaves the city.
+  fireEvent.keyDown(window,{key:'Escape'})
+  expect(screen.queryByRole('complementary',{name:'Sales & Leads building'})).not.toBeInTheDocument()
+  fireEvent.keyDown(window,{key:'Escape'})
+  expect(screen.queryByRole('navigation',{name:'City districts'})).not.toBeInTheDocument()
  })
 
  it('keeps unknown categories visible and never invents paused or available status',()=>{
@@ -76,6 +85,16 @@ describe('Business city',()=>{
   expect(screen.getByText(/Coming soon · Customer Support/)).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button',{name:'See how it works'}))
   expect(catalog().getByRole('heading',{name:'Customer Support'})).toBeInTheDocument()
+  expect(await screen.findByText('Blueprint',{},{timeout:3000})).toBeInTheDocument()
+ })
+ it('shows the inside of Finance and each part of the picture opens its automation',async()=>{
+  render(<BusinessCityView/>);fireEvent.click(screen.getByRole('button',{name:'Marketplace'}))
+  fireEvent.click(screen.getByRole('button',{name:'Finance & Billing'}))
+  expect(screen.getByRole('heading',{name:'Inside Finance'})).toBeInTheDocument()
+  expect(screen.queryByRole('heading',{name:'Your phone, answered'})).not.toBeInTheDocument() // one film at a time
+  expect(screen.getByRole('img',{name:/Finance building/})).toBeInTheDocument()
+  expect(screen.getAllByRole('button',{name:/: see how it works$/})).toHaveLength(4)
+  fireEvent.click(screen.getByRole('button',{name:'GST bills matched: see how it works'}))
   expect(await screen.findByText('Blueprint',{},{timeout:3000})).toBeInTheDocument()
  })
  it('searches across buildings and exposes actual records without inventing connections',()=>{
