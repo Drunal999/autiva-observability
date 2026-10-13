@@ -81,7 +81,7 @@ function GlowCityView({data,agents,onSelect,onPeek,explore,active,climate,onPrev
  useEffect(()=>{frame.current?.contentWindow?.postMessage({type:'autiva:city-previews'},location.origin)},[])
  // 'ready' can fire before this component listens; load always comes after the city's script ran.
  const hello=()=>{const w=frame.current?.contentWindow;w?.postMessage({type:'autiva:city-climate',mode:climateRef.current},location.origin);w?.postMessage({type:'autiva:city-mode',explore:exploring.current},location.origin);w?.postMessage({type:'autiva:city-previews'},location.origin)}
- return <iframe ref={frame} onLoad={hello} src="/city/agentic-city.html?dashboard=1&hero=1&v=20261013-peek" title="Your business city: tap a building to open its marketplace" className={styles.glowCity}/>
+ return <iframe ref={frame} onLoad={hello} src="/city/agentic-city.html?dashboard=1&hero=1&v=20261013-clean" title="Your business city: tap a building to open its marketplace" className={styles.glowCity}/>
 }
 const GlowCity=memo(GlowCityView)
 /** Runs that STARTED in each 2-hour slot of the last 24 hours, oldest first. Built only from recorded runs. */
