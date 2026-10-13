@@ -41,5 +41,6 @@ describe('every navigable page requires a session', () => {
     // turns every one of those requests into an HTML sign-in page.
     expect(isCovered('/api/calendar/feed')).toBe(false)
     expect(isCovered('/api/ingest/runs')).toBe(false)
+    expect(isCovered('/api/ingest/approvals')).toBe(false)
   })
 })

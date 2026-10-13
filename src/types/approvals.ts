@@ -14,6 +14,10 @@ export interface Approval {
   requestedAt: string
   decidedAt: string | null
   reason: string | null
+  /** Set by the engine once it carried the approved action out (or failed to). */
+  appliedAt?: string | null
+  applyOk?: boolean | null
+  applyNote?: string | null
   module?: { key: string; displayName: string } | null
   run?: { ref: string; agent: { name: string } } | null
   decidedBy?: { name: string } | null
