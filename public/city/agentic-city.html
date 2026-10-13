@@ -429,6 +429,10 @@ function openShop(D) {
   if (!document.documentElement.dataset.dashboard || !D) return;
   parent.postMessage({ type: 'autiva:city-select', building: SHOP[D.key] }, location.origin);
 }
+function peekShop(D) {
+  if (!document.documentElement.dataset.dashboard || !D) return;
+  parent.postMessage({ type: 'autiva:city-peek', building: SHOP[D.key] }, location.origin);
+}
 function districtAt(x, z) {
   var best = null, bd = Infinity;
   DISTRICTS.forEach(function (D) { var d = Math.hypot(x - D.x, z - D.z); if (d < bd) { bd = d; best = D; } });
@@ -3079,7 +3083,9 @@ renderer.domElement.addEventListener('pointerup', function (e) {
        there is work to report inside. */
     pickState.box = bi;
     UIBUS.selectSite && UIBUS.selectSite(pickState.site, bi);
-    if (document.documentElement.dataset.hero) openShop(box.site != null ? DISTRICTS[cityData.sites[box.site].district] : districtAt(box.x, box.z));
+    var D = box.site != null ? DISTRICTS[cityData.sites[box.site].district] : districtAt(box.x, box.z);
+    /* Home opens the marketplace; Explore keeps the city and shows a card for the building beside it. */
+    if (document.documentElement.dataset.hero) openShop(D); else peekShop(D);
   }
 });
 

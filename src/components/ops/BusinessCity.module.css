@@ -212,6 +212,36 @@ a.widget:hover { transform: translateY(-2px); }
 /* The still keeps its own shape, so the spot percentages land on what they point at. */
 .tourStill { position: relative; margin: 0; border-radius: 22px; overflow: hidden; border: 0.5px solid rgba(255, 255, 255, 0.16); background: #0b1220; }
 .tourPic { position: relative; }
+.tourFilm { display: block; width: 100%; aspect-ratio: 1344 / 752; object-fit: cover; }
+/* Explore: the card for the building tapped in the moving city. Tinted, not blurred, so the
+   city behind keeps its frame rate. Right side on a desktop, a bottom sheet on a phone. */
+.peek { position: fixed; z-index: 63; top: 76px; right: 16px; bottom: 16px; width: min(400px, calc(100vw - 32px)); overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 24px; color: #f2f2f7;
+  background: linear-gradient(155deg, rgba(24, 28, 40, 0.94), rgba(10, 12, 18, 0.96)); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55); animation: peek-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/* A long list must scroll the card, not squash the picture. */
+.peek > * { flex-shrink: 0; }
+.peek header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.peek h2 { margin: 2px 0 4px; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.peek header p:not(.eyebrow) { margin: 0; font-size: 14px; color: rgba(242, 242, 247, 0.75); }
+.peek h3 { margin: 4px 0 0; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(242, 242, 247, 0.6); }
+.peek .tourStill { border-radius: 16px; }
+.peekClose { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; cursor: pointer; font-size: 15px; color: #f2f2f7; background: rgba(255, 255, 255, 0.12); }
+.peekWatch { align-self: flex-start; height: 34px; padding: 0 14px; border-radius: 17px; border: 0; cursor: pointer; font-size: 13px; font-weight: 600; color: #f2f2f7; background: rgba(255, 255, 255, 0.12); }
+.peekList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.peekList button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; padding: 10px 12px; border-radius: 14px; border: 0; cursor: pointer; color: #f2f2f7; background: rgba(255, 255, 255, 0.07); }
+.peekList button:hover, .peekList button:focus-visible { background: rgba(255, 255, 255, 0.13); }
+.peekList span { display: grid; gap: 2px; font-size: 14.5px; font-weight: 600; min-width: 0; }
+.peekList small { font-size: 12.5px; font-weight: 400; color: rgba(242, 242, 247, 0.65); }
+.peekList em { flex: none; font-style: normal; font-size: 12px; font-weight: 600; color: var(--c); }
+.peekEmpty { margin: 0; font-size: 14px; color: rgba(242, 242, 247, 0.7); }
+.peekAll { margin-top: auto; min-height: 44px; border-radius: 22px; border: 0; cursor: pointer; font-size: 15px; font-weight: 700; color: #0b1220; background: #fff; }
+@keyframes peek-in { from { opacity: 0; transform: translateX(24px); } }
+@media (max-width: 700px) {
+  .peek { top: auto; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); width: auto; max-height: 72dvh; border-radius: 22px; }
+  @keyframes peek-in { from { opacity: 0; transform: translateY(32px); } }
+}
+@media (prefers-reduced-motion: reduce) { .peek { animation: none; } }
 .tourStill img { display: block; width: 100%; aspect-ratio: 1344 / 752; object-fit: cover; }
 .spot { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; padding: 3px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(255, 255, 255, 0.92); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45); }
 .spot b, .spotList b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #0b1220; color: #fff; font-size: 12px; font-weight: 700; }
@@ -270,7 +300,7 @@ a.widget:hover { transform: translateY(-2px); }
 .exploreBtn { position: relative; margin-top: 12px; height: 40px; padding: 0 18px; border-radius: 20px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace > .exploreBack { position: fixed; top: 16px; left: 16px; z-index: 61; height: 42px; padding: 0 20px; border-radius: 21px; font-size: 15px; font-weight: 600; color: var(--label); }
 .workspace[data-explore='true'] .stageCity { z-index: 60; }
-.workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack) { visibility: hidden; }
+.workspace[data-explore='true'] > :not(.stageCity):not(.exploreBack):not(.peek):not(.sheetBackdrop) { visibility: hidden; }
 
 /* Glass everywhere in the marketplace: translucent fill, blur, and a lit top edge. */
 .automation, .mobileBuildings button:not([aria-pressed='true']), .search input, .industries button, .empty {

@@ -43,12 +43,21 @@ describe('Business city',()=>{
   fireEvent.click(screen.getByRole('button',{name:/Enter your city/}))
   expect(screen.getByTitle('Your business city: tap a building to open its marketplace')).toBeInTheDocument()
   const districts=within(screen.getByRole('navigation',{name:'City districts'}))
+  // A district opens its card over the city; the city stays.
   fireEvent.click(districts.getByRole('button',{name:'Sales & Leads'}))
-  expect(screen.queryByRole('navigation',{name:'City districts'})).not.toBeInTheDocument()
-  expect(screen.queryByTitle('Your business city: tap a building to open its marketplace')).not.toBeInTheDocument()
+  const card=screen.getByRole('complementary',{name:'Sales & Leads building'})
+  expect(screen.getByTitle('Your business city: tap a building to open its marketplace')).toBeInTheDocument()
+  // From the card, the marketplace opens over the city, and closing it returns to the city.
+  fireEvent.click(within(card).getByRole('button',{name:'See everything in Sales & Leads'}))
   expect(screen.getByRole('dialog',{name:'Marketplace'})).toBeInTheDocument()
   fireEvent.keyDown(window,{key:'Escape'})
   expect(screen.queryByRole('dialog',{name:'Marketplace'})).not.toBeInTheDocument()
+  expect(screen.getByRole('navigation',{name:'City districts'})).toBeInTheDocument()
+  // Escape closes the card first, then leaves the city.
+  fireEvent.keyDown(window,{key:'Escape'})
+  expect(screen.queryByRole('complementary',{name:'Sales & Leads building'})).not.toBeInTheDocument()
+  fireEvent.keyDown(window,{key:'Escape'})
+  expect(screen.queryByRole('navigation',{name:'City districts'})).not.toBeInTheDocument()
  })
 
  it('keeps unknown categories visible and never invents paused or available status',()=>{
