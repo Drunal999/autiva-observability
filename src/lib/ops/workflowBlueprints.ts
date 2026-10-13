@@ -43,6 +43,10 @@ export const BLUEPRINTS: Record<string, Graph> = {
     ['Product brief', 'trigger', 0], ['Write ad scripts', 'code', 1], ['Avatar video', 'http', 2],
     ['Label as AI-made', 'step', 3], ['Owner approves', 'step', 4], ['Export for ads', 'step', 5],
   ], [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5]]),
+  'meta-ads-optimizer': plan('meta-ads-optimizer blueprint', [
+    ['Every Monday', 'trigger', 0], ['Read Meta insights', 'http', 1], ['Rank ads & ad sets', 'code', 2],
+    ['Anything to change?', 'branch', 3], ['You approve, it applies', 'http', 4, -1], ['Weekly report', 'step', 4, 1],
+  ], [[0, 1], [1, 2], [2, 3], [3, 4, 'yes'], [3, 5, 'no'], [4, 5]]),
   'ad-reengineer': plan('ad-reengineer blueprint', [
     ['Every week', 'trigger', 0], ['Read Ad Library', 'http', 1], ['Hook, offer, angle', 'code', 2],
     ['Write own variations', 'code', 3], ['Owner approves', 'step', 4], ['Save ad drafts', 'step', 5],

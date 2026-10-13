@@ -543,6 +543,12 @@ model Approval {
   /// Required when rejecting — a rejection with no reason is not reviewable.
   reason      String?
 
+  /// Set once by the engine that carried out an approved action, success or
+  /// not, so a half-applied plan is never picked up and applied twice.
+  appliedAt   DateTime?
+  applyOk     Boolean?
+  applyNote   String?
+
   @@index([tenantId, status, requestedAt])
 }
 

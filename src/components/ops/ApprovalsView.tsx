@@ -323,6 +323,16 @@ export function ApprovalsView() {
                   {a.status}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-[14.5px] text-white/65">{a.action}</span>
+                {/* Only engines that carry approvals out set this; others never show a status they cannot have. */}
+                {approved && a.appliedAt && (
+                  <span
+                    className="rounded-[5px] px-1.5 py-[2px] font-mono text-[11px] font-bold uppercase"
+                    style={{ color: a.applyOk ? OK : ERR }}
+                    title={a.applyNote ?? undefined}
+                  >
+                    {a.applyOk ? 'Applied' : 'Apply failed'}
+                  </span>
+                )}
                 {a.reason && (
                   <span className="max-w-[40ch] truncate font-mono text-[12px] text-white/35" title={a.reason}>
                     “{a.reason}”
