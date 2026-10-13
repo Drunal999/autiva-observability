@@ -15,6 +15,8 @@ vi.mock('@/lib/realtime/client',()=>({useEventListener:vi.fn()}))
 vi.mock('../AutivaAssistant',()=>({AutivaAssistant:()=>null}))
 vi.mock('../FactBubble',()=>({FactBubble:()=>null}))
 vi.mock('../Presence',()=>({usePresence:()=>[],PresenceBar:()=>null}))
+const auth=vi.hoisted(()=>({signOut:vi.fn()}))
+vi.mock('next-auth/react',()=>({useSession:()=>({data:{user:{name:'Aditya'}}}),signOut:auth.signOut}))
 const automation:CityModule={id:'m1',key:'lead-followup',displayName:'Lead Follow-up',district:'sales',pendingApprovals:0,agents:[{id:'a1',status:'IDLE'}],runs:[]}
 // The home bento also lists automations; marketplace assertions look inside the marketplace only.
 const catalog=()=>within(screen.getByRole('region',{name:'Building automations'}))
@@ -107,5 +109,11 @@ describe('Business city',()=>{
   fireEvent.click(screen.getByRole('button',{name:'Simple'}))
   expect(screen.queryByRole('navigation',{name:'Team navigation'})).not.toBeInTheDocument()
   expect(screen.getByText('Same data')).toBeInTheDocument()
+ })
+ it('says who is signed in and signs out back to the sign-in page',()=>{
+  stub(undefined);render(<OpsShell><p>x</p></OpsShell>)
+  expect(screen.getByText('Signed in as Aditya')).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button',{name:'Sign out'}))
+  expect(auth.signOut).toHaveBeenCalledWith({callbackUrl:'/signin'})
  })
 })
