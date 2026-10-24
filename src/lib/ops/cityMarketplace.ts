@@ -8,6 +8,7 @@ export const BUILDINGS = [
  {id:'operations',name:'Operations',purpose:'Keep daily work and your team on track.',color:'#dcc798',glow:'#4d8dff',districts:['operations','people']},
  {id:'security',name:'Security',purpose:'Review access and protect your business.',color:'#91bcc4',glow:'#ffc663',districts:['security']},
  {id:'knowledge',name:'Business Knowledge',purpose:'Bring research and business knowledge together.',color:'#b7c594',glow:'#7ee0ff',districts:['intelligence']},
+ {id:'healthcare',name:'Healthcare',purpose:'Appointments, reminders, reports and patient follow-up.',color:'#e3b0b6',glow:'#ff6b81',districts:['healthcare']},
  {id:'legal',name:'Legal & Compliance',purpose:'A future home for contracts and compliance.',color:'#c8c9d3',glow:'#c8c9d3',districts:[]},
 ] as const
 export type BuildingId = typeof BUILDINGS[number]['id']
@@ -34,6 +35,7 @@ const DETAILS:Record<string,{purpose:string;audience:string}>={
  'invoice-chase':{purpose:'Track invoices that need a payment follow-up.',audience:'Businesses that send invoices'},
  'review-replies':{purpose:'Prepare replies to customer reviews.',audience:'Businesses receiving online reviews'},
  'weekly-digest':{purpose:'Bring weekly activity together in one summary.',audience:'Owners and team leads'},
+ 'healthcare.hospital_automation':{purpose:'Books appointments over WhatsApp, sends reminders and reports, and collects patient feedback.',audience:'Hospitals and clinics'},
 }
 export function moduleDetails(module:CityModule){return DETAILS[module.key]??{purpose:'This automation is in your workspace; its description has not been added yet.',audience:'Not documented yet'}}
 export const INDUSTRIES=['CA firms','Cafes','Clinics','Real estate','Retail'] as const

@@ -364,7 +364,11 @@ var DISTRICTS = [
   { key: 'data',   name: 'DATA INSIGHTS TOWER', x: 108, z: -62, r: 34, col: 0x7ee0ff, bias: ST.OPTIMIZING,    kind: 'tower' },
   { key: 'growth', name: 'GROWTH LAB',          x: 128, z:  62, r: 32, col: 0x3ddc97, bias: ST.BUILDING,      kind: 'lab'   },
   { key: 'collab', name: 'COLLABORATION SPACE', x:   0, z: 128, r: 34, col: 0xa878ff, bias: ST.COLLABORATING, kind: 'plaza' },
-  { key: 'impact', name: 'AUTOMATION / IMPACT', x:-128, z:  62, r: 32, col: 0xff6bd6, bias: ST.DEPLOYING,     kind: 'works' }
+  { key: 'impact', name: 'AUTOMATION / IMPACT', x:-128, z:  62, r: 32, col: 0xff6bd6, bias: ST.DEPLOYING,     kind: 'works' },
+  /* Appended, not inserted: the city is laid out from a seeded random stream
+     in this order, so a new district at the end leaves the six above where
+     they were. The north slot was the one gap left in the ring. */
+  { key: 'health', name: 'HEALTHCARE',          x:   0, z:-128, r: 32, col: 0xff6b81, bias: ST.COLLABORATING, kind: 'clinic' }
 ];
 
 /* ===================================================================
@@ -386,9 +390,11 @@ var DISTRICTS = [
      marketing    -> growth  (SEO/replies map to the Growth Lab)
      support      -> learn   (reactive triage, closest remaining fit)
      operations   -> core    (the ops backbone maps to Central AI Core)
+     healthcare   -> health  (its own district: the hospital in the north)
    =================================================================== */
 var REAL_MAP = { support: 'learn', intelligence: 'data', finance: 'impact',
-                 sales: 'collab', marketing: 'growth', operations: 'core' };
+                 sales: 'collab', marketing: 'growth', operations: 'core',
+                 healthcare: 'health' };
 var REAL = { byDistrict: {} };
 // Dashboard supplies tenant-scoped data; the scene owns no credentials.
 window.addEventListener('message', function (event) {
@@ -423,9 +429,10 @@ window.addEventListener('message', function (event) {
    the catalog names it. Same pairing as REAL_MAP above, read the other way.
    Security and Legal have no district of their own yet; the dashboard lists them. */
 var SHOP = { core: 'operations', learn: 'support', data: 'knowledge',
-             growth: 'marketing', collab: 'sales', impact: 'finance' };
+             growth: 'marketing', collab: 'sales', impact: 'finance', health: 'healthcare' };
 var SHOP_NAME = { operations: 'OPERATIONS', support: 'CUSTOMER SUPPORT', knowledge: 'BUSINESS KNOWLEDGE',
-                  marketing: 'MARKETING', sales: 'SALES & LEADS', finance: 'FINANCE & BILLING' };
+                  marketing: 'MARKETING', sales: 'SALES & LEADS', finance: 'FINANCE & BILLING',
+                  healthcare: 'HEALTHCARE' };
 if (document.documentElement.dataset.dashboard)
   DISTRICTS.forEach(function (D) { D.name = SHOP_NAME[SHOP[D.key]]; });
 function openShop(D) {
@@ -877,7 +884,7 @@ function Simulation(sites, cfg) {
     work:      new Float32Array(S),
     busy:      new Float32Array(S),
     counts:    new Uint16Array(6),
-    districtLoad: new Uint16Array(6),
+    districtLoad: new Uint16Array(DISTRICTS.length),
     /* 0 at midnight, 1 at midday for dayFrac; `night` is the inverse and is
        what everything else reads, because everything else cares about dark. */
     dayFrac: DAY_START, night: 0,
@@ -1839,8 +1846,11 @@ function buildCity(rnd) {
     var nSites = D.key === 'core' ? 4 : 5;
     for (var k = 0; k < nSites; k++) {
       var ang = (k / nSites) * Math.PI * 2 + di * 0.7;
-      var rad = D.r * 0.62;
-      var h = 22 + rnd() * 26 + (D.key === 'core' ? 16 : 0);
+      /* The hospital is wider than the other landmarks, so its district's
+         towers stand a little further out to leave it room. */
+      var rad = D.r * (D.kind === 'clinic' ? 0.74 : 0.62);
+      /* The hospital is the landmark here: its district stays low so it reads from afar. */
+      var h = (22 + rnd() * 26 + (D.key === 'core' ? 16 : 0)) * (D.kind === 'clinic' ? 0.55 : 1);
       var w = 9 + rnd() * 5, d = 9 + rnd() * 5;
       /* A tower's position is fixed by its district, so it cannot simply be
          rejected off a carriageway — it gets pushed clear instead. */
@@ -1865,6 +1875,7 @@ function buildCity(rnd) {
       for (var attempt = 0; attempt < 12; attempt++) {
         var a2 = rnd() * Math.PI * 2;
         var r2 = D.r * (0.30 + Math.sqrt(rnd()) * 0.98);
+        if (D.kind === 'clinic' && r2 < D.r * 0.6) continue;   /* the hospital's own ground */
         var bx = D.x + Math.cos(a2) * r2, bz = D.z + Math.sin(a2) * r2;
         var bw = 5 + rnd() * 7, bd = 5 + rnd() * 7;
         bx = offLane(bx, bw * 0.5 + 1);
@@ -1872,7 +1883,7 @@ function buildCity(rnd) {
         if (onLane(bx, bz, bw * 0.5, bd * 0.5)) continue;   /* belt to that brace */
         if (occupied(bx, bz, 2.6)) continue;
         var near = 1 - Math.min(1, r2 / (D.r * 1.3));
-        var bh = 6 + rnd() * 20 + near * 30;
+        var bh = (6 + rnd() * 20 + near * 30) * (D.kind === 'clinic' ? 0.5 : 1);
         boxes.push({ x: bx, z: bz, w: bw, d: bd, h: bh, tint: tint, seed: rnd(),
                      floors: floorsFor(bh) });
         break;
@@ -2291,6 +2302,42 @@ function makeLandmarks(scene) {
       }
       var cap = new T.Mesh(new T.TorusGeometry(11, 0.5, 6, 48), glow);
       cap.position.y = 21; cap.rotation.x = Math.PI / 2; g.add(cap);
+    } else if (D.kind === 'clinic') {
+      /* A hospital: a glass main block and two wings with lit edges, a cross
+         turning on the roof, a helipad with a beacon on the east wing, and
+         ambulance-bay lights alternating at the door. The door faces +z,
+         toward the city centre. */
+      var shell = new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.1, toneMapped: false, depthWrite: false });
+      var edge = new T.LineBasicMaterial({ color: col, transparent: true, opacity: 0.9, toneMapped: false });
+      var block = function (w, h, d, x, z) {
+        var geo = new T.BoxGeometry(w, h, d), body = new T.Mesh(geo, shell);
+        body.position.set(x, h / 2, z); g.add(body);
+        var lines = new T.LineSegments(new T.EdgesGeometry(geo), edge);
+        lines.position.copy(body.position); g.add(lines);
+      };
+      block(12, 28, 10, 0, 0);
+      block(7, 14, 8, -9.5, 1);
+      block(7, 14, 8, 9.5, 1);
+      var canopy = new T.Mesh(new T.BoxGeometry(6, 0.3, 2.4), glow); canopy.position.set(0, 3.4, 6); g.add(canopy);
+      var cross = new T.Group(); cross.position.y = 35; g.add(cross);
+      cross.add(new T.Mesh(new T.BoxGeometry(2.4, 9, 2.4), glow));
+      cross.add(new T.Mesh(new T.BoxGeometry(9, 2.4, 2.4), glow));
+      var pad = new T.Mesh(new T.TorusGeometry(2.8, 0.18, 6, 40), glow);
+      pad.rotation.x = Math.PI / 2; pad.position.set(9.5, 14.15, 1); g.add(pad);
+      [[-0.7, 0, 0.35, 2.2], [0.7, 0, 0.35, 2.2], [0, 0, 1.4, 0.35]].forEach(function (b) {
+        var bar = new T.Mesh(new T.BoxGeometry(b[2], 0.08, b[3]), glow);   /* the H on the pad */
+        bar.position.set(9.5 + b[0], 14.2, 1 + b[1]); g.add(bar);
+      });
+      var beacon = new T.Mesh(new T.SphereGeometry(0.6, 10, 8),
+        new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1, toneMapped: false }));
+      beacon.position.set(9.5, 14.6, -1.8); g.add(beacon);
+      var bay = [0xff3355, 0x3d7bff].map(function (c, i) {
+        var lamp = new T.Mesh(new T.SphereGeometry(0.55, 10, 8),
+          new T.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.9, toneMapped: false }));
+        lamp.position.set(i ? 1.6 : -1.6, 1, 5.6); g.add(lamp);
+        return lamp;
+      });
+      g.userData.clinic = { cross: cross, beacon: beacon, bay: bay };
     } else {
       for (var c3 = 0; c3 < 4; c3++) {
         var stack = new T.Mesh(new T.CylinderGeometry(2, 2.6, 30 + c3 * 6, 6), glow);
@@ -3492,7 +3539,7 @@ var dlabs = DISTRICTS.map(function (D) {
   labelHost.appendChild(el);
   return { el: el, m: el.querySelector('.m'), bar: el.querySelector('.b i'),
            live: el.querySelector('.live'), key: D.key,
-           pos: new T.Vector3(D.x, D.kind === 'core' ? 104 : 46, D.z) };
+           pos: new T.Vector3(D.x, D.kind === 'core' ? 104 : D.kind === 'clinic' ? 58 : 46, D.z) };
 });
 var _lv = new T.Vector3();
 var _placed = [];
@@ -3710,6 +3757,13 @@ function frame(timestamp) {
   landmarks.forEach(function (g) {
     if (g.userData.core) { g.userData.core.rotation.y += dt * 0.24; g.userData.core.rotation.x += dt * 0.11; }
     if (g.userData.spinGroup) g.userData.spinGroup.rotation.y += dt * 0.8;
+    if (g.userData.clinic) {
+      var cl = g.userData.clinic, flip = Math.floor(time * 2.5) % 2;
+      cl.cross.rotation.y += dt * 0.35;
+      cl.beacon.material.opacity = 0.2 + 0.8 * Math.pow(Math.max(0, Math.sin(time * 2.4)), 8);
+      cl.bay[0].material.opacity = flip ? 0.95 : 0.12;
+      cl.bay[1].material.opacity = flip ? 0.12 : 0.95;
+    }
     g.children.forEach(function (ch) { if (ch.userData.spin) ch.rotation.z += dt * ch.userData.spin; });
   });
   motes.rotation.y += dt * 0.007;

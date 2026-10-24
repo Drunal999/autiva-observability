@@ -15,6 +15,7 @@ import styles from './CategoryCity.module.css'
 const LOTS: {x:number;y:number;h:number}[] = [
   {x:70,y:70,h:230},{x:290,y:70,h:280},{x:510,y:70,h:200},{x:730,y:70,h:255},
   {x:70,y:400,h:190},{x:290,y:400,h:265},{x:510,y:400,h:220},{x:730,y:400,h:200},
+  {x:400,y:560,h:240},
 ]
 
 export function CategoryCity({selected,onSelect,night,labels,hero=false}:{selected:BuildingId|null;onSelect:(id:BuildingId)=>void;night:boolean;labels:Record<string,string>;hero?:boolean}) {

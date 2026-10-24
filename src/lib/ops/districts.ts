@@ -2,7 +2,9 @@
  * Which district a module belongs to.
  *
  * The catalog groups modules into eight districts (AUTIVA ARCHITECTURE.md §6.1)
- * and the city draws one block per district. `Module` has no `district` column,
+ * and the city draws one block per district. `healthcare` is a ninth, added
+ * for the hospital automation (`healthcare.hospital_automation`): clinics are
+ * a target industry, and a hospital's work is not an operations side job. `Module` has no `district` column,
  * and adding one is a migration on a model this change does not otherwise
  * touch — so the mapping lives here until the city has earned the column.
  *
@@ -22,6 +24,7 @@ export const DISTRICTS = [
   'people',
   'security',
   'intelligence',
+  'healthcare',
 ] as const
 
 export type District = (typeof DISTRICTS)[number]
@@ -75,6 +78,9 @@ export function districtFor(key: string): District {
  * `Legal & Compliance` has no district behind it at all. That is deliberate:
  * it exists so the department can render as a discoverable "Set up" building
  * rather than not exist in the nav — AUTIVA has no legal engine yet.
+ *
+ * `Healthcare` is the one department outside the brief, added with its
+ * district: an owner of a clinic looks for "Healthcare", not "Operations".
  */
 export const DEPARTMENTS = [
   'Marketing',
@@ -84,6 +90,7 @@ export const DEPARTMENTS = [
   'Security',
   'Legal & Compliance',
   'Knowledge',
+  'Healthcare',
 ] as const
 
 export type Department = (typeof DEPARTMENTS)[number]
@@ -97,6 +104,7 @@ const DEPARTMENT_BY_DISTRICT: Record<District, Department> = {
   people: 'Operations',
   security: 'Security',
   intelligence: 'Knowledge',
+  healthcare: 'Healthcare',
 }
 
 export function departmentFor(district: District): Department {
@@ -112,4 +120,5 @@ export const DEPARTMENT_PURPOSE: Record<Department, string> = {
   Security: 'Access reviews, audit logs and authorised checks.',
   'Legal & Compliance': 'Contract drafts, document review and renewal reminders.',
   Knowledge: 'Business memory, SOPs and project documents.',
+  Healthcare: 'Patient appointments, reminders, reports and follow-up.',
 }
