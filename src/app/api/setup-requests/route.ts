@@ -6,7 +6,7 @@ import { getTenantContext } from '@/lib/ops/tenant'
 import { rateLimit } from '@/lib/ops/rateLimit'
 import { CATALOG } from '@/lib/ops/marketplaceCatalog'
 import { BUILDINGS } from '@/lib/ops/cityMarketplace'
-import { planFor, priceLabel, SETUP_INR, SETUP_FREE_FOR_FIRST, inr } from '@/lib/ops/plans'
+import { planFor, priceLabel, SETUP_INR, LAUNCH_SLOTS, inr } from '@/lib/ops/plans'
 
 /**
  * "Request setup" from My plan. No payment happens here: the request lands in
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const names = buildingIds.map(id => BUILDINGS.find(b => b.id === id)?.name ?? id)
   const plan = planFor(buildingIds.length)
   const lines = [
-    `${plan.name} plan, ${priceLabel(plan)} (launch price). Setup ${inr(SETUP_INR)} once, free for the first ${SETUP_FREE_FOR_FIRST}.`,
+    `${plan.name} plan, ${priceLabel(plan)} (launch price). Setup ${inr(SETUP_INR)} once, done in person. Launch price held for the first ${LAUNCH_SLOTS} businesses.`,
     ...picked.map(i => `${i.stage === 'ready' ? 'Set up' : 'Reserve (coming soon)'}: ${i.name}`),
     `Requested by ${user.name ?? 'a signed-in user'}. Call back to confirm; nothing has been charged.`,
   ]

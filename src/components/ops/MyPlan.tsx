@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { BUILDINGS } from '@/lib/ops/cityMarketplace'
 import { myPlan, useMyPlan, type PlanItem } from '@/lib/ops/myPlan'
-import { planFor, priceLabel, inr, SETUP_INR, SETUP_FREE_FOR_FIRST } from '@/lib/ops/plans'
+import { planFor, priceLabel, inr, SETUP_INR, LAUNCH_SLOTS } from '@/lib/ops/plans'
 import styles from './BusinessCity.module.css'
 
 /** Add an automation to My plan. Something not built yet is "Reserve", never "Buy". */
@@ -53,7 +53,7 @@ export function MyPlanBar() {
       </div>)}
       <div className={styles.planTotal}>
         <p><b>{plan.name}</b> · {plan.line}<br /><strong>{priceLabel(plan)}</strong> <small>Launch price</small></p>
-        <p className={styles.planSetup}>Setup {inr(SETUP_INR)} once, free for the first {SETUP_FREE_FOR_FIRST} businesses.</p>
+        <p className={styles.planSetup}>Setup {inr(SETUP_INR)} once, done in person. Launch price held for the first {LAUNCH_SLOTS} businesses.</p>
       </div>
       <p className={styles.planNote}>No payment now. We’ll call you, set it up with you, and you start when it works for you.</p>
       {state === 'error' && <p role="alert" className={styles.planError}>Couldn’t send. Nothing was saved; please try again.</p>}

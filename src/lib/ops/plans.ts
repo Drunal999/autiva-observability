@@ -16,7 +16,8 @@ export const PLANS: Plan[] = [
   { id: 'pro', name: 'Pro', priceInr: 3999, buildings: Infinity, line: 'More buildings · priced with you', from: true },
 ]
 export const SETUP_INR = 1999
-export const SETUP_FREE_FOR_FIRST = 10
+/** Launch prices are held for this many businesses (14 Nov: setup is paid now). */
+export const LAUNCH_SLOTS = 10
 
 /** The smallest plan that covers this many buildings. */
 export function planFor(buildings: number): Plan {
